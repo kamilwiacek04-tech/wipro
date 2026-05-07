@@ -1,0 +1,43 @@
+Kalkulator publiczny:
+- Klient, wypełnianie ofert
+- Pole tekstowe: dodatkowe informacje
+- uzupełnij dane firmy
+- ? Checkbox czy adres 
+
+- Do 16 pięter (dyamicznie)
+- Standardowa wysokość kodygnacji 3m (ilość pięter-1)*3 = wysokość podnoszenia
+- 
+
+
+
+Pliki:
+- oferta (wizualizacja)
+- opis rozwiązań estetycznych
+- Rysunki (pdf, dwg)
+- karta akceptacji materiału
+- opis techniczny (.docx)
+- Komentarz przy wyborze lustra (W przypadku kabin przelotowych lustro występuje na bocznej ścianie !frontowe)
+
+
+PANEL ADMINA
+
+STATUSY w adminie
+
+Widoczność dla konkretnej oferty dla adminów
+
+Grupowanie w ksiązce adresowej po mailu (moze być mail ten sam dla róznych firm)
+
+Najwazniejsze: montaz, delegacja, dodatkowe wyposazenie, zysk
+
+Zysk zmienialny
+
+Analiza na dashboard pod kątem konkretnych osób
+
+Filtrowanie po statusach i osobach
+Zapisywaie wszystkich ofert wysłanych w pdf
+
+Baza danych:
+Winda: Rysunki
+
+
+Produkcja do końca maja
