@@ -1,0 +1,102 @@
+/* ─── LARGE (< 1200px) ─────────────────────────── */
+@media screen and (width < 1200px) {
+    .bodyContainer {
+        flex-direction: column;
+        gap: 20px;
+    }
+    .shaftParametersSummaryContainer {
+        width: 100%;
+    }
+    .shaftParametersSummaryContent {
+        width: 90%;
+    }
+    .modalStylesModal {
+        width: 55%;
+    }
+}
+
+/* ─── MEDIUM (< 1000px) ────────────────────────── */
+@media screen and (width < 1000px) {
+    .embla__container {
+        flex-direction: column;
+        gap: 20px;
+    }
+    .inputContainer {
+        flex-direction: column;
+        gap: 0;
+    }
+    .carouselItemContainer {
+        flex-direction: column;
+    }
+}
+
+/* ─── TABLET (< 800px) ─────────────────────────── */
+@media screen and (width < 800px) {
+    .shaftParametersSummaryContent {
+        width: 85%;
+    }
+    .navigationContainer {
+        gap: 0;
+    }
+}
+
+/* ─── MOBILE (< 600px) ─────────────────────────── */
+@media screen and (width < 600px) {
+    .navigationContainer {
+        flex-direction: column;
+        border-radius: 10px;
+    }
+    .navigationStep {
+        clip-path: none !important;
+        border-radius: 6px;
+    }
+    .modalStylesModal {
+        width: 90%;
+    }
+    .mainContent {
+        padding: 0;
+    }
+}
+
+/* ─── SMALL MOBILE (< 500px) ───────────────────── */
+@media screen and (width < 500px) {
+    .layoutContainer > img {
+        width: 94%;
+    }
+    .textInputShaftTypeContainer {
+        flex-direction: column;
+    }
+    .doubleTextInput {
+        flex-direction: column;
+    }
+    .carouselaItemContainer {
+        flex: 0 0 140px;
+        width: 140px;
+    }
+}
+
+/* ─── WIDE (≥ 1600px) ──────────────────────────── */
+@media screen and (min-width: 1600px) {
+    .elevatorScrollWrapper {
+        padding-bottom: 16px;
+    }
+    .carouselaItemContainer {
+        flex: 0 0 200px;
+        width: 200px;
+    }
+    .navigationContainer {
+        gap: 2px;
+    }
+}
+
+/* ─── ULTRA-WIDE / 4K (≥ 2000px) ──────────────── */
+@media screen and (min-width: 2000px) {
+    .carouselaItemContainer {
+        flex: 0 0 220px;
+        width: 220px;
+    }
+    .modalStylesModal {
+        width: 28%;
+        max-width: 700px;
+    }
+}

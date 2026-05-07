@@ -1,0 +1,57 @@
+.radioButtonContainer {
+    display: flex;
+    flex-direction: row;
+    margin-bottom: 15px;
+    margin-top: -15px;
+    border: 1px solid var(--greyOpacity);
+    padding: 16px;
+    border-radius: 10px;
+    position: relative;
+    gap: 10px;
+}
+
+.radioButtonTitle {
+    margin: 0;
+    color: var(--grey);
+    padding-left: 5px;
+}
+
+.radioButtonItemContainer {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    gap: 20px;
+    flex: 1;
+}
+
+.radioButtonItem {
+    border: 0.5px solid var(--primary);
+    border-radius: 10px;
+    flex: 1;
+    padding: 0px 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 250ms ease-in-out;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.radioButtonItemSelected {
+    background-color: color-mix(in srgb, var(--primary), transparent 85%);
+}
+
+.radioButtonLabel {
+    color: var(--grey);
+    font-size: 15px;
+    font-weight: 600;
+    position: absolute;
+    top: -25px;
+    left: 10px;
+    background-color: var(--white);
+}
+
+.radioButtonItemContainerColumn {
+    flex-direction: column;
+    flex: 1;
+}

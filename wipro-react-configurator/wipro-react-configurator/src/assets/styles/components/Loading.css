@@ -1,0 +1,29 @@
+.loadingContainer {
+  height: 50px;
+  width: 50px;
+  border: 6px solid color-mix(in srgb, var(--primary), transparent 85%);
+  border-top: 6px solid var(--primary);
+  border-radius: 50%;
+  animation: spin 1.5s linear infinite;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.loadingChild {
+  height: 15px;
+  width: 15px;
+  background-color: var(--primary);
+  border-radius: 50%;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.3); opacity: 0.6; }
+}

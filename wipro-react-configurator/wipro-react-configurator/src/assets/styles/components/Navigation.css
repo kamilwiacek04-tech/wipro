@@ -1,0 +1,66 @@
+.navigationContainer {
+    display: flex;
+    flex-direction: row;
+    background-color: var(--secondary);
+    border-radius: 20px;
+    padding: 0px;
+    cursor: default;
+    overflow: hidden;
+    justify-content: space-between;
+}
+
+.navigationStep {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    clip-path: polygon(5% 0%, 93% 0%, 100% 50%, 93% 100%, 5% 100%, 10% 50%);
+    padding-left: 18px;
+    padding-right: 18px;
+}
+
+.navigationStep:first-child {
+    clip-path: polygon(0% 0%, 93% 0%, 100% 50%, 93% 100%, 0% 100%, 0% 50%);
+}
+
+.navigationStep:last-child {
+    clip-path: polygon(5% 0%, 100% 0%, 100% 50%, 100% 100%, 5% 100%, 10% 50%);
+}
+
+.navigationStepText {
+    color: var(--white);
+    font-size: 14px;
+    text-align: center;
+    font-weight: 600;
+}
+
+.navigationStepActive {
+    background-color: var(--primary);
+    transition: all 1s ease;
+}
+
+.navigationStepTextActive {
+    color: var(--black);
+    font-weight: 700;
+}
+
+.navigationStepPressable {
+    cursor: pointer;
+}
+
+.languageSwitcher {
+  background: none;
+  border: 1px solid #ffb400;
+  color: #ffb400;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-left: auto;
+}
+.languageSwitcher:hover {
+  background: #ffb400;
+  color: #1a1a1a;
+}

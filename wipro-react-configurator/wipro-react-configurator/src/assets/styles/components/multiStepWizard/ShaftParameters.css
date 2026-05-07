@@ -1,0 +1,80 @@
+.textInputShaftTypeContainer {
+    display: flex;
+    gap: 30px;
+    justify-content: space-between;
+}
+
+.inputNumberError {
+    font-size: 14px;
+    margin-top: 4px;
+    color: var(--red);
+}
+
+.inputNumberErrorContainer {
+    margin-top: -20px;
+    margin-bottom: 20px;
+}
+
+.submitButtonHolder {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.shaftParametersSummaryMainContainer {
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.shaftParametersSummaryContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 80%;
+    flex-direction: column;
+    gap: 24px;
+    box-sizing: border-box;
+    padding: 0 12px;
+}
+
+.shaftParametersSummaryHeader{ 
+    text-align: center;
+    margin-bottom: 0;
+}
+
+.shaftParametersSummarySubHeader {
+    text-align: center;
+}
+
+.shaftParametersSummaryImage {
+    position: absolute;
+    height: 50px;
+    right: -20px;
+    top: 80px;
+    transform: rotate(105deg) scale(1, 1);
+}
+
+.shaftParametersSummaryContent {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    box-sizing: border-box;
+}
+
+.columnInputField {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.doubleColumnForm {
+    display: flex;
+    flex-direction: row;
+    margin-bottom: 5px;
+    gap: 15px;
+}
+
+.radioContainerField {
+    flex: 2
+}

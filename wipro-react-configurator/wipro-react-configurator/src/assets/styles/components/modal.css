@@ -1,0 +1,96 @@
+.modalStylesContainer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modalStylesModal {
+    background-color: var(--white);
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 35%;
+    padding: 25px 10px;
+    box-shadow: 7px 7px 15px rgba(255, 255, 255, 0.3);
+    gap: 15px;
+}
+
+.modalStylesIconContainer {
+    border-radius: 20px;
+    margin-bottom: 10px;
+}
+
+.modalStylesIcon {
+    border: 3px solid #5fbb94;
+    border-radius: 50px;
+    width: 35px;
+}
+
+.modalStyleIconError {
+    border: 3px solid #f44336;
+}
+
+.modalStylesText {
+    line-height: normal;
+    margin: 0px;
+    text-align: center;
+}
+
+.modalStylesTextHeader {
+    font-size: 24px;
+    font-weight: 500;
+}
+
+.modalStylesTextDetails {
+    color: var(--grey);
+    font-weight: 400;
+    font-size: 18px;
+}
+
+.modalStylesButton {
+    margin-top: 20px;
+    width: 80%;
+    border: none;
+    background-color: var(--primary);
+    border-radius: 10px;
+    color: var(--black);
+    padding: 15px 0px;
+    font-weight: 600;
+    font-size: 17px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.modalStylesButton:hover {
+    transform: scale(1.05);
+}
+
+.modalStylesLinkButton {
+    display: block;
+    width: 80%;
+    border: 2px solid var(--primary);
+    background-color: transparent;
+    border-radius: 10px;
+    color: var(--black);
+    padding: 13px 0px;
+    font-weight: 600;
+    font-size: 17px;
+    cursor: pointer;
+    transition: 0.2s;
+    text-align: center;
+    text-decoration: none;
+}
+
+.modalStylesLinkButton:hover {
+    background-color: var(--primary);
+    transform: scale(1.05);
+}

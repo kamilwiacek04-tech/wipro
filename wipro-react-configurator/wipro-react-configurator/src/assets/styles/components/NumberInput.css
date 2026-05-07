@@ -1,0 +1,23 @@
+.numberInputContainer {
+    flex: 1;
+    margin-top: -20px;
+}
+
+.numberInputText {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--grey);
+}
+
+.inputContainer {
+    display: flex;
+    gap: 20px;
+}
+
+.inputText {
+    width: 50px;
+    border: none;
+    border: 1px solid var(--primary);
+    text-align: center;
+    border-radius: 5px;
+}

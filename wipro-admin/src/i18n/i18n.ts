@@ -1,0 +1,20 @@
+import i18next from 'i18next'
+import { initReactI18next } from 'react-i18next'
+import pl from './pl'
+import en from './en'
+
+i18next
+  .use(initReactI18next)
+  .init({
+    resources: {
+      pl: { translation: pl },
+      en: { translation: en },
+    },
+    lng: 'pl',
+    fallbackLng: 'pl',
+    interpolation: {
+      escapeValue: false,
+    },
+  })
+
+export default i18next
