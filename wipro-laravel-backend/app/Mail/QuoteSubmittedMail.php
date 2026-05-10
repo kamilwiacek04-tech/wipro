@@ -17,7 +17,6 @@ class QuoteSubmittedMail extends Mailable
     public function __construct(
         public readonly User $user,
         public readonly QuoteRequest $quoteRequest,
-        public readonly string $myQuotesUrl,
         string $locale = 'pl',
     ) {
         $this->locale($locale);

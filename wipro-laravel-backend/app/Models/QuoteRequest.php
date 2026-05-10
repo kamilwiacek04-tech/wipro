@@ -21,6 +21,7 @@ class QuoteRequest extends Model
         'investor_city',
         'investment_name',
         'investment_address',
+        'investment_city',
         'floors',
         'stops',
         'lift_capacity',

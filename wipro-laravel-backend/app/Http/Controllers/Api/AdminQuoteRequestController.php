@@ -13,7 +13,6 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class AdminQuoteRequestController extends Controller
 {
@@ -230,24 +229,13 @@ class AdminQuoteRequestController extends Controller
                 422,
                 __('messages.offer.no_send_accepted')
             );
-            $token = Str::random(64);
-            $offer->update([
-                'sent_at'        => now(),
-                'response_token' => $token,
-            ]);
+            $offer->update(['sent_at' => now()]);
             $offer->quoteRequest()->update(['status' => 'offer_sent']);
 
             $quoteRequest = $offer->quoteRequest()->with('user')->first();
             if ($quoteRequest?->user) {
-                $backendUrl = config('app.url');
-                $frontendUrl = config('app.client_url', 'http://localhost:3000');
-
-                $acceptUrl = $backendUrl . '/api/offers/respond/' . $token . '?action=accept';
-                $rejectUrl = $backendUrl . '/api/offers/respond/' . $token . '?action=reject';
-                $portalUrl = $frontendUrl . '/konto/zapytanie/' . $quoteRequest->id;
-
                 Mail::to($quoteRequest->user->email)
-                    ->send(new OfferSentMail($quoteRequest->user, $offer->load('items'), $acceptUrl, $rejectUrl, $portalUrl, app()->getLocale()));
+                    ->send(new OfferSentMail($quoteRequest->user, $offer->load('items'), app()->getLocale()));
             }
         }
 

@@ -11,7 +11,6 @@
         .info-box { background: white; border: 1px solid #e0e0e0; border-radius: 6px; padding: 20px; margin: 20px 0; }
         .info-box p { margin: 5px 0; font-size: 14px; }
         .number { font-size: 18px; font-family: monospace; font-weight: bold; color: #1a1a1a; }
-        .btn { display: inline-block; background: #ffb400; color: #1a1a1a !important; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; margin: 20px 0; font-size: 15px; }
     </style>
 </head>
 <body>
@@ -29,7 +28,6 @@
         </div>
 
         <p>{{ __('emails.quote_submitted.next_steps') }}</p>
-        <a href="{{ $myQuotesUrl }}" class="btn">{{ __('emails.quote_submitted.portal_btn') }}</a>
 
         <p style="margin-top: 24px; font-size: 13px; color: #666;">
             {{ __('emails.quote_submitted.contact') }} <a href="mailto:{{ config('mail.from.address') }}">{{ config('mail.from.address') }}</a>

@@ -22,6 +22,7 @@ return new class extends Migration
             $table->string('investor_city')->nullable();
             $table->string('investment_name')->nullable();
             $table->string('investment_address')->nullable();
+            $table->string('investment_city')->nullable();
             $table->integer('floors')->nullable();
             $table->integer('stops')->nullable();
             $table->integer('lift_capacity')->nullable();

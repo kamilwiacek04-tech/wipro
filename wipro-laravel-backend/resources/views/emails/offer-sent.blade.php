@@ -14,10 +14,6 @@
         th { text-align: left; color: #888; font-weight: normal; padding: 4px 8px; border-bottom: 1px solid #eee; }
         td { padding: 6px 8px; border-bottom: 1px solid #f4f4f4; }
         .total-row td { font-weight: bold; border-top: 2px solid #e0e0e0; padding-top: 10px; }
-        .btn-accept { display: inline-block; background: #22c55e; color: white !important; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 15px; }
-        .btn-reject { display: inline-block; background: #ef4444; color: white !important; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 15px; }
-        .btn-portal { display: inline-block; background: #ffb400; color: #1a1a1a !important; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 14px; }
-        .actions { display: flex; gap: 16px; margin: 24px 0; flex-wrap: wrap; }
     </style>
 </head>
 <body>
@@ -77,15 +73,6 @@
             <p style="font-size:14px; margin:0;">{{ $offer->notes }}</p>
         </div>
         @endif
-
-        <p><strong>{{ __('emails.offer_sent.respond_prompt') }}</strong></p>
-        <div class="actions">
-            <a href="{{ $acceptUrl }}" class="btn-accept">{{ __('emails.offer_sent.accept_btn') }}</a>
-            <a href="{{ $rejectUrl }}" class="btn-reject">{{ __('emails.offer_sent.reject_btn') }}</a>
-        </div>
-
-        <p style="font-size:13px; color:#666;">{{ __('emails.offer_sent.portal_hint') }}</p>
-        <a href="{{ $portalUrl }}" class="btn-portal">{{ __('emails.offer_sent.portal_btn') }}</a>
 
         <p style="margin-top: 24px; font-size: 13px; color: #666;">
             {{ __('emails.offer_sent.contact') }} <a href="mailto:{{ config('mail.from.address') }}">{{ config('mail.from.address') }}</a>

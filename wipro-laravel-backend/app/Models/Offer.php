@@ -21,7 +21,6 @@ class Offer extends Model
         'pdf_path',
         'docx_path',
         'sent_at',
-        'response_token',
         'client_response',
         'client_responded_at',
         'cancelled_at',

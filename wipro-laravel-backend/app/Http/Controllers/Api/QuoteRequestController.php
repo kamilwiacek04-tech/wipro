@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Mail\NewAccountMail;
 use App\Mail\QuoteSubmittedMail;
 use App\Models\Elevator;
 use App\Models\QuoteRequest;
@@ -12,7 +11,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 
 class QuoteRequestController extends Controller
@@ -29,6 +27,7 @@ class QuoteRequestController extends Controller
             'investor_city' => 'nullable|string|max:100',
             'investment_name' => 'nullable|string|max:255',
             'investment_address' => 'nullable|string|max:255',
+            'investment_city' => 'nullable|string|max:100',
             'floors' => 'nullable|integer',
             'stops' => 'nullable|integer',
             'lift_capacity' => 'nullable|integer',
@@ -52,7 +51,7 @@ class QuoteRequestController extends Controller
             'elevator_id' => 'nullable|integer|exists:elevators,id',
         ]);
 
-        // Find or create user by email
+        // Maintain user record for admin address book
         $user = User::firstOrCreate(
             ['email' => $data['investor_email']],
             [
@@ -66,15 +65,6 @@ class QuoteRequestController extends Controller
                 'role' => 'client',
             ]
         );
-
-        $isNewUser = $user->wasRecentlyCreated;
-        $frontendUrl = rtrim(config('app.client_url', 'http://localhost:3000'), '/');
-
-        if ($isNewUser) {
-            // New user — generate password-setup token
-            $token = Password::createToken($user);
-            $setupUrl = $frontendUrl . '/konto/ustaw-haslo?token=' . urlencode($token) . '&email=' . urlencode($user->email);
-        }
 
         // Use provided elevator_id or try to match based on capacity
         $elevatorId = $data['elevator_id'] ?? null;
@@ -96,14 +86,8 @@ class QuoteRequestController extends Controller
             'elevator_id' => $elevatorId,
         ]));
 
-        // Send appropriate email
         try {
-            if ($isNewUser) {
-                Mail::to($user->email)->send(new NewAccountMail($user, $setupUrl, app()->getLocale()));
-            } else {
-                $myQuotesUrl = $frontendUrl . '/konto/moje-zapytania';
-                Mail::to($user->email)->send(new QuoteSubmittedMail($user, $quoteRequest, $myQuotesUrl, app()->getLocale()));
-            }
+            Mail::to($user->email)->send(new QuoteSubmittedMail($user, $quoteRequest, app()->getLocale()));
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::warning('Failed to send email: ' . $e->getMessage());
         }
@@ -119,50 +103,5 @@ class QuoteRequestController extends Controller
                 'created_at' => $quoteRequest->created_at,
             ],
         ], 201);
-    }
-
-    public function update(Request $request, int $id): JsonResponse
-    {
-        $quoteRequest = QuoteRequest::where('user_id', $request->user()->id)
-            ->where('status', 'new')
-            ->findOrFail($id);
-
-        $data = $request->validate([
-            'investor_name' => 'sometimes|string|max:255',
-            'investor_email' => 'sometimes|email|max:255',
-            'investor_phone' => 'sometimes|nullable|string|max:50',
-            'investor_company' => 'sometimes|nullable|string|max:255',
-            'investor_address' => 'sometimes|nullable|string|max:255',
-            'investor_city' => 'sometimes|nullable|string|max:100',
-            'investment_name' => 'sometimes|nullable|string|max:255',
-            'stops' => 'sometimes|nullable|integer',
-            'pit_depth' => 'sometimes|nullable|integer',
-            'overhead' => 'sometimes|nullable|integer',
-            'drive_type' => 'sometimes|nullable|string|max:100',
-            'door_type' => 'sometimes|nullable|string|max:100',
-            'additional_notes' => 'sometimes|nullable|string',
-        ]);
-
-        $quoteRequest->update($data);
-
-        return response()->json($quoteRequest->fresh(['elevator', 'offers']));
-    }
-
-    public function index(Request $request): JsonResponse
-    {
-        $requests = QuoteRequest::where('user_id', $request->user()->id)
-            ->orderByDesc('created_at')
-            ->get();
-
-        return response()->json($requests);
-    }
-
-    public function show(Request $request, int $id): JsonResponse
-    {
-        $quoteRequest = QuoteRequest::where('user_id', $request->user()->id)
-            ->with(['elevator', 'offers'])
-            ->findOrFail($id);
-
-        return response()->json($quoteRequest);
     }
 }

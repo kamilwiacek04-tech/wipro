@@ -235,12 +235,14 @@ class QuoteRequestSeeder extends Seeder
 
             $requestNumber = sprintf('WPR-%s-%03d', $year, $counter++);
 
-            QuoteRequest::create(array_merge($requestData, [
-                'user_id' => $user?->id,
-                'request_number' => $requestNumber,
-                'elevator_id' => $elevator?->id,
-                'raw_data' => $requestData,
-            ]));
+            QuoteRequest::firstOrCreate(
+                ['request_number' => $requestNumber],
+                array_merge($requestData, [
+                    'user_id' => $user?->id,
+                    'elevator_id' => $elevator?->id,
+                    'raw_data' => $requestData,
+                ])
+            );
         }
     }
 }

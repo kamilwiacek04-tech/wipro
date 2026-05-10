@@ -5,33 +5,28 @@ use App\Http\Controllers\Api\ElevFinderController;
 use App\Http\Controllers\Api\AdminQuoteRequestController;
 use App\Http\Controllers\Api\AdminUserController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CabinAccessoryController;
+use App\Http\Controllers\Api\CabinModelController;
 use App\Http\Controllers\Api\ElevatorController;
-use App\Http\Controllers\Api\OfferController;
-use App\Http\Controllers\Api\OfferResponseController;
+use App\Http\Controllers\Api\LiftTypeController;
 use App\Http\Controllers\Api\QuoteRequestController;
+use App\Http\Controllers\Api\SettingController;
 use Illuminate\Support\Facades\Route;
 
 // Public routes
 Route::post('/elevFinder', [ElevFinderController::class, 'find']);
 Route::get('/elevators/{id}', [ElevatorController::class, 'show']);
+Route::get('/lift-types', [LiftTypeController::class, 'index']);
+Route::get('/settings', [SettingController::class, 'index']);
+Route::get('/cabin-models', [CabinModelController::class, 'index']);
+Route::get('/cabin-accessories', [CabinAccessoryController::class, 'index']);
 Route::post('/quote-requests', [QuoteRequestController::class, 'store']);
 Route::post('/auth/login', [AuthController::class, 'login']);
-Route::post('/auth/register', [AuthController::class, 'register']);
-Route::post('/auth/set-password', [AuthController::class, 'setPassword']);
-Route::get('/offers/respond/{token}', [OfferResponseController::class, 'respond']);
 
 // Authenticated routes
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/user', [AuthController::class, 'user']);
-
-    // Client quote requests
-    Route::get('/quote-requests', [QuoteRequestController::class, 'index']);
-    Route::get('/quote-requests/{id}', [QuoteRequestController::class, 'show']);
-    Route::patch('/quote-requests/{id}', [QuoteRequestController::class, 'update']);
-
-    Route::get('/offers/{id}/pdf', [OfferController::class, 'downloadPdf']);
-    Route::post('/offers/{id}/respond', [OfferResponseController::class, 'respondAuthenticated']);
 
     // Admin routes
     Route::middleware('admin')->prefix('admin')->group(function () {
@@ -64,5 +59,28 @@ Route::middleware('auth:sanctum')->group(function () {
         // Address book (users)
         Route::get('/users', [AdminUserController::class, 'index']);
         Route::get('/users/{id}', [AdminUserController::class, 'show']);
+
+        // Lift types
+        Route::get('/lift-types', [LiftTypeController::class, 'adminIndex']);
+        Route::post('/lift-types', [LiftTypeController::class, 'store']);
+        Route::patch('/lift-types/{id}', [LiftTypeController::class, 'update']);
+        Route::delete('/lift-types/{id}', [LiftTypeController::class, 'destroy']);
+
+        // Settings
+        Route::patch('/settings', [SettingController::class, 'update']);
+
+        // Cabin models
+        Route::get('/cabin-models', [CabinModelController::class, 'adminIndex']);
+        Route::post('/cabin-models', [CabinModelController::class, 'store']);
+        Route::patch('/cabin-models/{id}', [CabinModelController::class, 'update']);
+        Route::post('/cabin-models/{id}/image', [CabinModelController::class, 'uploadImage']);
+        Route::delete('/cabin-models/{id}', [CabinModelController::class, 'destroy']);
+
+        // Cabin accessories
+        Route::get('/cabin-accessories', [CabinAccessoryController::class, 'adminIndex']);
+        Route::post('/cabin-accessories', [CabinAccessoryController::class, 'store']);
+        Route::patch('/cabin-accessories/{id}', [CabinAccessoryController::class, 'update']);
+        Route::post('/cabin-accessories/{id}/image', [CabinAccessoryController::class, 'uploadImage']);
+        Route::delete('/cabin-accessories/{id}', [CabinAccessoryController::class, 'destroy']);
     });
 });

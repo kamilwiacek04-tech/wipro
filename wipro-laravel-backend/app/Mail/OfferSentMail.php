@@ -17,9 +17,6 @@ class OfferSentMail extends Mailable
     public function __construct(
         public readonly User $user,
         public readonly Offer $offer,
-        public readonly string $acceptUrl,
-        public readonly string $rejectUrl,
-        public readonly string $portalUrl,
         string $locale = 'pl',
     ) {
         $this->locale($locale);

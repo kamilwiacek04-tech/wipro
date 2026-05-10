@@ -11,9 +11,8 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         // Admin users
-        User::create([
+        User::updateOrCreate(['email' => 'admin@wipro-wind.pl'], [
             'name' => 'Administrator WIPRO',
-            'email' => 'admin@wipro-wind.pl',
             'password' => Hash::make('Admin@2024!'),
             'role' => 'admin',
             'is_active' => true,
@@ -22,9 +21,8 @@ class UserSeeder extends Seeder
             'city' => 'Warszawa',
         ]);
 
-        User::create([
+        User::updateOrCreate(['email' => 'marek.kowalski@wipro-wind.pl'], [
             'name' => 'Marek Kowalski',
-            'email' => 'marek.kowalski@wipro-wind.pl',
             'password' => Hash::make('Admin@2024!'),
             'role' => 'admin',
             'is_active' => true,
@@ -110,7 +108,7 @@ class UserSeeder extends Seeder
         ];
 
         foreach ($clients as $client) {
-            User::create(array_merge($client, [
+            User::updateOrCreate(['email' => $client['email']], array_merge($client, [
                 'password' => Hash::make('Klient@2024!'),
                 'role' => 'client',
                 'is_active' => true,

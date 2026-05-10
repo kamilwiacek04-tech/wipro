@@ -1,0 +1,213 @@
+import AnimatedPage from '@/components/AnimatedPage'
+import FormContent from '@/components/FormContent'
+import TitleParagraph from '@/components/TitleParagraph'
+import { useTranslation } from 'react-i18next'
+import AnimatedPageSide from '@/components/AnimatedPageSide'
+import FinishesAndAccessoriesSummary from '@/components/multiStepWizardSummary/FinishesAndAccessoriesSummary'
+import { Controller, useForm } from 'react-hook-form'
+import { FormFinishesAndAccessories } from '@/types/multiStepWizard/finishesAndAccessories'
+import { yupResolver } from '@hookform/resolvers/yup'
+import { dataSchema } from '@/validators/finishesAndAccessories'
+import { useSelector } from 'react-redux'
+import { RootState, useAppDispatch, useAppSelector } from '@/store'
+import { fillField, formSelectors } from '@/store/slices/formSlice'
+import CarouselaImage from '@/components/carouselaImage/CarouselaImage'
+import { useFormStore } from '@/store/zustand/formStore'
+import CheckboxElement from '@/components/CheckboxElement'
+import SubmitButton from '@/components/SubmitButton'
+import BorderInput from '@/components/BorderInput'
+import { openModal } from '@/store/slices/modalSlice'
+import { useStoreQuoteRequestMutation, useGetCabinModelsQuery, useGetCabinAccessoriesQuery, CabinModel } from '@/store/mainApi/response'
+import { useEffect, useState } from 'react'
+import CabinInfoModal from '@/components/CabinInfoModal'
+import AccessorySelector from '@/components/AccessorySelector'
+import Loading from '@/components/Loading'
+
+const ACCESSORY_SECTIONS: Array<{
+    key: keyof Pick<FormFinishesAndAccessories, 'panelId' | 'signalId' | 'ceilingId' | 'mirrorId' | 'handrailId' | 'flooringId'>;
+    category: string;
+    labelKey: string;
+}> = [
+    { key: 'panelId',    category: 'PANEL',    labelKey: 'form.finishesAndAccessories.field.panel' },
+    { key: 'signalId',   category: 'SIGNAL',   labelKey: 'form.finishesAndAccessories.field.signal' },
+    { key: 'ceilingId',  category: 'CEILING',  labelKey: 'form.finishesAndAccessories.field.ceiling' },
+    { key: 'mirrorId',   category: 'MIRROR',   labelKey: 'form.finishesAndAccessories.field.mirror' },
+    { key: 'handrailId', category: 'HANDRAIL', labelKey: 'form.finishesAndAccessories.field.handrail' },
+    { key: 'flooringId', category: 'FLOORING', labelKey: 'form.finishesAndAccessories.field.flooring' },
+]
+
+const FinishesAndAccessories = () => {
+    const { t, i18n } = useTranslation()
+    const textPath = 'form.finishesAndAccessories'
+    const defaultData: FormFinishesAndAccessories = useSelector((state: RootState) => state.form.finishesAndAccessories)
+    const dispatch = useAppDispatch()
+    const { updateField } = useFormStore()
+
+    const [infoItem, setInfoItem] = useState<CabinModel | null>(null)
+
+    const [sendData, { data: apiData, isLoading, isSuccess, isError, error }] = useStoreQuoteRequestMutation()
+    const { data: cabinModels, isLoading: loadingModels } = useGetCabinModelsQuery()
+    const { data: accessories, isLoading: loadingAccessories } = useGetCabinAccessoriesQuery()
+
+    const formData = useAppSelector(formSelectors.data)
+    const shaftParameters = useAppSelector(formSelectors.shaftParameters)
+
+    const { formState: { errors }, control, handleSubmit } = useForm<FormFinishesAndAccessories>({
+        resolver: yupResolver(dataSchema),
+        defaultValues: defaultData,
+        mode: 'onChange',
+    })
+
+    const onSubmit = (dataCurr: FormFinishesAndAccessories) => {
+        dispatch(fillField({ key: 'finishesAndAccessories', value: dataCurr }))
+
+        const installAddress = [formData.street, formData.houseNo, formData.localNo]
+            .filter(Boolean)
+            .join(' ')
+
+        sendData({
+            investor_name: formData.name,
+            investor_email: formData.email,
+            investor_phone: formData.phoneNumber || undefined,
+            investor_company: formData.companyName || undefined,
+            investor_nip: formData.nip || undefined,
+            investment_name: formData.investor || undefined,
+            investment_address: installAddress || undefined,
+            investment_city: formData.city || undefined,
+            stops: shaftParameters.stopDoorsCount,
+            pit_depth: shaftParameters.pitDepth ? parseInt(String(shaftParameters.pitDepth), 10) : undefined,
+            overhead: shaftParameters.headroom ? parseInt(String(shaftParameters.headroom), 10) : undefined,
+            drive_type: shaftParameters.liftPurpose,
+            door_type: shaftParameters.accessDiagram,
+            elevator_id: shaftParameters.elevatorId || undefined,
+            additional_notes: [
+                formData.additionalNotes,
+                JSON.stringify({
+                    liftingHeight: shaftParameters.liftingHeight,
+                    accessCount: shaftParameters.accessCount,
+                    ei30DoorsCount: shaftParameters.ei30DoorsCount,
+                    ei60DoorsCount: shaftParameters.ei60DoorsCount,
+                    leftSideMechanic: shaftParameters.leftSideMechanic,
+                    status: formData.status,
+                    cabinModelId: dataCurr.cabinModelId,
+                    panelId: dataCurr.panelId || undefined,
+                    signalId: dataCurr.signalId || undefined,
+                    ceilingId: dataCurr.ceilingId || undefined,
+                    mirrorId: dataCurr.mirrorId || undefined,
+                    handrailId: dataCurr.handrailId || undefined,
+                    flooringId: dataCurr.flooringId || undefined,
+                    energyRecovery: dataCurr.energyRecovery,
+                    antiVibrationSystems: dataCurr.antiVibrationSystems,
+                    cabinMonitoringSystem: dataCurr.cabinMonitoringSystem,
+                    shaftLighting: dataCurr.shaftLighting,
+                    increaseSpeed: dataCurr.increaseSpeed,
+                }),
+            ].filter(Boolean).join('\n\n'),
+        })
+    }
+
+    useEffect(() => {
+        if (!isLoading && isSuccess && !isError) {
+            dispatch(openModal({ type: 'success' }))
+        }
+        if (!isLoading && isError && !isSuccess) {
+            dispatch(openModal({ type: 'error' }))
+        }
+    }, [isLoading, isSuccess, apiData, error, isError])
+
+    const isLoadingAll = loadingModels || loadingAccessories
+
+    return (
+        <div className="flex flex-row overflow-hidden max-[1200px]:flex-col max-[1200px]:gap-5">
+            {infoItem && (
+                <CabinInfoModal item={infoItem} onClose={() => setInfoItem(null)} />
+            )}
+            <AnimatedPage>
+                <FormContent>
+                    <TitleParagraph text={t(`${textPath}.title`)} />
+                    {isLoadingAll ? (
+                        <div className="flex justify-center py-10">
+                            <Loading />
+                        </div>
+                    ) : (
+                        <form className="flex flex-col gap-5" onSubmit={handleSubmit(onSubmit)}>
+                            {/* Model kabiny */}
+                            <BorderInput title={t(`${textPath}.field.cabinModel`)}>
+                                <Controller
+                                    control={control}
+                                    name="cabinModelId"
+                                    render={({ field }) => (
+                                        <CarouselaImage
+                                            items={cabinModels ?? []}
+                                            currentValue={field.value}
+                                            lang={i18n.language}
+                                            onChange={(id) => {
+                                                updateField('finishesAndAccessories', 'cabinModelId', id)
+                                                field.onChange(id)
+                                            }}
+                                            onInfo={setInfoItem}
+                                        />
+                                    )}
+                                />
+                                {errors.cabinModelId && (
+                                    <p className="text-[14px] text-[var(--red)] mt-1">{t(errors.cabinModelId.message ?? '')}</p>
+                                )}
+                            </BorderInput>
+
+                            {/* Sekcje akcesoriów */}
+                            {ACCESSORY_SECTIONS.map(({ key, category, labelKey }) => {
+                                const items = accessories?.[category as keyof typeof accessories] ?? []
+                                if (items.length === 0) return null
+                                return (
+                                    <BorderInput key={key} title={t(labelKey)}>
+                                        <Controller
+                                            control={control}
+                                            name={key}
+                                            render={({ field }) => (
+                                                <AccessorySelector
+                                                    title=""
+                                                    items={items}
+                                                    currentValue={field.value}
+                                                    onChange={(id) => {
+                                                        updateField('finishesAndAccessories', key, id)
+                                                        field.onChange(id)
+                                                    }}
+                                                />
+                                            )}
+                                        />
+                                    </BorderInput>
+                                )
+                            })}
+
+                            {/* Dodatki */}
+                            <BorderInput title={t(`${textPath}.field.extras`)}>
+                                <Controller control={control} name="energyRecovery" render={({ field }) => (
+                                    <CheckboxElement currentValue={field.value} onChange={(e) => { updateField('finishesAndAccessories', 'energyRecovery', e); field.onChange(e) }} name={t(`${textPath}.field.energyRecovery`)} />
+                                )} />
+                                <Controller control={control} name="antiVibrationSystems" render={({ field }) => (
+                                    <CheckboxElement currentValue={field.value} onChange={(e) => { updateField('finishesAndAccessories', 'antiVibrationSystems', e); field.onChange(e) }} name={t(`${textPath}.field.antiVibrationSystems`)} />
+                                )} />
+                                <Controller control={control} name="cabinMonitoringSystem" render={({ field }) => (
+                                    <CheckboxElement currentValue={field.value} onChange={(e) => { updateField('finishesAndAccessories', 'cabinMonitoringSystem', e); field.onChange(e) }} name={t(`${textPath}.field.cabinMonitoringSystem`)} />
+                                )} />
+                                <Controller control={control} name="shaftLighting" render={({ field }) => (
+                                    <CheckboxElement currentValue={field.value} onChange={(e) => { updateField('finishesAndAccessories', 'shaftLighting', e); field.onChange(e) }} name={t(`${textPath}.field.shaftLighting`)} />
+                                )} />
+                                <Controller control={control} name="increaseSpeed" render={({ field }) => (
+                                    <CheckboxElement currentValue={field.value} onChange={(e) => { updateField('finishesAndAccessories', 'increaseSpeed', e); field.onChange(e) }} name={t(`${textPath}.field.increaseSpeed`)} />
+                                )} />
+                            </BorderInput>
+
+                            <SubmitButton title={t('form.submit')} />
+                        </form>
+                    )}
+                </FormContent>
+            </AnimatedPage>
+            <AnimatedPageSide>
+                <FinishesAndAccessoriesSummary />
+            </AnimatedPageSide>
+        </div>
+    )
+}
+
+export default FinishesAndAccessories

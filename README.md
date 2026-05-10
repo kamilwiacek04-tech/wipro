@@ -2,10 +2,10 @@
 
 Monorepo zawierające trzy aplikacje składające się na system konfiguracji wind:
 
-| Folder | Opis | Port |
+| Folder | Opis | Port / Ścieżka |
 |---|---|---|
-| `wipro-laravel-backend/` | API Laravel + panel Filament (admin) | 80/443 (DDEV) |
-| `wipro-admin/` | Panel administracyjny React | 3001 |
+| `wipro-laravel-backend/` | API Laravel + panel Filament | 80/443 (DDEV) |
+| `wipro-react-frontend/` | Panel administracyjny React | 3001, `/w-admin/` |
 | `wipro-react-configurator/wipro-react-configurator/` | Konfigurator dla klienta React | 3000 |
 
 ---
@@ -51,10 +51,10 @@ Możesz użyć [Mailpit](https://ddev.readthedocs.io/en/stable/users/extend/addi
 
 ---
 
-## 2. Panel admina (`wipro-admin`)
+## 2. Panel admina (`wipro-react-frontend`)
 
 ```bash
-cd wipro-admin
+cd wipro-react-frontend
 
 # Zainstaluj zależności
 npm install
@@ -67,7 +67,7 @@ cp .env.example .env
 npm run dev
 ```
 
-Panel dostępny pod: **http://localhost:3001**
+Panel dostępny pod: **http://localhost:3001/w-admin/**
 
 Zmienne środowiskowe (`.env`):
 ```
@@ -118,5 +118,5 @@ yarn build
 ## Kolejność uruchamiania
 
 1. Uruchom backend DDEV (`ddev start` w `wipro-laravel-backend/`)
-2. Uruchom panel admina (`npm run dev` w `wipro-admin/`)
+2. Uruchom panel admina (`npm run dev` w `wipro-react-frontend/`)
 3. Uruchom konfigurator (`yarn dev` w `wipro-react-configurator/wipro-react-configurator/`)

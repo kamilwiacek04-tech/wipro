@@ -18,11 +18,6 @@ return [
         'vat'             => 'VAT :rate%:',
         'gross_total'     => 'Suma brutto:',
         'notes_label'     => 'Uwagi:',
-        'respond_prompt'  => 'Prosimy o odpowiedź na niniejszą ofertę:',
-        'accept_btn'      => '✓ Akceptuję ofertę',
-        'reject_btn'      => '✗ Odrzucam ofertę',
-        'portal_hint'     => 'Mogą Państwo również zalogować się do panelu klienta i odpowiedzieć tam:',
-        'portal_btn'      => 'Przejdź do panelu klienta',
         'contact'         => 'W razie pytań skontaktuj się z nami:',
     ],
 
@@ -36,18 +31,6 @@ return [
         'status'       => 'Status:',
         'status_value' => 'Nowe',
         'next_steps'   => 'Nasi doradcy przeanalizują Twoje zapytanie i skontaktują się z Tobą, aby omówić szczegóły i przygotować ofertę.',
-        'portal_btn'   => 'Moje zapytania',
-        'contact'      => 'W razie pytań skontaktuj się z nami:',
-    ],
-
-    'new_account' => [
-        'subject'      => 'Witamy w Wipro — Aktywacja konta',
-        'title'        => 'Wipro — Aktywacja konta',
-        'greeting'     => 'Dzień dobry,',
-        'intro'        => 'Dla adresu <strong>:email</strong> zostało automatycznie utworzone konto w systemie Wipro przy składaniu zapytania ofertowego.',
-        'set_password' => 'Aby aktywować konto i ustawić hasło, kliknij poniższy przycisk:',
-        'btn'          => 'Ustaw hasło i zaloguj się',
-        'expiry'       => 'Link jest ważny przez 60 minut.',
         'contact'      => 'W razie pytań skontaktuj się z nami:',
     ],
 

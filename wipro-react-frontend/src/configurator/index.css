@@ -1,0 +1,113 @@
+@import "tailwindcss/theme" layer(theme);
+@import "tailwindcss/utilities";
+
+:root {
+  --primary: #ffb400;
+  --secondary: #333333;
+  --background: #f4f6f8;
+  --white: #ffffff;
+  --black: #111111;
+  --grey: #808080;
+  --red: #db4f4f;
+  --greyOpacity: rgba(128, 128, 128, 0.24);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--background);
+  color: var(--black);
+}
+
+@keyframes conf-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+@keyframes conf-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.3); opacity: 0.6; }
+}
+
+.conf-spinner {
+  height: 50px; width: 50px;
+  border: 6px solid color-mix(in srgb, var(--primary), transparent 85%);
+  border-top: 6px solid var(--primary);
+  border-radius: 50%;
+  animation: conf-spin 1.5s linear infinite;
+  display: flex; justify-content: center; align-items: center;
+}
+.conf-spinner-dot {
+  height: 15px; width: 15px;
+  background-color: var(--primary);
+  border-radius: 50%;
+  animation: conf-pulse 1.5s ease-in-out infinite;
+}
+
+.conf-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary) #f0f0f0;
+}
+.conf-scroll::-webkit-scrollbar { height: 5px; }
+.conf-scroll::-webkit-scrollbar-track { background: #f0f0f0; border-radius: 10px; }
+.conf-scroll::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
+
+.conf-btn {
+  cursor: pointer;
+  padding: 10px 60px;
+  border: none;
+  border-radius: 15px;
+  color: var(--black);
+  z-index: 1;
+  background: var(--primary);
+  position: relative;
+  font-weight: 1000;
+  font-size: 17px;
+  box-shadow: 4px 8px 19px -3px rgba(0, 0, 0, 0.27);
+  transition: all 250ms;
+  overflow: hidden;
+  align-self: flex-end;
+}
+.conf-btn::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0;
+  height: 100%; width: 0;
+  border-radius: 15px;
+  background-color: var(--black);
+  z-index: -1;
+  box-shadow: 4px 8px 19px -3px rgba(0, 0, 0, 0.27);
+  transition: all 250ms;
+}
+.conf-btn:hover { color: var(--white); }
+.conf-btn:hover::before { width: 100%; }
+.conf-btn-right { align-self: flex-start; }
+.conf-btn-right::before { left: auto; right: 0; }
+
+.conf-input-wrap { position: relative; flex: 1; }
+.conf-input {
+  width: 100%; border: none;
+  border-bottom: 2px solid var(--primary);
+  font-size: 18px; padding-bottom: 2px; padding-left: 2px;
+  background: transparent;
+}
+.conf-input-err { border-bottom: 2px solid var(--red) !important; }
+.conf-input:focus {
+  outline: none;
+  border-image: linear-gradient(to right, var(--primary), var(--black));
+  border-image-slice: 1;
+}
+.conf-label {
+  position: absolute; top: 0; left: 5px;
+  color: var(--grey); transition: all 0.2s ease; cursor: text;
+}
+.conf-input-wrap:focus-within > .conf-label,
+.conf-input:not(:placeholder-shown) + .conf-label {
+  color: var(--primary); font-size: 15px;
+  transform: translateY(-23px); font-weight: 600; cursor: default;
+}
+
+@media (max-width: 600px) {
+  .conf-nav-step { clip-path: none !important; border-radius: 6px; }
+}
