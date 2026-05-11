@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Plus, ChevronDown, ChevronRight, Trash2, Save } from 'lucide-react'
+import { Plus, ChevronDown, ChevronRight, Trash2, Save, FileDown } from 'lucide-react'
 import { Card } from '@admin/components/Cards'
 import { Button } from '@admin/components/Button'
 import SkeletonLoader from '@admin/components/SkeletonLoader'
@@ -734,6 +734,61 @@ const ElevatorRow = ({ elevator, onUpdate, onDelete }: {
   const [newElement, setNewElement] = useState({ name: '', category: '', price: '' })
   const [addingElement, setAddingElement] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [localElevator, setLocalElevator] = useState(elevator)
+  const [drawingFiles, setDrawingFiles] = useState<{ standard: Record<string, File | null>; throughway: Record<string, File | null> }>({
+    standard: { pdf: null, dwg: null, bim: null },
+    throughway: { pdf: null, dwg: null, bim: null },
+  })
+  const [drawingDoc, setDrawingDoc] = useState({
+    standard: elevator.drawing_standard_doc ?? '',
+    throughway: elevator.drawing_throughway_doc ?? '',
+  })
+  const [uploadingDrawing, setUploadingDrawing] = useState<Record<string, boolean>>({})
+
+  const uploadDrawing = async (type: 'standard' | 'throughway') => {
+    const files = drawingFiles[type]
+    if (!files.pdf || !files.dwg || !files.bim) {
+      alert('Wgraj wszystkie 3 pliki (PDF, DWG, BIM).')
+      return
+    }
+    setUploadingDrawing(prev => ({ ...prev, [type]: true }))
+    try {
+      const token = authStore.getState().token
+      const fd = new FormData()
+      fd.append('pdf', files.pdf)
+      fd.append('dwg', files.dwg)
+      fd.append('bim', files.bim)
+      fd.append('doc', drawingDoc[type])
+      const res = await fetch(`${apiBase}/admin/elevators/${elevator.id}/drawings/${type}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
+        body: fd,
+      })
+      if (!res.ok) throw new Error('Upload failed')
+      const updated = await res.json()
+      setLocalElevator(updated)
+      setDrawingFiles(prev => ({ ...prev, [type]: { pdf: null, dwg: null, bim: null } }))
+    } catch {
+      alert('Błąd podczas wgrywania plików.')
+    } finally {
+      setUploadingDrawing(prev => ({ ...prev, [type]: false }))
+    }
+  }
+
+  const downloadDrawing = async (type: 'standard' | 'throughway', ext: 'pdf' | 'dwg' | 'bim') => {
+    const token = authStore.getState().token
+    const res = await fetch(`${apiBase}/admin/elevators/${elevator.id}/drawings/${type}/${ext}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    if (!res.ok) { alert('Plik niedostępny.'); return }
+    const blob = await res.blob()
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `rysunek-${type}-${elevator.model}.${ext}`
+    document.body.appendChild(a); a.click(); document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
 
   const loadElements = () => {
     if (elements.length > 0) return
@@ -910,6 +965,74 @@ const ElevatorRow = ({ elevator, onUpdate, onDelete }: {
                   <InlineEdit value={elevator.equipment ?? ''} onSave={v => onUpdate(elevator.id, 'equipment', v)} />
                 </div>
               </div>
+            </div>
+
+            {/* Rysunki */}
+            <div className="mt-5 pt-4 border-t border-gray-200">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Rysunki</p>
+              {(['standard', 'throughway'] as const).map(type => (
+                <div key={type} className="mt-4 first:mt-0">
+                  <p className="text-xs font-medium text-gray-600 mb-2">
+                    {type === 'standard' ? 'Kabina nieprzelotowa' : 'Kabina przelotowa'}
+                  </p>
+                  {/* Current files */}
+                  <div className="flex gap-2 mb-3 flex-wrap">
+                    {(['pdf', 'dwg', 'bim'] as const).map(ext => {
+                      const path = localElevator[`drawing_${type}_${ext}` as keyof typeof localElevator]
+                      return (
+                        <button
+                          key={ext}
+                          onClick={() => path ? downloadDrawing(type, ext) : undefined}
+                          disabled={!path}
+                          className={`flex items-center gap-1 text-xs px-3 py-1.5 rounded border transition-colors ${
+                            path
+                              ? 'border-amber-200 text-amber-700 hover:bg-amber-50 cursor-pointer'
+                              : 'border-gray-100 text-gray-300 cursor-default'
+                          }`}
+                        >
+                          <FileDown className="h-3 w-3" />
+                          {ext.toUpperCase()}
+                        </button>
+                      )
+                    })}
+                  </div>
+                  {/* Doc description */}
+                  {localElevator[`drawing_${type}_doc` as keyof typeof localElevator] && (
+                    <p className="text-xs text-gray-500 mb-3 italic">{String(localElevator[`drawing_${type}_doc` as keyof typeof localElevator])}</p>
+                  )}
+                  {/* Upload new set */}
+                  <div className="flex flex-wrap gap-2 items-end">
+                    {(['pdf', 'dwg', 'bim'] as const).map(ext => (
+                      <div key={ext} className="flex flex-col gap-1">
+                        <label className="text-xs text-gray-400">{ext.toUpperCase()}</label>
+                        <input
+                          type="file"
+                          accept={ext === 'pdf' ? '.pdf' : undefined}
+                          onChange={e => setDrawingFiles(prev => ({ ...prev, [type]: { ...prev[type], [ext]: e.target.files?.[0] ?? null } }))}
+                          className="text-xs text-gray-600 border border-gray-200 rounded px-2 py-1 w-40 bg-gray-50"
+                        />
+                      </div>
+                    ))}
+                    <div className="flex flex-col gap-1 flex-1 min-w-40">
+                      <label className="text-xs text-gray-400">Opis</label>
+                      <input
+                        type="text"
+                        value={drawingDoc[type]}
+                        onChange={e => setDrawingDoc(prev => ({ ...prev, [type]: e.target.value }))}
+                        className="border border-gray-200 rounded px-2 py-1.5 text-xs bg-gray-50 focus:outline-none focus:ring-1 focus:ring-amber-300"
+                        placeholder="Opis rysunku..."
+                      />
+                    </div>
+                    <Button
+                      size="sm"
+                      onClick={() => uploadDrawing(type)}
+                      disabled={uploadingDrawing[type]}
+                    >
+                      {uploadingDrawing[type] ? 'Wgrywanie...' : 'Wgraj'}
+                    </Button>
+                  </div>
+                </div>
+              ))}
             </div>
           </td>
         </tr>
