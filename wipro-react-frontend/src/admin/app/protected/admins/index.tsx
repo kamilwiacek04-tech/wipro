@@ -1,0 +1,223 @@
+import { useEffect, useState } from 'react'
+import { Card } from '@admin/components/Cards'
+import { Button } from '@admin/components/Button'
+import SkeletonLoader from '@admin/components/SkeletonLoader'
+import MainLayout from '@admin/components/layout/MainLayout'
+import MainHeader from '@admin/components/layout/MainHeader'
+import api from '@admin/store/axiosInstance'
+import { adminViewStore } from '@admin/store/zustand/adminViewStore'
+import { Plus, RefreshCw, Shield, Mail, ToggleLeft, ToggleRight, Trash2, X, Check } from 'lucide-react'
+
+interface Admin {
+  id: number
+  name: string
+  email: string
+  role: string
+  is_active: boolean
+  created_at: string
+}
+
+const AdminsPage = () => {
+  const [admins, setAdmins] = useState<Admin[]>([])
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [showForm, setShowForm] = useState(false)
+  const [form, setForm] = useState({ name: '', email: '', password: '' })
+  const [formError, setFormError] = useState('')
+
+  const load = () => {
+    setLoading(true)
+    api.get('/admin/admins')
+      .then(res => {
+        setAdmins(res.data)
+        adminViewStore.getState().setAdmins(res.data)
+      })
+      .finally(() => setLoading(false))
+  }
+
+  useEffect(() => { load() }, [])
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setFormError('')
+    setSaving(true)
+    try {
+      await api.post('/admin/admins', form)
+      setForm({ name: '', email: '', password: '' })
+      setShowForm(false)
+      load()
+    } catch (err: any) {
+      const msg = err?.response?.data?.message ?? 'Błąd podczas tworzenia admina'
+      setFormError(msg)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const toggleActive = async (admin: Admin) => {
+    setSaving(true)
+    try {
+      await api.patch(`/admin/admins/${admin.id}`, { is_active: !admin.is_active })
+      load()
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const deactivate = async (admin: Admin) => {
+    if (!confirm(`Czy na pewno chcesz dezaktywować konto ${admin.name}?`)) return
+    setSaving(true)
+    try {
+      await api.delete(`/admin/admins/${admin.id}`)
+      load()
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <MainLayout headerComponent={
+      <MainHeader title="Zarządzanie adminami" subTitle="Konta administratorów systemu">
+        <Button size="sm" variant="outline" onClick={() => load()}>
+          <RefreshCw className="h-4 w-4" />
+          Odśwież
+        </Button>
+        <Button size="sm" onClick={() => { setShowForm(true); setFormError('') }}>
+          <Plus className="h-4 w-4" />
+          Nowy admin
+        </Button>
+      </MainHeader>
+    }>
+      <div className="flex flex-col gap-6">
+
+        {/* Create form */}
+        {showForm && (
+          <Card className="p-6 gap-0">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="font-semibold text-gray-900">Nowe konto administratora</h3>
+              <button onClick={() => setShowForm(false)} className="text-gray-400 hover:text-gray-600 cursor-pointer">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <form onSubmit={handleCreate} className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">Imię i nazwisko</label>
+                <input
+                  type="text"
+                  required
+                  value={form.name}
+                  onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                  placeholder="Jan Kowalski"
+                  className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:bg-white"
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">Email</label>
+                <input
+                  type="email"
+                  required
+                  value={form.email}
+                  onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                  placeholder="jan@wipro.pl"
+                  className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:bg-white"
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">Hasło</label>
+                <input
+                  type="password"
+                  required
+                  minLength={8}
+                  value={form.password}
+                  onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+                  placeholder="min. 8 znaków"
+                  className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:bg-white"
+                />
+              </div>
+              {formError && (
+                <div className="sm:col-span-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                  {formError}
+                </div>
+              )}
+              <div className="sm:col-span-3 flex gap-2">
+                <Button type="submit" size="sm" disabled={saving}>
+                  <Check className="h-4 w-4" />
+                  {saving ? 'Tworzenie...' : 'Utwórz konto'}
+                </Button>
+                <Button type="button" variant="outline" size="sm" onClick={() => setShowForm(false)}>
+                  Anuluj
+                </Button>
+              </div>
+            </form>
+          </Card>
+        )}
+
+        {/* Admins list */}
+        <Card className="gap-0 overflow-hidden">
+          {loading ? (
+            <div className="p-6">
+              <SkeletonLoader count={4} />
+            </div>
+          ) : admins.length === 0 ? (
+            <div className="p-12 text-center text-gray-400 text-sm">Brak kont administratorów</div>
+          ) : (
+            <div className="divide-y divide-gray-100">
+              {admins.map(admin => (
+                <div key={admin.id} className={`flex items-center gap-4 px-5 py-4 ${!admin.is_active ? 'opacity-50' : ''}`}>
+                  <div
+                    className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold shrink-0"
+                    style={{ background: admin.role === 'superadmin' ? '#ffb400' : '#f3f4f6', color: admin.role === 'superadmin' ? '#111827' : '#6b7280' }}
+                  >
+                    {admin.name.charAt(0).toUpperCase()}
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium text-gray-900 truncate">{admin.name}</p>
+                      {admin.role === 'superadmin' && (
+                        <span className="flex items-center gap-1 text-xs font-medium px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">
+                          <Shield className="h-3 w-3" /> Superadmin
+                        </span>
+                      )}
+                      {!admin.is_active && (
+                        <span className="text-xs px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">Nieaktywny</span>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
+                      <Mail className="h-3 w-3" /> {admin.email}
+                    </p>
+                  </div>
+
+                  {admin.role !== 'superadmin' && (
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        onClick={() => toggleActive(admin)}
+                        disabled={saving}
+                        title={admin.is_active ? 'Dezaktywuj' : 'Aktywuj'}
+                        className="text-gray-400 hover:text-amber-500 disabled:opacity-50 cursor-pointer transition-colors"
+                      >
+                        {admin.is_active
+                          ? <ToggleRight className="h-6 w-6 text-amber-500" />
+                          : <ToggleLeft className="h-6 w-6" />}
+                      </button>
+                      <button
+                        onClick={() => deactivate(admin)}
+                        disabled={saving || !admin.is_active}
+                        title="Dezaktywuj konto"
+                        className="text-gray-300 hover:text-red-500 disabled:opacity-30 cursor-pointer transition-colors"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+      </div>
+    </MainLayout>
+  )
+}
+
+export default AdminsPage
