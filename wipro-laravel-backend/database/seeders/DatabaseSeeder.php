@@ -11,10 +11,9 @@ class DatabaseSeeder extends Seeder
         $this->call([
             UserSeeder::class,
             LiftTypeSeeder::class,
-            ElevatorSeeder::class,
-            ElevatorElementSeeder::class,
             QuoteRequestSeeder::class,
             OfferSeeder::class,
+            CabinAccessorySeeder::class,
         ]);
     }
 }

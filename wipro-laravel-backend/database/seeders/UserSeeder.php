@@ -14,7 +14,7 @@ class UserSeeder extends Seeder
         User::updateOrCreate(['email' => 'admin@wipro-wind.pl'], [
             'name' => 'Administrator WIPRO',
             'password' => Hash::make('Admin@2024!'),
-            'role' => 'admin',
+            'role' => 'superadmin',
             'is_active' => true,
             'company' => 'WIPRO Wind sp. z o.o.',
             'phone' => '+48 123 456 789',
