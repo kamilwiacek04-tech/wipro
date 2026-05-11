@@ -383,7 +383,7 @@ const AccessoriesTab = ({ onCountChange }: { onCountChange?: (n: number) => void
   const [newAccImagePreview, setNewAccImagePreview] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
-  useEffect(() => { onCountChange?.(accessories.length) }, [accessories.length])
+  useEffect(() => { onCountChange?.(accessories.filter(a => a.category !== 'EXTRA').length) }, [accessories.length])
 
   useEffect(() => {
     api.get('/admin/cabin-accessories').then(r => setAccessories(r.data)).finally(() => setLoading(false))
