@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AdminDashboardController;
+use App\Http\Controllers\Api\AdminManagementController;
 use App\Http\Controllers\Api\ElevFinderController;
 use App\Http\Controllers\Api\AdminQuoteRequestController;
 use App\Http\Controllers\Api\AdminUserController;
@@ -37,6 +38,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/quote-requests', [AdminQuoteRequestController::class, 'index']);
         Route::get('/quote-requests/{id}', [AdminQuoteRequestController::class, 'show']);
         Route::patch('/quote-requests/{id}', [AdminQuoteRequestController::class, 'update']);
+        Route::patch('/quote-requests/{id}/assign', [AdminQuoteRequestController::class, 'assign']);
         Route::post('/quote-requests/{id}/generate-offer', [AdminQuoteRequestController::class, 'generateOffer']);
         Route::patch('/offers/{offerId}', [AdminQuoteRequestController::class, 'updateOffer']);
         Route::post('/offers/{offerId}/cancel', [AdminQuoteRequestController::class, 'cancelOffer']);
@@ -56,9 +58,21 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::patch('/elevator-elements/{elementId}', [ElevatorController::class, 'updateElement']);
         Route::delete('/elevator-elements/{elementId}', [ElevatorController::class, 'destroyElement']);
 
+        // Elevator drawings
+        Route::post('/elevators/{id}/drawings/{type}', [ElevatorController::class, 'uploadDrawings']);
+        Route::get('/elevators/{id}/drawings/{type}/{ext}', [ElevatorController::class, 'downloadDrawing']);
+
         // Address book (users)
         Route::get('/users', [AdminUserController::class, 'index']);
         Route::get('/users/{id}', [AdminUserController::class, 'show']);
+
+        // Admin management (superadmin only)
+        Route::middleware('superadmin')->group(function () {
+            Route::get('/admins', [AdminManagementController::class, 'index']);
+            Route::post('/admins', [AdminManagementController::class, 'store']);
+            Route::patch('/admins/{id}', [AdminManagementController::class, 'update']);
+            Route::delete('/admins/{id}', [AdminManagementController::class, 'destroy']);
+        });
 
         // Lift types
         Route::get('/lift-types', [LiftTypeController::class, 'adminIndex']);
