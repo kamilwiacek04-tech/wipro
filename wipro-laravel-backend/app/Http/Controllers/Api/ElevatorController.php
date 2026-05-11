@@ -36,6 +36,20 @@ class ElevatorController extends Controller
             'base_price' => 'required|numeric|min:0',
             'description' => 'nullable|string',
             'is_active' => 'boolean',
+            'standards'          => 'nullable|string|max:255',
+            'machine_room'       => 'nullable|string|max:255',
+            'lifting_height'     => 'nullable|numeric|min:0',
+            'door_width'         => 'nullable|integer|min:1',
+            'door_height'        => 'nullable|integer|min:1',
+            'door_fire_class'    => 'nullable|string|max:100',
+            'shaft_construction' => 'nullable|string|max:255',
+            'shaft_ventilation'  => 'nullable|string|max:255',
+            'shaft_temperature'  => 'nullable|string|max:255',
+            'installation_type'  => 'nullable|string|max:255',
+            'cabin_finish'       => 'nullable|string|max:255',
+            'cabin_door_finish'  => 'nullable|string|max:255',
+            'landing_door_finish'=> 'nullable|string|max:255',
+            'equipment'          => 'nullable|string',
         ]);
 
         $elevator = Elevator::create($data);
@@ -71,6 +85,20 @@ class ElevatorController extends Controller
             'base_price' => 'sometimes|numeric|min:0',
             'description' => 'sometimes|nullable|string',
             'is_active' => 'sometimes|boolean',
+            'standards'          => 'sometimes|nullable|string|max:255',
+            'machine_room'       => 'sometimes|nullable|string|max:255',
+            'lifting_height'     => 'sometimes|nullable|numeric|min:0',
+            'door_width'         => 'sometimes|nullable|integer|min:1',
+            'door_height'        => 'sometimes|nullable|integer|min:1',
+            'door_fire_class'    => 'sometimes|nullable|string|max:100',
+            'shaft_construction' => 'sometimes|nullable|string|max:255',
+            'shaft_ventilation'  => 'sometimes|nullable|string|max:255',
+            'shaft_temperature'  => 'sometimes|nullable|string|max:255',
+            'installation_type'  => 'sometimes|nullable|string|max:255',
+            'cabin_finish'       => 'sometimes|nullable|string|max:255',
+            'cabin_door_finish'  => 'sometimes|nullable|string|max:255',
+            'landing_door_finish'=> 'sometimes|nullable|string|max:255',
+            'equipment'          => 'sometimes|nullable|string',
         ]);
 
         $elevator->update($data);
