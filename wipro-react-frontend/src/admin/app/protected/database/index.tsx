@@ -9,6 +9,7 @@ import InlineEdit from '@admin/components/InlineEdit'
 import api from '@admin/store/axiosInstance'
 import { useTranslation } from 'react-i18next'
 import { authStore } from '@admin/store/zustand/authStore'
+import { toast } from '@admin/store/zustand/toastStore'
 
 // ─── Settings helpers ─────────────────────────────────────────────────────────
 
@@ -1122,14 +1123,27 @@ const Database = () => {
   useEffect(() => { load() }, [])
 
   const updateElevator = async (id: number, field: string, value: string) => {
-    const payload: Record<string, string | boolean | number> = {}
+    const payload: Record<string, string | boolean | number | null> = {}
+    const nullableInts = ['shaft_width', 'shaft_depth', 'pit_depth', 'overhead', 'door_width', 'door_height']
+    const nullableFloats = ['base_price', 'lifting_height']
     if (field === 'is_active') payload[field] = value === '1'
-    else if (['capacity', 'persons', 'cabin_width', 'cabin_depth', 'cabin_height', 'shaft_width', 'shaft_depth', 'pit_depth', 'overhead', 'max_stops', 'door_width', 'door_height'].includes(field)) payload[field] = parseInt(value)
-    else if (['base_price', 'speed', 'lifting_height'].includes(field)) payload[field] = parseFloat(value)
-    else payload[field] = value
+    else if (['capacity', 'persons', 'cabin_width', 'cabin_depth', 'cabin_height', 'max_stops'].includes(field)) payload[field] = parseInt(value)
+    else if (nullableInts.includes(field)) payload[field] = value.trim() !== '' ? parseInt(value) : null
+    else if (['speed'].includes(field)) payload[field] = parseFloat(value)
+    else if (nullableFloats.includes(field)) payload[field] = value.trim() !== '' ? parseFloat(value) : null
+    else payload[field] = value.trim() !== '' ? value : null
 
-    await api.patch(`/admin/elevators/${id}`, payload)
-    setElevators(prev => prev.map(e => e.id === id ? { ...e, ...payload } as Elevator : e))
+    try {
+      await api.patch(`/admin/elevators/${id}`, payload)
+      setElevators(prev => prev.map(e => e.id === id ? { ...e, ...payload } as Elevator : e))
+    } catch (err: any) {
+      const errors = err?.response?.data?.errors as Record<string, string[]> | undefined
+      if (errors) {
+        Object.values(errors).forEach(msgs => toast.error(msgs[0]))
+      } else {
+        toast.error(err?.response?.data?.message ?? 'Błąd zapisu')
+      }
+    }
   }
 
   const deleteElevator = async (id: number) => {
@@ -1169,8 +1183,13 @@ const Database = () => {
       setForm(EMPTY_ELEVATOR)
       setShowAdd(false)
     } catch (err: any) {
-      const errors = err?.response?.data?.errors
-      if (errors) setFormErrors(errors)
+      const errors = err?.response?.data?.errors as Record<string, string[]> | undefined
+      if (errors) {
+        setFormErrors(errors)
+        Object.values(errors).forEach(msgs => toast.error(msgs[0]))
+      } else {
+        toast.error(err?.response?.data?.message ?? 'Błąd zapisu')
+      }
     } finally {
       setSaving(false)
     }
