@@ -106,7 +106,9 @@ class ElevFinderController extends Controller
             'id'              => $e->id,
             'udzwig'          => $e->capacity,
             'liczbaPasazerow' => (string) $e->persons,
-            'opis'            => trim("{$e->manufacturer} {$e->model}" . ($e->description ? ' – ' . $e->description : '')),
+            'model'           => $e->model,
+            'manufacturer'    => $e->manufacturer,
+            'opis'            => $e->description ?? '',
             'predkosc'        => number_format((float) $e->speed, 2, '.', ''),
         ])->values()->all();
     }
