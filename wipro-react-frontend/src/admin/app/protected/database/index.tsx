@@ -989,6 +989,12 @@ const Database = () => {
     required: true,
   })
 
+  const optInp = (key: keyof typeof form) => ({
+    value: form[key],
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => setForm(p => ({ ...p, [key]: e.target.value })),
+    className: 'w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-300',
+  })
+
   return (
     <MainLayout headerComponent={
       <MainHeader title={t('nav.database')} subTitle={tab === 'elevators' ? t('elevators.elevatorsCount', { count: elevators.length }) : undefined}>
@@ -1038,7 +1044,35 @@ const Database = () => {
               <div><label className="text-xs text-gray-500 mb-1 block">{t('elevators.maxStops')}</label><input {...inp('max_stops')} type="number" /></div>
               <div className="col-span-2"><label className="text-xs text-gray-500 mb-1 block">{t('elevators.basePriceNet')}</label><input {...inp('base_price')} type="number" step="0.01" /></div>
             </div>
-            <div className="flex gap-2">
+            {/* Technical parameters */}
+            <div className="border-t border-gray-100 pt-4 mt-2">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Parametry techniczne</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-3">
+                <div><label className="text-xs text-gray-500 mb-1 block">Normy</label><input {...optInp('standards')} /></div>
+                <div><label className="text-xs text-gray-500 mb-1 block">Maszynownia</label><input {...optInp('machine_room')} /></div>
+                <div><label className="text-xs text-gray-500 mb-1 block">Wys. podnoszenia [m]</label><input {...optInp('lifting_height')} type="number" step="0.01" /></div>
+                <div><label className="text-xs text-gray-500 mb-1 block">Szer. drzwi [mm]</label><input {...optInp('door_width')} type="number" /></div>
+                <div><label className="text-xs text-gray-500 mb-1 block">Wys. drzwi [mm]</label><input {...optInp('door_height')} type="number" /></div>
+                <div><label className="text-xs text-gray-500 mb-1 block">Klasa EI drzwi</label><input {...optInp('door_fire_class')} /></div>
+                <div><label className="text-xs text-gray-500 mb-1 block">Konstr. szybu</label><input {...optInp('shaft_construction')} /></div>
+                <div><label className="text-xs text-gray-500 mb-1 block">Wentylacja szybu</label><input {...optInp('shaft_ventilation')} /></div>
+                <div><label className="text-xs text-gray-500 mb-1 block">Temp. w szybie</label><input {...optInp('shaft_temperature')} /></div>
+                <div><label className="text-xs text-gray-500 mb-1 block">Montaż</label><input {...optInp('installation_type')} /></div>
+                <div><label className="text-xs text-gray-500 mb-1 block">Wystrój kabiny</label><input {...optInp('cabin_finish')} /></div>
+                <div><label className="text-xs text-gray-500 mb-1 block">Drzwi kabinowe</label><input {...optInp('cabin_door_finish')} /></div>
+                <div className="col-span-2"><label className="text-xs text-gray-500 mb-1 block">Drzwi przystankowe</label><input {...optInp('landing_door_finish')} /></div>
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">Wyposażenie</label>
+                <textarea
+                  value={form.equipment}
+                  onChange={e => setForm(p => ({ ...p, equipment: e.target.value }))}
+                  rows={3}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-300 resize-none"
+                />
+              </div>
+            </div>
+            <div className="flex gap-2 mt-4">
               <Button type="submit" size="sm" disabled={saving}>{saving ? t('common.saving') : t('elevators.add')}</Button>
               <Button type="button" variant="ghost" size="sm" onClick={() => setShowAdd(false)}>{t('common.cancel')}</Button>
             </div>
