@@ -704,6 +704,24 @@ interface Elevator {
   drawing_throughway_doc?: string | null
 }
 
+const TechField = ({ label, value, elevatorId, field, onSaved, type = 'text' }: {
+  label: string
+  value: string | number | null | undefined
+  elevatorId: number
+  field: string
+  onSaved: (elevatorId: number, field: string, value: string) => void
+  type?: string
+}) => (
+  <div>
+    <p className="text-xs text-gray-400 mb-0.5 uppercase tracking-wide">{label}</p>
+    <InlineEdit
+      value={value ?? ''}
+      type={type}
+      onSave={v => onSaved(elevatorId, field, v)}
+    />
+  </div>
+)
+
 const ElevatorRow = ({ elevator, onUpdate, onDelete }: {
   elevator: Elevator
   onUpdate: (id: number, field: string, value: string) => void
@@ -869,6 +887,30 @@ const ElevatorRow = ({ elevator, onUpdate, onDelete }: {
                 </button>
               </div>
             )}
+
+            {/* Dane techniczne */}
+            <div className="mt-5 pt-4 border-t border-gray-200">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Dane techniczne</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-3">
+                <TechField label="Normy" value={elevator.standards} elevatorId={elevator.id} field="standards" onSaved={onUpdate} />
+                <TechField label="Maszynownia" value={elevator.machine_room} elevatorId={elevator.id} field="machine_room" onSaved={onUpdate} />
+                <TechField label="Wys. podnoszenia [m]" value={elevator.lifting_height} elevatorId={elevator.id} field="lifting_height" type="number" onSaved={onUpdate} />
+                <TechField label="Szer. drzwi [mm]" value={elevator.door_width} elevatorId={elevator.id} field="door_width" type="number" onSaved={onUpdate} />
+                <TechField label="Wys. drzwi [mm]" value={elevator.door_height} elevatorId={elevator.id} field="door_height" type="number" onSaved={onUpdate} />
+                <TechField label="Klasa EI drzwi" value={elevator.door_fire_class} elevatorId={elevator.id} field="door_fire_class" onSaved={onUpdate} />
+                <TechField label="Konstr. szybu" value={elevator.shaft_construction} elevatorId={elevator.id} field="shaft_construction" onSaved={onUpdate} />
+                <TechField label="Wentylacja szybu" value={elevator.shaft_ventilation} elevatorId={elevator.id} field="shaft_ventilation" onSaved={onUpdate} />
+                <TechField label="Temp. w szybie" value={elevator.shaft_temperature} elevatorId={elevator.id} field="shaft_temperature" onSaved={onUpdate} />
+                <TechField label="Montaż" value={elevator.installation_type} elevatorId={elevator.id} field="installation_type" onSaved={onUpdate} />
+                <TechField label="Wystrój kabiny" value={elevator.cabin_finish} elevatorId={elevator.id} field="cabin_finish" onSaved={onUpdate} />
+                <TechField label="Drzwi kabinowe" value={elevator.cabin_door_finish} elevatorId={elevator.id} field="cabin_door_finish" onSaved={onUpdate} />
+                <TechField label="Drzwi przystankowe" value={elevator.landing_door_finish} elevatorId={elevator.id} field="landing_door_finish" onSaved={onUpdate} />
+                <div className="col-span-2 sm:col-span-3 lg:col-span-4">
+                  <p className="text-xs text-gray-400 mb-0.5 uppercase tracking-wide">Wyposażenie</p>
+                  <InlineEdit value={elevator.equipment ?? ''} onSave={v => onUpdate(elevator.id, 'equipment', v)} />
+                </div>
+              </div>
+            </div>
           </td>
         </tr>
       )}
@@ -940,8 +982,8 @@ const Database = () => {
   const updateElevator = async (id: number, field: string, value: string) => {
     const payload: Record<string, string | boolean | number> = {}
     if (field === 'is_active') payload[field] = value === '1'
-    else if (['capacity', 'persons', 'cabin_width', 'cabin_depth', 'cabin_height', 'shaft_width', 'shaft_depth', 'pit_depth', 'overhead', 'max_stops'].includes(field)) payload[field] = parseInt(value)
-    else if (['base_price', 'speed'].includes(field)) payload[field] = parseFloat(value)
+    else if (['capacity', 'persons', 'cabin_width', 'cabin_depth', 'cabin_height', 'shaft_width', 'shaft_depth', 'pit_depth', 'overhead', 'max_stops', 'door_width', 'door_height'].includes(field)) payload[field] = parseInt(value)
+    else if (['base_price', 'speed', 'lifting_height'].includes(field)) payload[field] = parseFloat(value)
     else payload[field] = value
 
     await api.patch(`/admin/elevators/${id}`, payload)
