@@ -64,8 +64,8 @@ const AdminsPage = () => {
     }
   }
 
-  const deactivate = async (admin: Admin) => {
-    if (!confirm(`Czy na pewno chcesz dezaktywować konto ${admin.name}?`)) return
+  const deleteAdmin = async (admin: Admin) => {
+    if (!confirm(`Czy na pewno chcesz usunąć konto ${admin.name}?`)) return
     setSaving(true)
     try {
       await api.delete(`/admin/admins/${admin.id}`)
@@ -201,9 +201,9 @@ const AdminsPage = () => {
                           : <ToggleLeft className="h-6 w-6" />}
                       </button>
                       <button
-                        onClick={() => deactivate(admin)}
-                        disabled={saving || !admin.is_active}
-                        title="Dezaktywuj konto"
+                        onClick={() => deleteAdmin(admin)}
+                        disabled={saving}
+                        title="Usuń konto"
                         className="text-gray-300 hover:text-red-500 disabled:opacity-30 cursor-pointer transition-colors"
                       >
                         <Trash2 className="h-4 w-4" />
