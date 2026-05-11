@@ -7,6 +7,7 @@ use App\Models\Elevator;
 use App\Models\ElevatorElement;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ElevatorController extends Controller
 {
@@ -111,6 +112,55 @@ class ElevatorController extends Controller
         $elevator = Elevator::findOrFail($id);
         $elevator->delete();
         return response()->json(['message' => 'Deleted']);
+    }
+
+    public function uploadDrawings(Request $request, int $id, string $type): JsonResponse
+    {
+        abort_if(!in_array($type, ['standard', 'throughway']), 422, 'Invalid drawing type.');
+
+        $elevator = Elevator::findOrFail($id);
+
+        $request->validate([
+            'pdf' => 'required|file|mimes:pdf|max:20480',
+            'dwg' => 'required|file|max:20480',
+            'bim' => 'required|file|max:20480',
+            'doc' => 'nullable|string',
+        ]);
+
+        $dir = "elevator-drawings/{$id}/{$type}";
+
+        foreach (['pdf', 'dwg', 'bim'] as $ext) {
+            $existing = $elevator->{"drawing_{$type}_{$ext}"};
+            if ($existing && Storage::exists($existing)) {
+                Storage::delete($existing);
+            }
+        }
+
+        $paths = [];
+        foreach (['pdf', 'dwg', 'bim'] as $ext) {
+            $paths["drawing_{$type}_{$ext}"] = $request->file($ext)->storeAs(
+                $dir,
+                $request->file($ext)->getClientOriginalName()
+            );
+        }
+        $paths["drawing_{$type}_doc"] = $request->input('doc');
+
+        $elevator->update($paths);
+
+        return response()->json($elevator->fresh());
+    }
+
+    public function downloadDrawing(int $id, string $type, string $ext): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    {
+        abort_if(!in_array($type, ['standard', 'throughway']), 422, 'Invalid drawing type.');
+        abort_if(!in_array($ext, ['pdf', 'dwg', 'bim']), 422, 'Invalid file extension.');
+
+        $elevator = Elevator::findOrFail($id);
+        $path = $elevator->{"drawing_{$type}_{$ext}"};
+
+        abort_if(!$path || !Storage::exists($path), 404, 'File not found.');
+
+        return response()->download(Storage::path($path));
     }
 
     // Elements
