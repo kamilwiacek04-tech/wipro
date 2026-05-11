@@ -122,13 +122,15 @@ const DetailsEditor = ({ value, onChange }: { value: DetailRow[]; onChange: (v: 
 }
 
 // ─── Lift types tab ───────────────────────────────────────────────────────────
-const LiftTypesTab = () => {
+const LiftTypesTab = ({ onCountChange }: { onCountChange?: (n: number) => void }) => {
   const { t } = useTranslation()
   const [liftTypes, setLiftTypes] = useState<LiftType[]>([])
   const [loading, setLoading] = useState(true)
   const [showAdd, setShowAdd] = useState(false)
   const [newType, setNewType] = useState({ key: '', name_pl: '', name_en: '', sort_order: 0 })
   const [saving, setSaving] = useState(false)
+
+  useEffect(() => { onCountChange?.(liftTypes.length) }, [liftTypes.length])
 
   useEffect(() => {
     api.get('/admin/lift-types').then(r => setLiftTypes(r.data)).finally(() => setLoading(false))
@@ -216,7 +218,7 @@ const LiftTypesTab = () => {
 // ─── Cabin models tab ─────────────────────────────────────────────────────────
 const EMPTY_CABIN = { name_pl: '', name_en: '', sort_order: 0 }
 
-const CabinModelsTab = () => {
+const CabinModelsTab = ({ onCountChange }: { onCountChange?: (n: number) => void }) => {
   const { t } = useTranslation()
   const [models, setModels] = useState<CabinModel[]>([])
   const [loading, setLoading] = useState(true)
@@ -228,6 +230,8 @@ const CabinModelsTab = () => {
   const [saving, setSaving] = useState(false)
   const [expandedId, setExpandedId] = useState<number | null>(null)
   const [editingDetails, setEditingDetails] = useState<DetailRow[]>([])
+
+  useEffect(() => { onCountChange?.(models.length) }, [models.length])
 
   useEffect(() => {
     api.get('/admin/cabin-models').then(r => setModels(r.data)).finally(() => setLoading(false))
@@ -369,7 +373,7 @@ const CabinModelsTab = () => {
 // ─── Accessories tab ──────────────────────────────────────────────────────────
 const EMPTY_ACC = { category: 'PANEL', name_pl: '', name_en: '', sort_order: 0 }
 
-const AccessoriesTab = () => {
+const AccessoriesTab = ({ onCountChange }: { onCountChange?: (n: number) => void }) => {
   const { t } = useTranslation()
   const [accessories, setAccessories] = useState<CabinAccessory[]>([])
   const [loading, setLoading] = useState(true)
@@ -378,6 +382,8 @@ const AccessoriesTab = () => {
   const [newAccImageFile, setNewAccImageFile] = useState<File | null>(null)
   const [newAccImagePreview, setNewAccImagePreview] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+
+  useEffect(() => { onCountChange?.(accessories.length) }, [accessories.length])
 
   useEffect(() => {
     api.get('/admin/cabin-accessories').then(r => setAccessories(r.data)).finally(() => setLoading(false))
@@ -510,13 +516,15 @@ const AccessoriesTab = () => {
 // ─── Extras tab ───────────────────────────────────────────────────────────────
 const EMPTY_EXTRA = { name_pl: '', name_en: '', sort_order: 0 }
 
-const ExtrasTab = () => {
+const ExtrasTab = ({ onCountChange }: { onCountChange?: (n: number) => void }) => {
   const { t } = useTranslation()
   const [extras, setExtras] = useState<CabinAccessory[]>([])
   const [loading, setLoading] = useState(true)
   const [showAdd, setShowAdd] = useState(false)
   const [newExtra, setNewExtra] = useState(EMPTY_EXTRA)
   const [saving, setSaving] = useState(false)
+
+  useEffect(() => { onCountChange?.(extras.length) }, [extras.length])
 
   useEffect(() => {
     api.get('/admin/cabin-accessories')
@@ -1084,6 +1092,15 @@ const DB_TABS: { id: DatabaseTab; label: string }[] = [
   { id: 'general', label: 'Ogólne' },
 ]
 
+const TAB_SUBTITLES: Record<DatabaseTab, (n: number) => string> = {
+  'elevators':     n => `${n} wind w bazie`,
+  'lift-types':    n => `${n} typów wind w bazie`,
+  'cabin-models':  n => `${n} modeli kabin w bazie`,
+  'accessories':   n => `${n} akcesoriów w bazie`,
+  'extras':        n => `${n} dodatków w bazie`,
+  'general':       _  => 'Ustawienia ogólne',
+}
+
 const Database = () => {
   const { t } = useTranslation()
   const [elevators, setElevators] = useState<Elevator[]>([])
@@ -1092,6 +1109,7 @@ const Database = () => {
   const [form, setForm] = useState(EMPTY_ELEVATOR)
   const [saving, setSaving] = useState(false)
   const [tab, setTab] = useState<DatabaseTab>('elevators')
+  const [counts, setCounts] = useState<Partial<Record<DatabaseTab, number>>>({})
 
   const load = () => {
     setLoading(true)
@@ -1162,7 +1180,7 @@ const Database = () => {
 
   return (
     <MainLayout headerComponent={
-      <MainHeader title={t('nav.database')} subTitle={tab === 'elevators' ? t('elevators.elevatorsCount', { count: elevators.length }) : undefined}>
+      <MainHeader title={t('nav.database')} subTitle={TAB_SUBTITLES[tab](tab === 'elevators' ? elevators.length : (counts[tab] ?? 0))}>
         {tab === 'elevators' && (
           <Button size="sm" onClick={() => setShowAdd(!showAdd)}>
             <Plus className="h-4 w-4" />
@@ -1287,10 +1305,10 @@ const Database = () => {
         </Card>
       )}
 
-      {tab === 'lift-types' && <LiftTypesTab />}
-      {tab === 'cabin-models' && <CabinModelsTab />}
-      {tab === 'accessories' && <AccessoriesTab />}
-      {tab === 'extras' && <ExtrasTab />}
+      {tab === 'lift-types' && <LiftTypesTab onCountChange={n => setCounts(p => ({ ...p, 'lift-types': n }))} />}
+      {tab === 'cabin-models' && <CabinModelsTab onCountChange={n => setCounts(p => ({ ...p, 'cabin-models': n }))} />}
+      {tab === 'accessories' && <AccessoriesTab onCountChange={n => setCounts(p => ({ ...p, 'accessories': n }))} />}
+      {tab === 'extras' && <ExtrasTab onCountChange={n => setCounts(p => ({ ...p, 'extras': n }))} />}
       {tab === 'general' && <GeneralTab />}
     </MainLayout>
   )
