@@ -9,14 +9,16 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('quote_requests', function (Blueprint $table) {
-            $table->string('investment_city')->nullable()->after('investment_address');
+            $table->unsignedBigInteger('assigned_admin_id')->nullable()->after('user_id');
+            $table->foreign('assigned_admin_id')->references('id')->on('users')->nullOnDelete();
         });
     }
 
     public function down(): void
     {
         Schema::table('quote_requests', function (Blueprint $table) {
-            $table->dropColumn('investment_city');
+            $table->dropForeign(['assigned_admin_id']);
+            $table->dropColumn('assigned_admin_id');
         });
     }
 };
