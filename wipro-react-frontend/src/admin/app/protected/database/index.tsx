@@ -1108,6 +1108,7 @@ const Database = () => {
   const [showAdd, setShowAdd] = useState(false)
   const [form, setForm] = useState(EMPTY_ELEVATOR)
   const [saving, setSaving] = useState(false)
+  const [formErrors, setFormErrors] = useState<Record<string, string[]>>({})
   const [tab, setTab] = useState<DatabaseTab>('elevators')
   const [counts, setCounts] = useState<Partial<Record<DatabaseTab, number>>>({})
 
@@ -1140,7 +1141,10 @@ const Database = () => {
   const addElevator = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
+    setFormErrors({})
     try {
+      const num = (v: string) => v !== '' ? parseInt(v) : null
+      const flt = (v: string) => v !== '' ? parseFloat(v) : null
       const res = await api.post('/admin/elevators', {
         ...form,
         capacity: parseInt(form.capacity),
@@ -1148,18 +1152,25 @@ const Database = () => {
         cabin_width: parseInt(form.cabin_width),
         cabin_depth: parseInt(form.cabin_depth),
         cabin_height: parseInt(form.cabin_height),
-        shaft_width: parseInt(form.shaft_width),
-        shaft_depth: parseInt(form.shaft_depth),
-        pit_depth: parseInt(form.pit_depth),
-        overhead: parseInt(form.overhead),
+        shaft_width: num(form.shaft_width),
+        shaft_depth: num(form.shaft_depth),
+        pit_depth: num(form.pit_depth),
+        overhead: num(form.overhead),
         speed: parseFloat(form.speed),
+        drive_type: form.drive_type || null,
         max_stops: parseInt(form.max_stops),
-        base_price: parseFloat(form.base_price),
+        base_price: flt(form.base_price),
+        lifting_height: flt(form.lifting_height),
+        door_width: num(form.door_width),
+        door_height: num(form.door_height),
         is_active: true,
       })
       setElevators(prev => [res.data, ...prev])
       setForm(EMPTY_ELEVATOR)
       setShowAdd(false)
+    } catch (err: any) {
+      const errors = err?.response?.data?.errors
+      if (errors) setFormErrors(errors)
     } finally {
       setSaving(false)
     }
@@ -1211,21 +1222,57 @@ const Database = () => {
           <h3 className="font-medium text-gray-900 mb-4">{t('elevators.newElevator')}</h3>
           <form onSubmit={addElevator}>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-4">
-              <div><label className="text-xs text-gray-500 mb-1 block">{t('elevators.manufacturer')}</label><input {...inp('manufacturer')} /></div>
-              <div><label className="text-xs text-gray-500 mb-1 block">{t('elevators.model')}</label><input {...inp('model')} /></div>
-              <div><label className="text-xs text-gray-500 mb-1 block">{t('elevators.capacityKg')}</label><input {...inp('capacity')} type="number" /></div>
-              <div><label className="text-xs text-gray-500 mb-1 block">{t('elevators.persons')}</label><input {...inp('persons')} type="number" /></div>
-              <div><label className="text-xs text-gray-500 mb-1 block">{t('elevators.cabinWidth')}</label><input {...inp('cabin_width')} type="number" /></div>
-              <div><label className="text-xs text-gray-500 mb-1 block">{t('elevators.cabinDepth')}</label><input {...inp('cabin_depth')} type="number" /></div>
-              <div><label className="text-xs text-gray-500 mb-1 block">{t('elevators.cabinHeight')}</label><input {...inp('cabin_height')} type="number" /></div>
-              <div><label className="text-xs text-gray-500 mb-1 block">{t('elevators.shaftWidth')}</label><input {...inp('shaft_width')} type="number" /></div>
-              <div><label className="text-xs text-gray-500 mb-1 block">{t('elevators.shaftDepth')}</label><input {...inp('shaft_depth')} type="number" /></div>
-              <div><label className="text-xs text-gray-500 mb-1 block">{t('elevators.pitDepth')}</label><input {...inp('pit_depth')} type="number" /></div>
-              <div><label className="text-xs text-gray-500 mb-1 block">{t('elevators.overhead')}</label><input {...inp('overhead')} type="number" /></div>
-              <div><label className="text-xs text-gray-500 mb-1 block">{t('elevators.speedMs')}</label><input {...inp('speed')} type="number" step="0.1" /></div>
-              <div><label className="text-xs text-gray-500 mb-1 block">{t('elevators.driveType')}</label><input {...inp('drive_type')} /></div>
-              <div><label className="text-xs text-gray-500 mb-1 block">{t('elevators.maxStops')}</label><input {...inp('max_stops')} type="number" /></div>
-              <div className="col-span-2"><label className="text-xs text-gray-500 mb-1 block">{t('elevators.basePriceNet')}</label><input {...inp('base_price')} type="number" step="0.01" /></div>
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">{t('elevators.manufacturer')}</label>
+                <input {...inp('manufacturer')} />
+                {formErrors.manufacturer && <p className="text-xs text-red-500 mt-0.5">{formErrors.manufacturer[0]}</p>}
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">{t('elevators.model')}</label>
+                <input {...inp('model')} />
+                {formErrors.model && <p className="text-xs text-red-500 mt-0.5">{formErrors.model[0]}</p>}
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">{t('elevators.capacityKg')}</label>
+                <input {...inp('capacity')} type="number" />
+                {formErrors.capacity && <p className="text-xs text-red-500 mt-0.5">{formErrors.capacity[0]}</p>}
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">{t('elevators.persons')}</label>
+                <input {...inp('persons')} type="number" />
+                {formErrors.persons && <p className="text-xs text-red-500 mt-0.5">{formErrors.persons[0]}</p>}
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">{t('elevators.cabinWidth')}</label>
+                <input {...inp('cabin_width')} type="number" />
+                {formErrors.cabin_width && <p className="text-xs text-red-500 mt-0.5">{formErrors.cabin_width[0]}</p>}
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">{t('elevators.cabinDepth')}</label>
+                <input {...inp('cabin_depth')} type="number" />
+                {formErrors.cabin_depth && <p className="text-xs text-red-500 mt-0.5">{formErrors.cabin_depth[0]}</p>}
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">{t('elevators.cabinHeight')}</label>
+                <input {...inp('cabin_height')} type="number" />
+                {formErrors.cabin_height && <p className="text-xs text-red-500 mt-0.5">{formErrors.cabin_height[0]}</p>}
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">{t('elevators.speedMs')}</label>
+                <input {...inp('speed')} type="number" step="0.1" />
+                {formErrors.speed && <p className="text-xs text-red-500 mt-0.5">{formErrors.speed[0]}</p>}
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">{t('elevators.maxStops')}</label>
+                <input {...inp('max_stops')} type="number" />
+                {formErrors.max_stops && <p className="text-xs text-red-500 mt-0.5">{formErrors.max_stops[0]}</p>}
+              </div>
+              <div><label className="text-xs text-gray-500 mb-1 block">{t('elevators.shaftWidth')} <span className="text-gray-300">(opcj.)</span></label><input {...optInp('shaft_width')} type="number" /></div>
+              <div><label className="text-xs text-gray-500 mb-1 block">{t('elevators.shaftDepth')} <span className="text-gray-300">(opcj.)</span></label><input {...optInp('shaft_depth')} type="number" /></div>
+              <div><label className="text-xs text-gray-500 mb-1 block">{t('elevators.pitDepth')} <span className="text-gray-300">(opcj.)</span></label><input {...optInp('pit_depth')} type="number" /></div>
+              <div><label className="text-xs text-gray-500 mb-1 block">{t('elevators.overhead')} <span className="text-gray-300">(opcj.)</span></label><input {...optInp('overhead')} type="number" /></div>
+              <div><label className="text-xs text-gray-500 mb-1 block">{t('elevators.driveType')} <span className="text-gray-300">(opcj.)</span></label><input {...optInp('drive_type')} /></div>
+              <div className="col-span-2"><label className="text-xs text-gray-500 mb-1 block">{t('elevators.basePriceNet')} <span className="text-gray-300">(opcj.)</span></label><input {...optInp('base_price')} type="number" step="0.01" /></div>
             </div>
             {/* Technical parameters */}
             <div className="border-t border-gray-100 pt-4 mt-2">

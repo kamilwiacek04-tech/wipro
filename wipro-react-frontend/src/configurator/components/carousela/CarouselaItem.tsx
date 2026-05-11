@@ -25,15 +25,19 @@ const CarouselaItem = ({item, currentValue, onChange, onDetails}: Props) => {
       ].join(' ')}
       onClick={() => onChange?.(item.id)}
     >
-      <div className="flex flex-col items-center gap-1 py-[18px] px-3 w-full">
-        <span className="text-[36px] leading-none">🛗</span>
-        <p className="text-[15px] font-bold text-[var(--secondary)] m-0">{item.udzwig} kg</p>
+      <div className="flex flex-col items-center gap-1 pt-[14px] pb-[10px] px-3 w-full">
+        <span className="text-[28px] leading-none">🛗</span>
+        <p className="text-[13px] font-bold text-[var(--secondary)] m-0 text-center leading-tight">{item.manufacturer} {item.model}</p>
         {isSelected && (
           <span className="inline-flex items-center justify-center w-[18px] h-[18px] bg-[var(--primary)] text-[var(--secondary)] rounded-full text-[11px] font-bold mt-0.5">✓</span>
         )}
       </div>
 
       <div className="flex flex-col w-full border-t border-[#f0f0f0] flex-1">
+        <div className="flex justify-between items-center py-[5px] px-3 border-b border-[#f5f5f5]">
+          <span className="text-[11px] text-[var(--grey)]">{t('elevatorDetail.capacity')}</span>
+          <span className="text-[12px] font-semibold text-[var(--secondary)]">{item.udzwig} kg</span>
+        </div>
         <div className="flex justify-between items-center py-[5px] px-3 border-b border-[#f5f5f5]">
           <span className="text-[11px] text-[var(--grey)]">{t('form.shaftParameters.carousel.numberOfPassengers')}</span>
           <span className="text-[12px] font-semibold text-[var(--secondary)]">{item.liczbaPasazerow}</span>

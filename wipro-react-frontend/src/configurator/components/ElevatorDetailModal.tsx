@@ -17,16 +17,31 @@ interface ElevatorDetail {
   cabin_width: number
   cabin_depth: number
   cabin_height: number
-  shaft_width: number
-  shaft_depth: number
-  pit_depth: number
-  overhead: number
+  shaft_width: number | null
+  shaft_depth: number | null
+  pit_depth: number | null
+  overhead: number | null
   speed: string
-  drive_type: string
+  drive_type: string | null
   max_stops: number
-  base_price: string
+  base_price: string | null
   description: string | null
   elements: ElevatorElement[]
+  // Technical fields
+  standards?: string | null
+  machine_room?: string | null
+  lifting_height?: string | null
+  door_width?: number | null
+  door_height?: number | null
+  door_fire_class?: string | null
+  shaft_construction?: string | null
+  shaft_ventilation?: string | null
+  shaft_temperature?: string | null
+  installation_type?: string | null
+  cabin_finish?: string | null
+  cabin_door_finish?: string | null
+  landing_door_finish?: string | null
+  equipment?: string | null
 }
 
 interface Props {
@@ -87,27 +102,51 @@ const ElevatorDetailModal = ({ elevatorId, onClose }: Props) => {
               <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: '#999', lineHeight: 1 }}>×</button>
             </div>
 
-            <div style={{ background: '#fffbeb', border: '1px solid #ffe08a', borderRadius: 8, padding: '12px 16px', marginBottom: 20 }}>
-              <p style={{ fontSize: 13, color: '#92400e', margin: 0 }}>
-                {t('elevatorDetail.basePrice')}: <strong>{price(data.base_price)}</strong>
-              </p>
-            </div>
-
             <h3 style={{ fontSize: 14, fontWeight: 600, color: '#555', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('elevatorDetail.params')}</h3>
             <Row label={t('elevatorDetail.capacity')} value={`${data.capacity} kg`} />
             <Row label={t('elevatorDetail.persons')} value={fmt(data.persons)} />
             <Row label={t('elevatorDetail.speed')} value={`${data.speed} m/s`} />
-            <Row label={t('elevatorDetail.driveType')} value={fmt(data.drive_type)} />
+            {data.drive_type && <Row label={t('elevatorDetail.driveType')} value={fmt(data.drive_type)} />}
             <Row label={t('elevatorDetail.maxStops')} value={fmt(data.max_stops)} />
+            {data.base_price && (
+              <Row label={t('elevatorDetail.basePrice')} value={Number(data.base_price).toLocaleString('pl-PL', { style: 'currency', currency: 'PLN' })} />
+            )}
 
             <h3 style={{ fontSize: 14, fontWeight: 600, color: '#555', margin: '16px 0 8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('elevatorDetail.dimensions')}</h3>
-            <Row label={t('elevatorDetail.shaftWidth')} value={`${data.shaft_width} mm`} />
-            <Row label={t('elevatorDetail.shaftDepth')} value={`${data.shaft_depth} mm`} />
             <Row label={t('elevatorDetail.cabinWidth')} value={`${data.cabin_width} mm`} />
             <Row label={t('elevatorDetail.cabinDepth')} value={`${data.cabin_depth} mm`} />
             <Row label={t('elevatorDetail.cabinHeight')} value={`${data.cabin_height} mm`} />
-            <Row label={t('elevatorDetail.pitDepth')} value={`${data.pit_depth} mm`} />
-            <Row label={t('elevatorDetail.overhead')} value={`${data.overhead} mm`} />
+            {data.shaft_width != null && <Row label={t('elevatorDetail.shaftWidth')} value={`${data.shaft_width} mm`} />}
+            {data.shaft_depth != null && <Row label={t('elevatorDetail.shaftDepth')} value={`${data.shaft_depth} mm`} />}
+            {data.pit_depth != null && <Row label={t('elevatorDetail.pitDepth')} value={`${data.pit_depth} mm`} />}
+            {data.overhead != null && <Row label={t('elevatorDetail.overhead')} value={`${data.overhead} mm`} />}
+            {data.lifting_height && <Row label="Wys. podnoszenia" value={`${data.lifting_height} m`} />}
+
+            {(data.standards || data.machine_room || data.door_width || data.door_height || data.door_fire_class ||
+              data.shaft_construction || data.shaft_ventilation || data.shaft_temperature ||
+              data.installation_type || data.cabin_finish || data.cabin_door_finish || data.landing_door_finish) && (
+              <>
+                <h3 style={{ fontSize: 14, fontWeight: 600, color: '#555', margin: '16px 0 8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Parametry techniczne</h3>
+                {data.standards && <Row label="Normy" value={data.standards} />}
+                {data.machine_room && <Row label="Maszynownia" value={data.machine_room} />}
+                {data.door_width != null && <Row label="Szer. drzwi" value={`${data.door_width} mm`} />}
+                {data.door_height != null && <Row label="Wys. drzwi" value={`${data.door_height} mm`} />}
+                {data.door_fire_class && <Row label="Klasa EI drzwi" value={data.door_fire_class} />}
+                {data.shaft_construction && <Row label="Konstr. szybu" value={data.shaft_construction} />}
+                {data.shaft_ventilation && <Row label="Wentylacja szybu" value={data.shaft_ventilation} />}
+                {data.shaft_temperature && <Row label="Temp. w szybie" value={data.shaft_temperature} />}
+                {data.installation_type && <Row label="Montaż" value={data.installation_type} />}
+                {data.cabin_finish && <Row label="Wystrój kabiny" value={data.cabin_finish} />}
+                {data.cabin_door_finish && <Row label="Drzwi kabinowe" value={data.cabin_door_finish} />}
+                {data.landing_door_finish && <Row label="Drzwi przystankowe" value={data.landing_door_finish} />}
+              </>
+            )}
+            {data.equipment && (
+              <>
+                <h3 style={{ fontSize: 14, fontWeight: 600, color: '#555', margin: '16px 0 8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Wyposażenie</h3>
+                <p style={{ fontSize: 13, color: '#555', margin: 0, whiteSpace: 'pre-wrap' }}>{data.equipment}</p>
+              </>
+            )}
 
             {data.elements.length > 0 && (
               <>
