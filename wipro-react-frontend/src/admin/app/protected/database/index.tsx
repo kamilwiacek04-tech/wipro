@@ -654,7 +654,7 @@ const GeneralTab = () => {
   const [savedPricing, setSavedPricing] = useState(false)
 
   useEffect(() => {
-    api.get('/admin/settings').then(r => {
+    api.get('/settings').then(r => {
       const d = r.data
       setMaxStops(parseInt(d.max_stops ?? '16'))
       setCompanyName(d.company_name ?? '')

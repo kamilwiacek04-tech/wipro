@@ -5,217 +5,289 @@
 <title>Oferta {{ $offer->offer_number }}</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
-body { font-family: DejaVu Sans, sans-serif; font-size:10px; color:#1a1a2e; line-height:1.5; }
-.accent { background:#ffb400; height:6px; }
-.header { display:table; width:100%; padding:18px 32px 14px; border-bottom:1px solid #eee; }
-.h-left { display:table-cell; vertical-align:middle; width:55%; }
-.h-right { display:table-cell; vertical-align:middle; text-align:right; }
-.logo-img { max-height:55px; max-width:180px; }
-.company-name { font-size:22px; font-weight:bold; color:#1a1a2e; letter-spacing:2px; }
-.company-meta { font-size:8px; color:#888; margin-top:4px; line-height:1.7; }
-.badge { display:inline-block; background:#ffb400; color:#1a1a2e; font-size:7px; font-weight:bold; letter-spacing:1.5px; text-transform:uppercase; padding:3px 12px; border-radius:20px; margin-bottom:4px; }
-.offer-num { font-size:14px; font-weight:bold; }
-.offer-meta { font-size:8px; color:#888; margin-top:2px; }
-.body { padding:0 32px 20px; }
-.section { margin-top:16px; }
-.section-title { font-size:7px; font-weight:bold; letter-spacing:1.5px; text-transform:uppercase; color:#ffb400; border-bottom:2px solid #ffb400; padding-bottom:3px; margin-bottom:10px; }
-.two-col { display:table; width:100%; }
-.col { display:table-cell; width:50%; vertical-align:top; }
-.col-r { padding-left:16px; }
-.info-row { display:table; width:100%; margin-bottom:4px; }
-.info-label { display:table-cell; width:42%; font-size:8px; color:#888; }
-.info-value { display:table-cell; font-size:10px; font-weight:bold; }
-table.items { width:100%; border-collapse:collapse; margin-top:6px; font-size:9px; }
-table.items th { text-align:left; color:#888; border-bottom:1px solid #ddd; padding:4px 6px; font-weight:normal; font-size:8px; }
-table.items td { padding:5px 6px; border-bottom:1px solid #f5f5f5; }
-table.items tr:last-child td { border-bottom:none; }
-.price-box { border:2px solid #1a1a2e; border-radius:6px; overflow:hidden; margin-top:6px; }
-.p-row { display:table; width:100%; padding:7px 14px; border-bottom:1px solid #f0f0f0; }
-.p-row:last-child { border-bottom:none; }
-.p-label { display:table-cell; font-size:9px; color:#555; }
-.p-value { display:table-cell; text-align:right; font-size:9px; font-weight:bold; }
-.p-grand { background:#1a1a2e; }
-.p-grand .p-label { color:#fff; font-size:10px; }
-.p-grand .p-value { color:#ffb400; font-size:12px; }
-.pasek { margin-top:auto; padding-top:16px; }
+body { font-family: DejaVu Sans, sans-serif; font-size:9px; color:#1a1a1a; line-height:1.5; }
+.hdr { display:table; width:100%; padding:14px 28px 10px; }
+.hdr-l { display:table-cell; vertical-align:top; width:62%; }
+.hdr-r { display:table-cell; vertical-align:top; text-align:right; }
+.co-name { font-size:13px; font-weight:bold; line-height:1.35; margin-bottom:6px; }
+.co-info { font-size:8.5px; color:#222; line-height:1.85; }
+.logo-img { max-height:72px; max-width:190px; }
+hr { border:none; border-top:1px solid #aaa; margin:0 28px; }
+.cblock { display:table; width:100%; padding:9px 28px; }
+.cblock-l { display:table-cell; width:58%; vertical-align:top; }
+.cblock-r { display:table-cell; vertical-align:top; text-align:right; font-size:8.5px; color:#333; }
+.clabel { font-weight:bold; font-size:10px; margin-bottom:5px; }
+.cinfo { padding-left:10px; font-size:9px; line-height:1.9; color:#222; }
+.title { text-align:center; font-size:15px; font-weight:bold; padding:15px 28px 13px; }
+.items-wrap { padding:0 28px; }
+table.items { width:100%; border-collapse:collapse; font-size:9px; }
+table.items thead tr { border-top:1px solid #999; border-bottom:1px solid #999; }
+table.items th { padding:6px 8px; font-weight:normal; text-align:left; color:#444; font-size:8.5px; }
+table.items td { padding:8px 8px; border-bottom:1px solid #e5e5e5; vertical-align:top; }
+table.items tbody tr:last-child td { border-bottom:none; }
+.td-qty { text-align:center; font-weight:bold; }
+.td-price { text-align:right; white-space:nowrap; }
+.summary { padding:10px 28px 0; text-align:right; font-size:9px; line-height:2.1; }
+.s-row { display:block; }
+.s-total { font-weight:bold; font-size:11px; }
+.pasek { margin-top:22px; }
 .pasek img { width:100%; display:block; }
-.spec-grid { display:table; width:100%; }
-.spec-row { display:table-row; }
-.spec-cell { display:table-cell; width:25%; padding:6px 8px; border:1px solid #f0f0f0; vertical-align:top; }
-.spec-cell-label { font-size:7px; color:#aaa; text-transform:uppercase; letter-spacing:0.5px; }
-.spec-cell-value { font-size:9px; font-weight:bold; margin-top:2px; }
-.spec-cell:nth-child(even) { background:#fafafa; }
-.cabin-img { max-width:280px; max-height:220px; margin-top:14px; border-radius:6px; }
+/* Page 2 */
+.spec-title { text-align:center; font-size:16px; font-weight:bold; padding:16px 28px 12px; }
+.spec-wrap { padding:0 22px; }
+.sections { display:table; width:100%; }
+.sec-row { display:table-row; }
+.sec-l { display:table-cell; width:49%; vertical-align:top; padding-right:5px; }
+.sec-r { display:table-cell; width:49%; vertical-align:top; padding-left:5px; }
+table.sec { width:100%; border-collapse:collapse; border:1px solid #bbb; margin-bottom:8px; font-size:8.5px; }
+table.sec .sec-head { font-weight:bold; font-size:9px; padding:5px 8px; border-bottom:1px solid #bbb; }
+table.sec td { padding:3.5px 8px; vertical-align:top; }
+table.sec td.lbl { text-decoration:underline; width:54%; color:#222; }
+table.sec tr.sep td { border-top:1px solid #efefef; }
+.spec-footer { padding:16px 28px 10px; font-size:8.5px; color:#333; line-height:1.6; }
 </style>
 </head>
 <body>
 
-<div class="accent"></div>
-
-{{-- PAGE 1: Commercial offer --}}
-<div class="header">
-  <div class="h-left">
-    @if($logoBase64)
-      <img class="logo-img" src="{{ $logoBase64 }}">
-    @else
-      <div class="company-name">{{ $settings['company_name'] ?? 'WIPRO' }}</div>
-    @endif
-    <div class="company-meta">
-      @if(!empty($settings['company_address'])){{ $settings['company_address'] }}<br>@endif
-      @if(!empty($settings['company_nip']))NIP: {{ $settings['company_nip'] }}@endif
-      @if(!empty($settings['company_regon'])}&nbsp;&nbsp;REGON: {{ $settings['company_regon'] }}@endif
-      @if(!empty($settings['company_krs']))<br>KRS: {{ $settings['company_krs'] }}@endif
+{{-- PAGE 1 --}}
+<div class="hdr">
+  <div class="hdr-l">
+    <div class="co-name">{{ $settings['company_name'] ?? 'WIPRO' }}</div>
+    <div class="co-info">
+      @if(!empty($settings['company_address']))Adres siedziby:<br>{{ $settings['company_address'] }}<br>@endif
+      @if(!empty($settings['company_nip']))NIP: {{ $settings['company_nip'] }}<br>@endif
+      @if(!empty($settings['company_regon']))REGON: {{ $settings['company_regon'] }}<br>@endif
+      KRS: {{ $settings['company_krs'] ?? '' }}
     </div>
   </div>
-  <div class="h-right">
-    <div class="badge">Oferta handlowa</div>
-    <div class="offer-num">{{ $offer->offer_number }}</div>
-    <div class="offer-meta">Data: {{ $offer->created_at->format('d.m.Y') }}</div>
-    @if($offer->valid_until)
-    <div class="offer-meta">Ważna do: <strong>{{ $offer->valid_until->format('d.m.Y') }}</strong></div>
-    @endif
+  <div class="hdr-r">
+    @if($logoBase64)<img class="logo-img" src="{{ $logoBase64 }}">@endif
   </div>
 </div>
 
-<div class="body">
+<hr>
 
-<div class="section">
-  <div class="two-col">
-    <div class="col">
-      <div class="section-title">Adresat oferty</div>
-      @if($qr->investor_name)
-      <div class="info-row"><span class="info-label">Imię i nazwisko</span><span class="info-value">{{ $qr->investor_name }}</span></div>
-      @endif
-      @if($qr->investor_company)
-      <div class="info-row"><span class="info-label">Firma</span><span class="info-value">{{ $qr->investor_company }}</span></div>
-      @endif
-      @if($qr->investor_nip)
-      <div class="info-row"><span class="info-label">NIP</span><span class="info-value">{{ $qr->investor_nip }}</span></div>
-      @endif
-      @if($qr->investor_email)
-      <div class="info-row"><span class="info-label">Email</span><span class="info-value">{{ $qr->investor_email }}</span></div>
-      @endif
-      @if($qr->investor_phone)
-      <div class="info-row"><span class="info-label">Telefon</span><span class="info-value">{{ $qr->investor_phone }}</span></div>
-      @endif
+<div class="cblock">
+  <div class="cblock-l">
+    <div class="clabel">Klient:</div>
+    <div class="cinfo">
+      @php $clientAddr = $qr->investment_address ?? $qr->investor_address ?? null; @endphp
+      @if($clientAddr)<div>{{ $clientAddr }}</div>@endif
+      @if($qr->investor_name)<div>{{ $qr->investor_name }}</div>@endif
+      @if($qr->investor_phone)<div>{{ $qr->investor_phone }}</div>@endif
+      @if($qr->investor_email)<div>{{ $qr->investor_email }}</div>@endif
     </div>
-    <div class="col col-r">
-      <div class="section-title">Dane inwestycji</div>
-      @if($qr->investment_name)
-      <div class="info-row"><span class="info-label">Nazwa</span><span class="info-value">{{ $qr->investment_name }}</span></div>
-      @endif
-      @if($qr->investment_address)
-      <div class="info-row"><span class="info-label">Adres</span><span class="info-value">{{ $qr->investment_address }}</span></div>
-      @endif
-      @if($qr->stops)
-      <div class="info-row"><span class="info-label">Liczba przystanków</span><span class="info-value">{{ $qr->stops }}</span></div>
-      @endif
-      @if($qr->drive_type)
-      <div class="info-row"><span class="info-label">Napęd</span><span class="info-value">{{ $qr->drive_type }}</span></div>
-      @endif
-    </div>
+  </div>
+  <div class="cblock-r">
+    Data wystawienia: {{ $offer->created_at->format('d.m.Y H:i:s') }}
   </div>
 </div>
 
-<div class="section">
-  <div class="section-title">Zakres i wycena</div>
+<hr>
+
+<div class="title">Oferta handlowa nr {{ $offer->offer_number }}</div>
+
+<hr style="margin-bottom:0">
+
+<div class="items-wrap">
   <table class="items">
     <thead>
       <tr>
-        <th style="width:50%">Opis</th>
-        <th style="text-align:center">Ilość</th>
-        <th style="text-align:center">J.m.</th>
-        <th style="text-align:right">Cena jedn. netto</th>
-        <th style="text-align:right">Wartość netto</th>
+        <th style="width:56%">Nazwa towaru</th>
+        <th style="text-align:center; width:9%">Ilość</th>
+        <th style="text-align:right; width:17%">Cena netto</th>
+        <th style="text-align:right; width:18%">Wartość netto</th>
       </tr>
     </thead>
     <tbody>
       @foreach($offer->items as $item)
       <tr>
         <td>{{ $item->description }}</td>
-        <td style="text-align:center">{{ $item->quantity }}</td>
-        <td style="text-align:center">{{ $item->unit }}</td>
-        <td style="text-align:right">{{ number_format($item->unit_price_net, 2, ',', ' ') }} PLN</td>
-        <td style="text-align:right">{{ number_format($item->total_price_net, 2, ',', ' ') }} PLN</td>
+        <td class="td-qty">{{ $item->quantity }}</td>
+        <td class="td-price">{{ number_format((float)$item->unit_price_net, 2, ',', ' ') }} zł</td>
+        <td class="td-price">{{ number_format((float)$item->total_price_net, 2, ',', ' ') }} zł</td>
       </tr>
       @endforeach
     </tbody>
   </table>
 </div>
 
-<div class="section">
-  <div class="section-title">Wartość oferty</div>
-  <div class="price-box">
-    <div class="p-row"><span class="p-label">Wartość netto</span><span class="p-value">{{ number_format($offer->total_price_net, 2, ',', ' ') }} PLN</span></div>
-    <div class="p-row"><span class="p-label">VAT {{ $offer->vat_rate }}%</span><span class="p-value">{{ number_format($offer->total_price_gross - $offer->total_price_net, 2, ',', ' ') }} PLN</span></div>
-    <div class="p-row p-grand"><span class="p-label">Łącznie brutto</span><span class="p-value">{{ number_format($offer->total_price_gross, 2, ',', ' ') }} PLN</span></div>
-  </div>
+<hr style="margin-top:0">
+
+<div class="summary">
+  <span class="s-row">Wartość netto:&nbsp;&nbsp;{{ number_format((float)$offer->total_price_net, 2, ',', ' ') }} zł</span>
+  <span class="s-row">VAT({{ intval($offer->vat_rate) }}%):&nbsp;&nbsp;{{ number_format((float)$offer->total_price_gross - (float)$offer->total_price_net, 2, ',', ' ') }} zł</span>
+  <span class="s-row s-total">Razem do zapłaty:&nbsp;&nbsp;{{ number_format((float)$offer->total_price_gross, 2, ',', ' ') }} zł</span>
 </div>
 
 @if($pasekBase64)
-<div class="pasek">
-  <img src="{{ $pasekBase64 }}">
-</div>
+<div class="pasek"><img src="{{ $pasekBase64 }}"></div>
 @endif
 
-</div>{{-- /body page 1 --}}
-
-{{-- PAGE 2: Technical specification --}}
+{{-- PAGE 2 --}}
 <div style="page-break-before:always;"></div>
 
-<div class="accent"></div>
-<div style="padding:18px 32px 20px;">
+@php
+  $el = $qr->elevator;
+  $statusMap = [
+    'PASSENGER'   => 'Pasażerski',
+    'ARCHITECT'   => 'Projektowy',
+    'CONTRACTOR'  => 'Budowlany',
+    'RESIDENTIAL' => 'Mieszkalny',
+    'HOSPITAL'    => 'Szpitalny',
+    'FREIGHT'     => 'Towarowy',
+  ];
+  $statusLabel = $statusMap[$parsedNotes['status'] ?? ''] ?? ($parsedNotes['status'] ?? null);
+  $shaftW = $qr->shaft_width  ?? $el?->shaft_width;
+  $shaftD = $qr->shaft_depth  ?? $el?->shaft_depth;
+  $pitD   = $qr->pit_depth    ?? $el?->pit_depth;
+  $oh     = $qr->overhead     ?? $el?->overhead;
+  $doorW  = $qr->door_width   ?? $el?->door_width;
+  $doorH  = $qr->door_height  ?? $el?->door_height;
+  $cabW   = $qr->cabin_width  ?? $el?->cabin_width;
+  $cabD   = $qr->cabin_depth  ?? $el?->cabin_depth;
+  $cabH   = $qr->cabin_height ?? $el?->cabin_height;
+  $ei30   = (int)($parsedNotes['ei30DoorsCount'] ?? 0);
+  $ei60   = (int)($parsedNotes['ei60DoorsCount'] ?? 0);
+@endphp
 
-<div class="section">
-  <div class="section-title">Specyfikacja Techniczna Dźwigu</div>
-  @php
-    $specs = array_filter([
-      'Udźwig'        => $qr->lift_capacity ? $qr->lift_capacity . ' kg' : null,
-      'Przystanki'    => $qr->stops,
-      'Kondygnacje'   => $qr->floors,
-      'Napęd'         => $qr->drive_type,
-      'Wys. podnosz.' => isset($parsedNotes['liftingHeight']) ? $parsedNotes['liftingHeight'] . ' m' : null,
-      'Szer. szybu'   => $qr->shaft_width  ? $qr->shaft_width  . ' mm' : null,
-      'Głęb. szybu'   => $qr->shaft_depth  ? $qr->shaft_depth  . ' mm' : null,
-      'Szer. kabiny'  => $qr->cabin_width  ? $qr->cabin_width  . ' mm' : null,
-      'Głęb. kabiny'  => $qr->cabin_depth  ? $qr->cabin_depth  . ' mm' : null,
-      'Wys. kabiny'   => $qr->cabin_height ? $qr->cabin_height . ' mm' : null,
-      'Podszybie'     => $qr->pit_depth    ? $qr->pit_depth    . ' mm' : null,
-      'Nadszybie'     => $qr->overhead     ? $qr->overhead     . ' mm' : null,
-      'Typ drzwi'     => $qr->door_type,
-      'Szer. drzwi'   => $qr->door_width   ? $qr->door_width   . ' mm' : null,
-      'Wys. drzwi'    => $qr->door_height  ? $qr->door_height  . ' mm' : null,
-      'Drzwi EI30'    => ($parsedNotes['ei30DoorsCount'] ?? 0) > 0 ? ($parsedNotes['ei30DoorsCount'] . ' szt.') : null,
-      'Drzwi EI60'    => ($parsedNotes['ei60DoorsCount'] ?? 0) > 0 ? ($parsedNotes['ei60DoorsCount'] . ' szt.') : null,
-      'Liczba wejść'  => $parsedNotes['accessCount'] ?? null,
-      'Strona mech.'  => isset($parsedNotes['leftSideMechanic']) ? ($parsedNotes['leftSideMechanic'] ? 'Lewa' : 'Prawa') : null,
-      'Przeznaczenie' => $parsedNotes['status'] ?? null,
-    ]);
-  @endphp
-  <div class="spec-grid">
-    @foreach(array_chunk($specs, 4, true) as $row)
-    <div class="spec-row">
-      @foreach($row as $label => $value)
-      <div class="spec-cell">
-        <div class="spec-cell-label">{{ $label }}</div>
-        <div class="spec-cell-value">{{ $value }}</div>
-      </div>
-      @endforeach
-      @for($i = count($row); $i < 4; $i++)
-      <div class="spec-cell" style="background:#fff;border-color:#f8f8f8;"></div>
-      @endfor
-    </div>
-    @endforeach
-  </div>
+<div class="spec-title">Specyfikacja techniczna dźwigu</div>
+<hr style="margin:0 22px 10px">
+
+<div class="spec-wrap">
+<div class="sections">
+
+<div class="sec-row">
+
+<div class="sec-l">
+  <table class="sec">
+    <tr><td colspan="2" class="sec-head">Parametry dźwigu</td></tr>
+    @if($el?->standards)
+    <tr><td class="lbl">Zgodność</td><td>{{ $el->standards }}</td></tr>
+    @endif
+    @if($el?->capacity)
+    <tr class="sep"><td class="lbl">Udźwig [kg]</td><td>{{ $el->capacity }}</td></tr>
+    @endif
+    @if($el?->persons)
+    <tr class="sep"><td class="lbl">Liczba pasażerów</td><td>{{ $el->persons }} osób</td></tr>
+    @endif
+    @if($el)
+    <tr class="sep"><td class="lbl">Typ</td><td>{{ trim(($el->manufacturer ?? '') . ' ' . ($el->model ?? '')) }}@if($el->description) — {{ $el->description }}@endif</td></tr>
+    <tr class="sep"><td class="lbl">Model</td><td>{{ $el->model }}</td></tr>
+    @endif
+    @if($statusLabel)
+    <tr class="sep"><td class="lbl">Przeznaczenie</td><td>{{ $statusLabel }}</td></tr>
+    @endif
+    @if($qr->stops)
+    <tr class="sep"><td class="lbl">Ilość przystanków</td><td>{{ $qr->stops }}</td></tr>
+    @endif
+    @if(isset($parsedNotes['accessCount']))
+    <tr class="sep"><td class="lbl">Ilość dojść</td><td>{{ $parsedNotes['accessCount'] }}</td></tr>
+    @endif
+    @if($el?->speed)
+    <tr class="sep"><td class="lbl">Prędkość</td><td>{{ $el->speed }} m/s</td></tr>
+    @endif
+    @if(isset($parsedNotes['liftingHeight']))
+    <tr class="sep"><td class="lbl">Wysokość podnoszenia [m]</td><td>{{ $parsedNotes['liftingHeight'] }}</td></tr>
+    @endif
+    @if($el?->machine_room)
+    <tr class="sep"><td class="lbl">Maszynownia</td><td>{{ $el->machine_room }}</td></tr>
+    @endif
+  </table>
 </div>
 
-@if($cabinImageBase64)
-<div class="section">
-  <div class="section-title">Wybrany model kabiny</div>
-  <img class="cabin-img" src="{{ $cabinImageBase64 }}">
-</div>
-@endif
+<div class="sec-r">
+  <table class="sec" style="margin-bottom:8px">
+    <tr><td colspan="2" class="sec-head">Parametry szybu:</td></tr>
+    @if($shaftW)
+    <tr><td class="lbl">Szerokość szybu</td><td>{{ $shaftW }}</td></tr>
+    @endif
+    @if($shaftD)
+    <tr class="sep"><td class="lbl">Głębokość szybu</td><td>{{ $shaftD }}</td></tr>
+    @endif
+    @if($pitD)
+    <tr class="sep"><td class="lbl">Głębokość podszybia [m]</td><td>{{ $pitD }}</td></tr>
+    @endif
+    @if($oh)
+    <tr class="sep"><td class="lbl">Wysokość nadszybia [m]</td><td>{{ $oh }}</td></tr>
+    @endif
+    @if($doorW && $doorH)
+    <tr class="sep"><td class="lbl">Otwory drzwiowe (szer. x wys.):</td><td>{{ $doorW }} x {{ $doorH }}</td></tr>
+    @endif
+  </table>
 
+  @if($qr->drive_type || $el?->drive_type)
+  <table class="sec">
+    <tr><td colspan="2" class="sec-head">Zespół napędowy</td></tr>
+    <tr><td class="lbl">Typ</td><td>{{ $qr->drive_type ?? $el?->drive_type }}</td></tr>
+  </table>
+  @endif
+</div>
+
+</div>{{-- /sec-row 1 --}}
+
+<div class="sec-row">
+
+<div class="sec-l">
+  <table class="sec">
+    <tr><td colspan="2" class="sec-head">Drzwi</td></tr>
+    @if($qr->door_type)
+    <tr><td class="lbl">Typ:</td><td>{{ $qr->door_type }}</td></tr>
+    @endif
+    @if($doorW && $doorH)
+    <tr class="sep"><td class="lbl">Wymiary drzwi (szer. x wys.):</td><td>{{ $doorW }} x {{ $doorH }}</td></tr>
+    @endif
+    @if($el?->cabin_door_finish)
+    <tr class="sep"><td class="lbl">Drzwi kabinowe wykończenie:</td><td>{{ $el->cabin_door_finish }}</td></tr>
+    @endif
+    @if($el?->landing_door_finish)
+    <tr class="sep"><td class="lbl">Drzwi szybowe wykończenie:</td><td>{{ $el->landing_door_finish }}</td></tr>
+    @endif
+    @if($el?->door_fire_class)
+    <tr class="sep"><td class="lbl">Klasa ognioodporności:</td><td>{{ $el->door_fire_class }}</td></tr>
+    @endif
+    @if($ei30 > 0)
+    <tr class="sep"><td class="lbl">Ilość drzwi EI 30:</td><td>{{ $ei30 }}</td></tr>
+    @endif
+    @if($ei60 > 0)
+    <tr class="sep"><td class="lbl">Ilość drzwi EI 60:</td><td>{{ $ei60 }}</td></tr>
+    @endif
+  </table>
+</div>
+
+<div class="sec-r">
+  <table class="sec">
+    <tr><td colspan="2" class="sec-head">Kabina@if($el?->cabin_finish): {{ $el->cabin_finish }}@endif</td></tr>
+    @if($cabW && $cabD && $cabH)
+    <tr><td class="lbl">Wymiary kabiny (szer. x gł. x wys.):</td><td>{{ $cabW }} x {{ $cabD }} x {{ $cabH }}</td></tr>
+    @endif
+    @if($el?->cabin_finish)
+    <tr class="sep"><td class="lbl">Wykończenie wszystkich ścian:</td><td>{{ $el->cabin_finish }}</td></tr>
+    @endif
+    @if(isset($parsedNotes['leftSideMechanic']))
+    <tr class="sep"><td class="lbl">Strona mechanizmu:</td><td>{{ $parsedNotes['leftSideMechanic'] ? 'Lewa' : 'Prawa' }}</td></tr>
+    @endif
+    @if($qr->lighting)
+    <tr class="sep"><td class="lbl">Oświetlenie:</td><td>{{ $qr->lighting }}</td></tr>
+    @endif
+    @if($qr->floor_material)
+    <tr class="sep"><td class="lbl">Podłoga:</td><td>{{ $qr->floor_material }}</td></tr>
+    @endif
+    @if($qr->control_panel)
+    <tr class="sep"><td class="lbl">Panel sterowania:</td><td>{{ $qr->control_panel }}</td></tr>
+    @endif
+  </table>
+</div>
+
+</div>{{-- /sec-row 2 --}}
+
+</div>{{-- /sections --}}
+</div>{{-- /spec-wrap --}}
+
+<div class="spec-footer">
+  W celu sfinalizowania lub korekty umowy prosimy o przesłanie numeru umowy drogą mailową na adres
+  <strong>{{ $settings['company_email'] ?? 'biuro@windywipro.pl' }}</strong>.
+  Pozwoli nam to na sprawne przeprowadzenie dalszych etapów realizacji.
 </div>
 
 </body>

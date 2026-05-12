@@ -61,22 +61,14 @@ class OfferPdfService
      */
     public function generateTechSpec(QuoteRequest $quoteRequest): string
     {
+        $quoteRequest->loadMissing(['elevator']);
+
         $offerService = new OfferService();
         $parsedNotes  = $offerService->parseConfiguratorNotes($quoteRequest->additional_notes);
 
-        $cabinImageBase64 = null;
-        $cabinModelId     = (int) ($parsedNotes['cabinModelId'] ?? 0);
-        if ($cabinModelId > 0) {
-            $cabinModel = CabinModel::find($cabinModelId);
-            if ($cabinModel?->image_url) {
-                $cabinImageBase64 = $this->urlImageToBase64($cabinModel->image_url);
-            }
-        }
-
         return Pdf::loadView('offers.tech-spec-pdf', [
-            'qr'               => $quoteRequest,
-            'parsedNotes'      => $parsedNotes,
-            'cabinImageBase64' => $cabinImageBase64,
+            'qr'          => $quoteRequest,
+            'parsedNotes' => $parsedNotes,
         ])->setPaper('a4')->output();
     }
 

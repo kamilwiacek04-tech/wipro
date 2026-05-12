@@ -26,8 +26,7 @@ class AestheticPdfService
                 $singleIds[] = (int) $parsedNotes[$field];
             }
         }
-        $extraIds = array_map('intval', (array) ($parsedNotes['extraIds'] ?? []));
-        $allIds   = array_unique(array_merge($singleIds, $extraIds));
+        $allIds = array_unique($singleIds);
 
         $accessories = CabinAccessory::whereIn('id', $allIds)->get()
             ->map(fn($a) => [
