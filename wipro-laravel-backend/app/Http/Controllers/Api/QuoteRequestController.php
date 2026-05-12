@@ -3,14 +3,15 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Mail\QuoteSubmittedMail;
 use App\Models\Elevator;
+use App\Models\Offer;
 use App\Models\QuoteRequest;
 use App\Models\User;
+use App\Services\OfferService;
+use App\Services\QuoteMailService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 class QuoteRequestController extends Controller
@@ -86,10 +87,34 @@ class QuoteRequestController extends Controller
             'elevator_id' => $elevatorId,
         ]));
 
+        // Auto-generate offer v1 and send with 5 attachments
         try {
-            Mail::to($user->email)->send(new QuoteSubmittedMail($user, $quoteRequest, app()->getLocale()));
-        } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::warning('Failed to send email: ' . $e->getMessage());
+            $version     = 1;
+            $offerNumber = sprintf('%s/OF/%d', $quoteRequest->request_number, $version);
+
+            $offer = Offer::create([
+                'quote_request_id'    => $quoteRequest->id,
+                'created_by_admin_id' => null,
+                'offer_number'        => $offerNumber,
+                'version'             => $version,
+                'status'              => 'sent',
+                'sent_at'             => now(),
+                'total_price_net'     => 0,
+                'total_price_gross'   => 0,
+                'vat_rate'            => 23.00,
+                'valid_until'         => now()->addDays(30)->toDateString(),
+            ]);
+
+            $offerService = new OfferService();
+            $totalNet     = $offerService->buildPricedItems($quoteRequest, $offer);
+            $totalGross   = round($totalNet * 1.23, 2);
+            $offer->update(['total_price_net' => $totalNet, 'total_price_gross' => $totalGross]);
+
+            $quoteRequest->update(['status' => 'offer_sent']);
+
+            (new QuoteMailService())->send($quoteRequest, $offer->load('items'));
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to generate/send auto-offer: ' . $e->getMessage());
         }
 
         return response()->json([
