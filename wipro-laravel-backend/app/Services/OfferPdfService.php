@@ -1,0 +1,115 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\CabinModel;
+use App\Models\Offer;
+use App\Models\QuoteRequest;
+use App\Models\Setting;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Storage;
+
+class OfferPdfService
+{
+    /**
+     * Generates the full 2-page offer PDF, saves it to storage, updates offer.pdf_path.
+     * Returns the storage path.
+     */
+    public function generate(QuoteRequest $quoteRequest, Offer $offer): string
+    {
+        $quoteRequest->loadMissing(['elevator']);
+        $offer->loadMissing(['items']);
+
+        $offerService = new OfferService();
+        $parsedNotes  = $offerService->parseConfiguratorNotes($quoteRequest->additional_notes);
+
+        $settings = Setting::all()->pluck('value', 'key')->toArray();
+
+        $logoBase64  = $this->storageImageToBase64($settings['company_logo_path'] ?? null);
+        $pasekBase64 = $this->publicImageToBase64('images/PL-Pasek_FE-RGB-poziom.png');
+
+        $cabinModel     = null;
+        $cabinImageBase64 = null;
+        $cabinModelId   = (int) ($parsedNotes['cabinModelId'] ?? 0);
+        if ($cabinModelId > 0) {
+            $cabinModel = CabinModel::find($cabinModelId);
+            if ($cabinModel?->image_url) {
+                $cabinImageBase64 = $this->urlImageToBase64($cabinModel->image_url);
+            }
+        }
+
+        $pdf = Pdf::loadView('offers.offer-pdf', compact(
+            'offer', 'settings', 'logoBase64', 'pasekBase64', 'cabinImageBase64', 'parsedNotes'
+        ) + ['qr' => $quoteRequest])->setPaper('a4');
+
+        $filename = str_replace('/', '_', $offer->offer_number) . '.pdf';
+        $path     = 'offers/' . $filename;
+
+        if (!is_dir(storage_path('app/offers'))) {
+            mkdir(storage_path('app/offers'), 0755, true);
+        }
+
+        Storage::put($path, $pdf->output());
+        $offer->update(['pdf_path' => $path]);
+
+        return $path;
+    }
+
+    /**
+     * Generates a standalone 1-page tech-spec PDF (for separate attachment).
+     * Returns raw PDF string — not saved to disk.
+     */
+    public function generateTechSpec(QuoteRequest $quoteRequest): string
+    {
+        $offerService = new OfferService();
+        $parsedNotes  = $offerService->parseConfiguratorNotes($quoteRequest->additional_notes);
+
+        $cabinImageBase64 = null;
+        $cabinModelId     = (int) ($parsedNotes['cabinModelId'] ?? 0);
+        if ($cabinModelId > 0) {
+            $cabinModel = CabinModel::find($cabinModelId);
+            if ($cabinModel?->image_url) {
+                $cabinImageBase64 = $this->urlImageToBase64($cabinModel->image_url);
+            }
+        }
+
+        return Pdf::loadView('offers.tech-spec-pdf', [
+            'qr'               => $quoteRequest,
+            'parsedNotes'      => $parsedNotes,
+            'cabinImageBase64' => $cabinImageBase64,
+        ])->setPaper('a4')->output();
+    }
+
+    private function storageImageToBase64(?string $storagePath): ?string
+    {
+        if (!$storagePath || !Storage::exists($storagePath)) return null;
+        $content = Storage::get($storagePath);
+        $ext     = strtolower(pathinfo($storagePath, PATHINFO_EXTENSION));
+        $mime    = match($ext) { 'jpg', 'jpeg' => 'image/jpeg', 'gif' => 'image/gif', default => 'image/png' };
+        return 'data:' . $mime . ';base64,' . base64_encode($content);
+    }
+
+    private function publicImageToBase64(string $relativePath): ?string
+    {
+        $abs = public_path($relativePath);
+        if (!file_exists($abs)) return null;
+        $ext  = strtolower(pathinfo($abs, PATHINFO_EXTENSION));
+        $mime = match($ext) { 'jpg', 'jpeg' => 'image/jpeg', 'gif' => 'image/gif', default => 'image/png' };
+        return 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($abs));
+    }
+
+    private function urlImageToBase64(?string $url): ?string
+    {
+        if (!$url) return null;
+        try {
+            $content = @file_get_contents($url);
+            if (!$content) return null;
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            $mime  = finfo_buffer($finfo, $content);
+            finfo_close($finfo);
+            return 'data:' . $mime . ';base64,' . base64_encode($content);
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+}
