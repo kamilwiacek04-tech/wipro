@@ -7,6 +7,7 @@ RUN apk add --no-cache \
     libjpeg-turbo-dev \
     freetype-dev \
     libxml2-dev \
+    oniguruma-dev \
     zip \
     unzip \
     curl \
