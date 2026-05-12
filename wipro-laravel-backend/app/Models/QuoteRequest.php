@@ -44,6 +44,7 @@ class QuoteRequest extends Model
         'additional_notes',
         'raw_data',
         'elevator_id',
+        'assigned_admin_id',
     ];
 
     protected $casts = [
@@ -72,6 +73,11 @@ class QuoteRequest extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function assignedAdmin(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_admin_id');
     }
 
     public function elevator(): BelongsTo

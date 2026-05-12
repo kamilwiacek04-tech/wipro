@@ -19,6 +19,7 @@ const MyModal = ({type}: Props) => {
 
     const handleClick = () => {
         if(type === 'success') {
+            useFormStore.getState().resetStore();
             useFormStore.persist.clearStorage();
             dispatch(resetState());
             dispatch(closeModal());

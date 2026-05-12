@@ -257,7 +257,7 @@ table.sec tr.sep td { border-top:1px solid #efefef; }
 
 <div class="sec-r">
   <table class="sec">
-    <tr><td colspan="2" class="sec-head">Kabina@if($el?->cabin_finish): {{ $el->cabin_finish }}@endif</td></tr>
+    <tr><td colspan="2" class="sec-head">Kabina{{ $el?->cabin_finish ? ' — ' . $el->cabin_finish : '' }}</td></tr>
     @if($cabW && $cabD && $cabH)
     <tr><td class="lbl">Wymiary kabiny (szer. x gł. x wys.):</td><td>{{ $cabW }} x {{ $cabD }} x {{ $cabH }}</td></tr>
     @endif

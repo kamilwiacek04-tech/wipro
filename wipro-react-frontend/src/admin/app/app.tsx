@@ -8,7 +8,7 @@ const App = () => {
   const user = authStore((s) => s.user)
 
   useEffect(() => {
-    if (token && user?.role === 'admin') {
+    if (token && ['admin', 'superadmin'].includes(user?.role ?? '')) {
       navigate('/dashboard', { replace: true })
     } else {
       navigate('/auth', { replace: true })

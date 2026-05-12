@@ -1,6 +1,6 @@
 import { FillFieldPayload, FormType } from "@/types/global";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { useFormStore } from "@/store/zustand/formStore";
+import { blankFormState, useFormStore } from "@/store/zustand/formStore";
 import { RootState } from "..";
 
 const initialState: FormType = {
@@ -25,7 +25,7 @@ export const formSlice = createSlice({
         fillField: <K extends keyof FormType>(state: FormType, action: PayloadAction<FillFieldPayload<K>>) => {
             state[action.payload.key] = action.payload.value;
         },
-        resetState: () => initialState
+        resetState: () => ({ ...blankFormState })
     }
 })
 

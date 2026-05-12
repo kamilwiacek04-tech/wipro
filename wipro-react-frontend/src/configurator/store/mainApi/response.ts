@@ -27,7 +27,7 @@ export interface CabinModel {
     is_active: boolean;
 }
 
-export type AccessoryCategory = 'PANEL' | 'SIGNAL' | 'CEILING' | 'MIRROR' | 'HANDRAIL' | 'FLOORING';
+export type AccessoryCategory = 'PANEL' | 'SIGNAL' | 'CEILING' | 'MIRROR' | 'HANDRAIL' | 'FLOORING' | 'EXTRA';
 
 export interface CabinAccessory {
     id: number;

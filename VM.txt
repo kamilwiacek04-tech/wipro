@@ -1,0 +1,200 @@
+ ---
+  Instrukcja postawienia projektu Wipro na VM
+  
+  Wymagania systemowe
+
+  - Ubuntu 22.04 LTS (lub 24.04)
+  - RAM: min. 2 GB
+  - CPU: 2 vCPU
+  - Dysk: 10 GB
+
+  ---
+  1. Instalacja zależności systemowych
+
+  # Aktualizacja systemu
+  sudo apt update && sudo apt upgrade -y
+
+  # PHP 8.3 + rozszerzenia
+  sudo apt install -y software-properties-common
+  sudo add-apt-repository ppa:ondrej/php -y
+  sudo apt update
+  sudo apt install -y php8.3 php8.3-cli php8.3-fpm php8.3-mbstring \
+    php8.3-xml php8.3-curl php8.3-zip php8.3-mysql php8.3-pdo \
+    php8.3-gd php8.3-bcmath php8.3-intl
+
+  # Composer
+  curl -sS https://getcomposer.org/installer | php
+  sudo mv composer.phar /usr/local/bin/composer
+  sudo add-apt-repository ppa:ondrej/php -y
+  sudo apt update
+  sudo apt install -y php8.3 php8.3-cli php8.3-fpm php8.3-mbstring \
+    php8.3-xml php8.3-curl php8.3-zip php8.3-mysql php8.3-pdo \
+    php8.3-gd php8.3-bcmath php8.3-intl
+
+  # Composer
+  curl -sS https://getcomposer.org/installer | php
+  sudo mv composer.phar /usr/local/bin/composer
+
+  # MariaDB
+  sudo apt install -y mariadb-server
+  sudo systemctl enable mariadb
+  sudo systemctl start mariadb
+
+  # Node.js (LTS, np. 22.x)
+  curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+  sudo apt install -y nodejs
+
+  # Nginx
+  sudo apt install -y nginx
+  sudo systemctl enable nginx
+
+  ---
+  2. Baza danych
+
+  sudo mariadb -u root <<'SQL'
+  CREATE DATABASE wipro CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+  CREATE USER 'wipro'@'localhost' IDENTIFIED BY 'tajnehaslo123';
+  GRANT ALL PRIVILEGES ON wipro.* TO 'wipro'@'localhost';
+  FLUSH PRIVILEGES;
+  SQL
+
+  ---
+  3. Backend (Laravel)
+
+  # Klonowanie / skopiowanie kodu na VM
+  cd /var/www
+  sudo git clone <URL_REPOZYTORIUM> wipro
+  # LUB: scp/rsync ze swojego kompa:
+  # rsync -avz /Users/wiacus/Work/wipro/ user@vm-ip:/var/www/wipro/
+
+  sudo chown -R $USER:www-data /var/www/wipro
+  cd /var/www/wipro/wipro-laravel-backend
+
+  # Zależności PHP
+  composer install --no-dev --optimize-autoloader
+
+  # Konfiguracja środowiska
+  cp .env .env.production
+  nano .env.production
+
+  W pliku .env.production zmień:
+
+  APP_ENV=production
+  APP_DEBUG=false
+  APP_URL=http://<IP_VMKI>
+
+  FRONTEND_URL=http://<IP_VMKI>:3001
+  CLIENT_URL=http://<IP_VMKI>:3002
+
+  DB_CONNECTION=mariadb
+  DB_HOST=127.0.0.1
+  DB_PORT=3306
+  DB_DATABASE=wipro
+  DB_USERNAME=wipro
+  DB_PASSWORD=tajnehaslo123
+
+  # Ustaw właściwy .env
+  cp .env.production .env
+
+  # Generuj klucz aplikacji
+  php artisan key:generate
+
+  # Migracje + seeder
+  php artisan migrate --force
+  php artisan db:seed --force
+
+  # Cache konfiguracji (produkcja)
+  php artisan config:cache
+  php artisan route:cache
+
+  # Uprawnienia storage
+  sudo chown -R www-data:www-data storage bootstrap/cache
+  sudo chmod -R 775 storage bootstrap/cache
+
+  ---
+  4. Nginx dla backendu
+
+  sudo nano /etc/nginx/sites-available/wipro-backend
+
+  server {
+      listen 8000;
+      root /var/www/wipro/wipro-laravel-backend/public;
+      index index.php;
+
+      location / {
+          try_files $uri $uri/ /index.php?$query_string;
+      }
+
+      location ~ \.php$ {
+          include snippets/fastcgi-php.conf;
+          fastcgi_pass unix:/run/php/php8.3-fpm.sock;
+      }
+  }
+
+  sudo ln -s /etc/nginx/sites-available/wipro-backend /etc/nginx/sites-enabled/
+  sudo nginx -t
+  sudo systemctl reload nginx
+
+  ---
+  5. Frontend (React)
+
+  cd /var/www/wipro/wipro-react-frontend
+
+  npm install
+
+  # Ustaw URL backendu przed buildem
+  echo "VITE_API_URL=http://<IP_VMKI>:8000/api" > .env.production
+
+  npm run build
+  # Artefakty lądują w katalogu: build/
+
+  ---
+  6. Nginx dla frontendu
+
+  sudo nano /etc/nginx/sites-available/wipro-frontend
+
+  server {
+      listen 3001;
+      root /var/www/wipro/wipro-react-frontend/build;
+      index index.html;
+
+      location / {
+          try_files $uri $uri/ /index.html;
+          # SPA fallback - React Router obsłuży routing
+      }
+  }
+
+  sudo ln -s /etc/nginx/sites-available/wipro-frontend /etc/nginx/sites-enabled/
+  sudo nginx -t
+  sudo systemctl reload nginx
+
+  ---
+  7. Weryfikacja
+
+  # Backend działa?
+  curl http://localhost:8000/api/admin/dashboard
+  # Powinno zwrócić 401 (nie 404) — dobry znak
+
+  # Frontend?
+  curl -I http://localhost:3001
+  # Powinno zwrócić 200 z Content-Type: text/html
+
+  Otwórz w przeglądarce: http://<IP_VMKI>:3001 — panel admina.
+
+  ---
+  Porty podsumowanie
+
+  ┌───────────────────┬──────┐
+  │      Usługa       │ Port │
+  ├───────────────────┼──────┤
+  │ Laravel API       │ 8000 │
+  ├───────────────────┼──────┤
+  │ React Admin Panel │ 3001 │
+  └───────────────────┴──────┘
+
+  ---
+  Opcjonalnie: CORS
+
+  Jeśli frontend nie może gadać z backendem, sprawdź config/cors.php w Laravel i upewnij się
+   że allowed_origins zawiera adres VM. Domyślnie Laravel Sanctum ma to skonfigurowane przez
+   .env (FRONTEND_URL, CLIENT_URL).

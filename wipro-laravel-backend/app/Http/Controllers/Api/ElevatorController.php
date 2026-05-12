@@ -76,14 +76,14 @@ class ElevatorController extends Controller
             'cabin_width' => 'sometimes|integer|min:1',
             'cabin_depth' => 'sometimes|integer|min:1',
             'cabin_height' => 'sometimes|integer|min:1',
-            'shaft_width' => 'sometimes|integer|min:1',
-            'shaft_depth' => 'sometimes|integer|min:1',
-            'pit_depth' => 'sometimes|integer|min:1',
-            'overhead' => 'sometimes|integer|min:1',
+            'shaft_width' => 'sometimes|nullable|integer|min:1',
+            'shaft_depth' => 'sometimes|nullable|integer|min:1',
+            'pit_depth' => 'sometimes|nullable|integer|min:1',
+            'overhead' => 'sometimes|nullable|integer|min:1',
             'speed' => 'sometimes|numeric|min:0.1',
-            'drive_type' => 'sometimes|string|max:100',
+            'drive_type' => 'sometimes|nullable|string|max:100',
             'max_stops' => 'sometimes|integer|min:2',
-            'base_price' => 'sometimes|numeric|min:0',
+            'base_price' => 'sometimes|nullable|numeric|min:0',
             'description' => 'sometimes|nullable|string',
             'is_active' => 'sometimes|boolean',
             'standards'          => 'sometimes|nullable|string|max:255',
@@ -121,29 +121,32 @@ class ElevatorController extends Controller
         $elevator = Elevator::findOrFail($id);
 
         $request->validate([
-            'pdf' => 'required|file|mimes:pdf|max:20480',
-            'dwg' => 'required|file|max:20480',
-            'bim' => 'required|file|max:20480',
-            'doc' => 'nullable|string',
+            'pdf' => 'nullable|file|mimes:pdf|max:20480',
+            'dwg' => 'nullable|file|max:20480',
+            'bim' => 'nullable|file|max:20480',
+            'doc' => 'nullable|file|mimetypes:application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document|max:20480',
         ]);
+
+        abort_if(
+            !$request->hasFile('pdf') && !$request->hasFile('dwg') && !$request->hasFile('bim') && !$request->hasFile('doc'),
+            422,
+            'Wgraj co najmniej jeden plik.'
+        );
 
         $dir = "elevator-drawings/{$id}/{$type}";
 
-        foreach (['pdf', 'dwg', 'bim'] as $ext) {
+        $paths = [];
+        foreach (['pdf', 'dwg', 'bim', 'doc'] as $ext) {
+            if (!$request->hasFile($ext)) continue;
             $existing = $elevator->{"drawing_{$type}_{$ext}"};
             if ($existing && Storage::exists($existing)) {
                 Storage::delete($existing);
             }
-        }
-
-        $paths = [];
-        foreach (['pdf', 'dwg', 'bim'] as $ext) {
             $paths["drawing_{$type}_{$ext}"] = $request->file($ext)->storeAs(
                 $dir,
                 $request->file($ext)->getClientOriginalName()
             );
         }
-        $paths["drawing_{$type}_doc"] = $request->input('doc');
 
         $elevator->update($paths);
 
@@ -153,7 +156,7 @@ class ElevatorController extends Controller
     public function downloadDrawing(int $id, string $type, string $ext): \Symfony\Component\HttpFoundation\BinaryFileResponse
     {
         abort_if(!in_array($type, ['standard', 'throughway']), 422, 'Invalid drawing type.');
-        abort_if(!in_array($ext, ['pdf', 'dwg', 'bim']), 422, 'Invalid file extension.');
+        abort_if(!in_array($ext, ['pdf', 'dwg', 'bim', 'doc']), 422, 'Invalid file extension.');
 
         $elevator = Elevator::findOrFail($id);
         $path = $elevator->{"drawing_{$type}_{$ext}"};

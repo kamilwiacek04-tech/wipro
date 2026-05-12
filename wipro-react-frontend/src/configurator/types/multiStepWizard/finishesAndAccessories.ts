@@ -6,9 +6,5 @@ export interface FormFinishesAndAccessories {
     mirrorId: number;
     handrailId: number;
     flooringId: number;
-    energyRecovery: boolean;
-    antiVibrationSystems: boolean;
-    cabinMonitoringSystem: boolean;
-    shaftLighting: boolean;
-    increaseSpeed: boolean;
+    extraIds: number[];
 }

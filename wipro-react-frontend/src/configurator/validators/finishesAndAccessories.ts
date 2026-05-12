@@ -9,9 +9,5 @@ export const dataSchema = new yup.ObjectSchema<FormFinishesAndAccessories>({
     mirrorId: yup.number().default(0),
     handrailId: yup.number().default(0),
     flooringId: yup.number().default(0),
-    energyRecovery: yup.boolean().required(),
-    antiVibrationSystems: yup.boolean().required(),
-    cabinMonitoringSystem: yup.boolean().required(),
-    shaftLighting: yup.boolean().required(),
-    increaseSpeed: yup.boolean().required(),
+    extraIds: yup.array().of(yup.number().required()).default([]),
 });

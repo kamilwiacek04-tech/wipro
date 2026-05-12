@@ -31,7 +31,7 @@ class CabinAccessoryController extends Controller
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'category'   => 'required|string|in:PANEL,SIGNAL,CEILING,MIRROR,HANDRAIL,FLOORING',
+            'category'   => 'required|string|in:PANEL,SIGNAL,CEILING,MIRROR,HANDRAIL,FLOORING,EXTRA',
             'name_pl'    => 'required|string|max:200',
             'name_en'    => 'required|string|max:200',
             'sort_order' => 'integer|min:0',
@@ -54,7 +54,7 @@ class CabinAccessoryController extends Controller
         $accessory = CabinAccessory::findOrFail($id);
 
         $data = $request->validate([
-            'category'   => 'sometimes|string|in:PANEL,SIGNAL,CEILING,MIRROR,HANDRAIL,FLOORING',
+            'category'   => 'sometimes|string|in:PANEL,SIGNAL,CEILING,MIRROR,HANDRAIL,FLOORING,EXTRA',
             'name_pl'    => 'sometimes|string|max:200',
             'name_en'    => 'sometimes|string|max:200',
             'sort_order' => 'sometimes|integer|min:0',

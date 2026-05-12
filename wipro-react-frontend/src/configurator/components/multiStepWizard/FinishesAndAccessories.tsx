@@ -1,27 +1,26 @@
-import AnimatedPage from '@/components/AnimatedPage'
-import FormContent from '@/components/FormContent'
-import TitleParagraph from '@/components/TitleParagraph'
-import { useTranslation } from 'react-i18next'
-import AnimatedPageSide from '@/components/AnimatedPageSide'
-import FinishesAndAccessoriesSummary from '@/components/multiStepWizardSummary/FinishesAndAccessoriesSummary'
-import { Controller, useForm } from 'react-hook-form'
-import { FormFinishesAndAccessories } from '@/types/multiStepWizard/finishesAndAccessories'
-import { yupResolver } from '@hookform/resolvers/yup'
-import { dataSchema } from '@/validators/finishesAndAccessories'
-import { useSelector } from 'react-redux'
-import { RootState, useAppDispatch, useAppSelector } from '@/store'
-import { fillField, formSelectors } from '@/store/slices/formSlice'
-import CarouselaImage from '@/components/carouselaImage/CarouselaImage'
-import { useFormStore } from '@/store/zustand/formStore'
-import CheckboxElement from '@/components/CheckboxElement'
-import SubmitButton from '@/components/SubmitButton'
-import BorderInput from '@/components/BorderInput'
-import { openModal } from '@/store/slices/modalSlice'
-import { useStoreQuoteRequestMutation, useGetCabinModelsQuery, useGetCabinAccessoriesQuery, CabinModel } from '@/store/mainApi/response'
-import { useEffect, useState } from 'react'
-import CabinInfoModal from '@/components/CabinInfoModal'
 import AccessorySelector from '@/components/AccessorySelector'
+import CheckboxElement from '@/components/CheckboxElement'
+import AnimatedPage from '@/components/AnimatedPage'
+import AnimatedPageSide from '@/components/AnimatedPageSide'
+import BorderInput from '@/components/BorderInput'
+import CarouselaImage from '@/components/carouselaImage/CarouselaImage'
+import FormContent from '@/components/FormContent'
 import Loading from '@/components/Loading'
+import FinishesAndAccessoriesSummary from '@/components/multiStepWizardSummary/FinishesAndAccessoriesSummary'
+import SubmitButton from '@/components/SubmitButton'
+import TitleParagraph from '@/components/TitleParagraph'
+import { RootState, useAppDispatch, useAppSelector } from '@/store'
+import { useGetCabinAccessoriesQuery, useGetCabinModelsQuery, useStoreQuoteRequestMutation } from '@/store/mainApi/response'
+import { fillField, formSelectors } from '@/store/slices/formSlice'
+import { openModal } from '@/store/slices/modalSlice'
+import { useFormStore } from '@/store/zustand/formStore'
+import { FormFinishesAndAccessories } from '@/types/multiStepWizard/finishesAndAccessories'
+import { dataSchema } from '@/validators/finishesAndAccessories'
+import { yupResolver } from '@hookform/resolvers/yup'
+import { useEffect } from 'react'
+import { Controller, useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
+import { useSelector } from 'react-redux'
 
 const ACCESSORY_SECTIONS: Array<{
     key: keyof Pick<FormFinishesAndAccessories, 'panelId' | 'signalId' | 'ceilingId' | 'mirrorId' | 'handrailId' | 'flooringId'>;
@@ -42,8 +41,6 @@ const FinishesAndAccessories = () => {
     const defaultData: FormFinishesAndAccessories = useSelector((state: RootState) => state.form.finishesAndAccessories)
     const dispatch = useAppDispatch()
     const { updateField } = useFormStore()
-
-    const [infoItem, setInfoItem] = useState<CabinModel | null>(null)
 
     const [sendData, { data: apiData, isLoading, isSuccess, isError, error }] = useStoreQuoteRequestMutation()
     const { data: cabinModels, isLoading: loadingModels } = useGetCabinModelsQuery()
@@ -96,11 +93,7 @@ const FinishesAndAccessories = () => {
                     mirrorId: dataCurr.mirrorId || undefined,
                     handrailId: dataCurr.handrailId || undefined,
                     flooringId: dataCurr.flooringId || undefined,
-                    energyRecovery: dataCurr.energyRecovery,
-                    antiVibrationSystems: dataCurr.antiVibrationSystems,
-                    cabinMonitoringSystem: dataCurr.cabinMonitoringSystem,
-                    shaftLighting: dataCurr.shaftLighting,
-                    increaseSpeed: dataCurr.increaseSpeed,
+                    extraIds: dataCurr.extraIds,
                 }),
             ].filter(Boolean).join('\n\n'),
         })
@@ -118,10 +111,7 @@ const FinishesAndAccessories = () => {
     const isLoadingAll = loadingModels || loadingAccessories
 
     return (
-        <div className="flex flex-row overflow-hidden max-[1200px]:flex-col max-[1200px]:gap-5">
-            {infoItem && (
-                <CabinInfoModal item={infoItem} onClose={() => setInfoItem(null)} />
-            )}
+        <div className="flex flex-row flex-1 overflow-hidden max-[1200px]:flex-col max-[1200px]:gap-5">
             <AnimatedPage>
                 <FormContent>
                     <TitleParagraph text={t(`${textPath}.title`)} />
@@ -145,7 +135,7 @@ const FinishesAndAccessories = () => {
                                                 updateField('finishesAndAccessories', 'cabinModelId', id)
                                                 field.onChange(id)
                                             }}
-                                            onInfo={setInfoItem}
+                                            onInfo={(item) => dispatch(openModal({ type: 'cabinInfo', cabinModel: item }))}
                                         />
                                     )}
                                 />
@@ -179,24 +169,37 @@ const FinishesAndAccessories = () => {
                                 )
                             })}
 
-                            {/* Dodatki */}
-                            <BorderInput title={t(`${textPath}.field.extras`)}>
-                                <Controller control={control} name="energyRecovery" render={({ field }) => (
-                                    <CheckboxElement currentValue={field.value} onChange={(e) => { updateField('finishesAndAccessories', 'energyRecovery', e); field.onChange(e) }} name={t(`${textPath}.field.energyRecovery`)} />
-                                )} />
-                                <Controller control={control} name="antiVibrationSystems" render={({ field }) => (
-                                    <CheckboxElement currentValue={field.value} onChange={(e) => { updateField('finishesAndAccessories', 'antiVibrationSystems', e); field.onChange(e) }} name={t(`${textPath}.field.antiVibrationSystems`)} />
-                                )} />
-                                <Controller control={control} name="cabinMonitoringSystem" render={({ field }) => (
-                                    <CheckboxElement currentValue={field.value} onChange={(e) => { updateField('finishesAndAccessories', 'cabinMonitoringSystem', e); field.onChange(e) }} name={t(`${textPath}.field.cabinMonitoringSystem`)} />
-                                )} />
-                                <Controller control={control} name="shaftLighting" render={({ field }) => (
-                                    <CheckboxElement currentValue={field.value} onChange={(e) => { updateField('finishesAndAccessories', 'shaftLighting', e); field.onChange(e) }} name={t(`${textPath}.field.shaftLighting`)} />
-                                )} />
-                                <Controller control={control} name="increaseSpeed" render={({ field }) => (
-                                    <CheckboxElement currentValue={field.value} onChange={(e) => { updateField('finishesAndAccessories', 'increaseSpeed', e); field.onChange(e) }} name={t(`${textPath}.field.increaseSpeed`)} />
-                                )} />
-                            </BorderInput>
+                            {/* Dodatki z bazy danych */}
+                            {(accessories?.['EXTRA'] ?? []).length > 0 && (
+                                <BorderInput title={t(`${textPath}.field.extras`)}>
+                                    <Controller
+                                        control={control}
+                                        name="extraIds"
+                                        render={({ field }) => (
+                                            <div className="flex flex-col">
+                                                {(accessories?.['EXTRA'] ?? []).map((extra) => {
+                                                    const name = i18n.language === 'pl' ? extra.name_pl : extra.name_en
+                                                    const checked = (field.value ?? []).includes(extra.id)
+                                                    return (
+                                                        <CheckboxElement
+                                                            key={extra.id}
+                                                            currentValue={checked}
+                                                            name={name}
+                                                            onChange={(val) => {
+                                                                const next = val
+                                                                    ? [...(field.value ?? []), extra.id]
+                                                                    : (field.value ?? []).filter((id) => id !== extra.id)
+                                                                updateField('finishesAndAccessories', 'extraIds', next)
+                                                                field.onChange(next)
+                                                            }}
+                                                        />
+                                                    )
+                                                })}
+                                            </div>
+                                        )}
+                                    />
+                                </BorderInput>
+                            )}
 
                             <SubmitButton title={t('form.submit')} />
                         </form>

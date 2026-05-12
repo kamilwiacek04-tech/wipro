@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
-import { Search, RefreshCw } from 'lucide-react'
+import { Search, RefreshCw, Plus, X, Check, ChevronDown, ListFilter } from 'lucide-react'
 import { Card } from '@admin/components/Cards'
 import { Button } from '@admin/components/Button'
 import { Badge, statusBadge, statusLabel } from '@admin/components/Badge'
@@ -10,6 +10,7 @@ import MainHeader from '@admin/components/layout/MainHeader'
 import api from '@admin/store/axiosInstance'
 import formatDate from '@admin/functions/formatDate'
 import { useTranslation } from 'react-i18next'
+import { adminViewStore } from '@admin/store/zustand/adminViewStore'
 
 interface QuoteRequest {
   id: number
@@ -29,29 +30,145 @@ interface Paginated {
   total: number
 }
 
-const STATUS_VALUES = ['', 'new', 'in_progress', 'offer_sent', 'accepted', 'rejected']
+const STATUS_FILTER_VALUES = ['new', 'in_progress', 'offer_sent', 'accepted', 'rejected'] as const
+
+const STATUS_DOTS: Record<string, string> = {
+  new: 'bg-amber-400',
+  in_progress: 'bg-blue-400',
+  offer_sent: 'bg-gray-400',
+  accepted: 'bg-emerald-400',
+  rejected: 'bg-red-400',
+}
+
+const StatusDropdown = ({
+  selected,
+  onChange,
+}: {
+  selected: string[]
+  onChange: (statuses: string[]) => void
+}) => {
+  const [open, setOpen] = useState(false)
+  const { t } = useTranslation()
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const onMouse = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
+    document.addEventListener('mousedown', onMouse)
+    document.addEventListener('keydown', onKey)
+    return () => { document.removeEventListener('mousedown', onMouse); document.removeEventListener('keydown', onKey) }
+  }, [])
+
+  const toggle = (value: string) =>
+    onChange(selected.includes(value) ? selected.filter(s => s !== value) : [...selected, value])
+
+  const label = selected.length === 0
+    ? t('quoteRequests.allStatuses')
+    : selected.length === 1
+    ? t(`status.${selected[0]}`)
+    : t('quoteRequests.statusesSelected', { count: selected.length })
+
+  const active = selected.length > 0
+
+  return (
+    <div className="relative shrink-0" ref={ref}>
+      <button
+        onClick={() => setOpen(v => !v)}
+        className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-full border transition-colors cursor-pointer ${
+          active
+            ? 'bg-[#ffb400] text-gray-900 border-[#ffb400] font-semibold'
+            : 'bg-white text-gray-500 border-gray-200 hover:border-gray-400 hover:text-gray-700'
+        }`}
+      >
+        <ListFilter className="h-3 w-3" />
+        <span>{label}</span>
+        {active && (
+          <span className="flex items-center justify-center w-4 h-4 rounded-full bg-black/15 text-[10px] font-bold leading-none">
+            {selected.length}
+          </span>
+        )}
+        <ChevronDown className={`h-3 w-3 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+      </button>
+
+      {/* Dropdown panel */}
+      <div
+        className={`absolute right-0 top-full mt-2 z-30 bg-white rounded-xl border border-gray-200 shadow-xl shadow-gray-200/50 overflow-hidden min-w-[196px] transition-all duration-150 origin-top-right ${
+          open ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-95 pointer-events-none'
+        }`}
+      >
+        {/* Header */}
+        <div className="px-3 py-2 border-b border-gray-100 flex items-center justify-between">
+          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</span>
+          {active && (
+            <button
+              onClick={() => onChange([])}
+              className="text-[10px] text-amber-600 hover:text-amber-800 font-semibold cursor-pointer transition-colors"
+            >
+              {t('common.clear')}
+            </button>
+          )}
+        </div>
+
+        {/* Options */}
+        {STATUS_FILTER_VALUES.map(value => {
+          const checked = selected.includes(value)
+          return (
+            <div
+              key={value}
+              onClick={() => toggle(value)}
+              className={`flex items-center gap-2.5 px-3 py-2.5 cursor-pointer transition-colors select-none ${
+                checked ? 'bg-amber-50' : 'hover:bg-gray-50'
+              }`}
+            >
+              {/* Custom checkbox */}
+              <div className={`w-4 h-4 rounded border-[1.5px] flex items-center justify-center shrink-0 transition-all duration-150 ${
+                checked ? 'bg-[#ffb400] border-[#ffb400]' : 'border-gray-300 bg-white'
+              }`}>
+                {checked && <Check className="h-2.5 w-2.5 text-gray-900" strokeWidth={3} />}
+              </div>
+              {/* Status dot */}
+              <div className={`w-2 h-2 rounded-full shrink-0 ${STATUS_DOTS[value]}`} />
+              {/* Label */}
+              <span className={`text-xs ${checked ? 'text-gray-900 font-medium' : 'text-gray-600'}`}>
+                {t(`status.${value}`)}
+              </span>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
 
 const QuoteRequests = () => {
   const navigate = useNavigate()
   const { t } = useTranslation()
+  const { selectedAdminId } = adminViewStore()
   const [data, setData] = useState<Paginated | null>(null)
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
-  const [status, setStatus] = useState('')
+  const [statuses, setStatuses] = useState<string[]>([])
   const [page, setPage] = useState(1)
   void page
 
-  const load = (p = 1, s = search, st = status) => {
+  const [showForm, setShowForm] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [form, setForm] = useState({ name: '', email: '' })
+
+  const load = (p = 1, s = search, st = statuses) => {
     setLoading(true)
     const params: Record<string, string | number> = { page: p }
     if (s) params.search = s
-    if (st) params.status = st
+    if (st.length > 0) params.status = st.join(',')
+    if (selectedAdminId) params.admin_id = selectedAdminId
     api.get('/admin/quote-requests', { params })
       .then(res => setData(res.data))
       .finally(() => setLoading(false))
   }
 
-  useEffect(() => { load(1) }, [])
+  useEffect(() => { load(1) }, [selectedAdminId])
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -59,8 +176,8 @@ const QuoteRequests = () => {
     load(1)
   }
 
-  const handleStatusChange = (st: string) => {
-    setStatus(st)
+  const handleStatusesChange = (st: string[]) => {
+    setStatuses(st)
     setPage(1)
     load(1, search, st)
   }
@@ -70,21 +187,81 @@ const QuoteRequests = () => {
     load(p)
   }
 
-  const statusLabel_ = (value: string) => value === '' ? t('quoteRequests.allStatuses') : t(`status.${value}`)
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSaving(true)
+    try {
+      const res = await api.post('/admin/quote-requests', {
+        investor_name: form.name,
+        investor_email: form.email || undefined,
+      })
+      navigate(`/quote-requests/${res.data.id}`)
+    } finally {
+      setSaving(false)
+    }
+  }
 
   return (
     <MainLayout headerComponent={
       <MainHeader title={t('quoteRequests.title')} subTitle={data ? t('quoteRequests.totalCount', { count: data.total }) : undefined}>
-        <Button size="sm" onClick={() => load(1)}>
+        <Button size="sm" variant="outline" onClick={() => load(1)}>
           <RefreshCw className="h-4 w-4" />
           {t('common.refresh')}
+        </Button>
+        <Button size="sm" onClick={() => { setShowForm(true); setForm({ name: '', email: '' }) }}>
+          <Plus className="h-4 w-4" />
+          {t('quoteRequests.newRequest')}
         </Button>
       </MainHeader>
     }>
 
+      {/* New request form */}
+      {showForm && (
+        <Card className="p-6 gap-0">
+          <div className="flex items-center justify-between mb-5">
+            <h3 className="font-semibold text-gray-900">{t('quoteRequests.newRequestTitle')}</h3>
+            <button onClick={() => setShowForm(false)} className="text-gray-400 hover:text-gray-600 cursor-pointer">
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+          <form onSubmit={handleCreate} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">{t('quoteRequests.clientNameLabel')} *</label>
+              <input
+                type="text"
+                required
+                value={form.name}
+                onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                placeholder="Jan Kowalski / ABC sp. z o.o."
+                className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:bg-white"
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">{t('quoteRequests.clientEmailLabel')}</label>
+              <input
+                type="email"
+                value={form.email}
+                onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                placeholder={t('quoteRequests.clientEmailPlaceholder')}
+                className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:bg-white"
+              />
+            </div>
+            <div className="sm:col-span-2 flex gap-2">
+              <Button type="submit" size="sm" disabled={saving}>
+                <Check className="h-4 w-4" />
+                {saving ? t('quoteRequests.creating') : t('quoteRequests.createRequest')}
+              </Button>
+              <Button type="button" variant="outline" size="sm" onClick={() => setShowForm(false)}>
+                {t('common.cancel')}
+              </Button>
+            </div>
+          </form>
+        </Card>
+      )}
+
       {/* Filters */}
       <Card className="p-4 gap-0">
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
           <form onSubmit={handleSearch} className="flex gap-2 flex-1">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -93,27 +270,13 @@ const QuoteRequests = () => {
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder={t('quoteRequests.search')}
-                className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:bg-white"
+                className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:bg-white"
               />
             </div>
             <Button type="submit" size="sm">{t('common.search')}</Button>
           </form>
 
-          <div className="flex gap-1 flex-wrap">
-            {STATUS_VALUES.map(value => (
-              <button
-                key={value}
-                onClick={() => handleStatusChange(value)}
-                className={`px-3 py-1.5 text-xs rounded-full border transition-colors cursor-pointer ${
-                  status === value
-                    ? 'bg-gray-900 text-white border-gray-900'
-                    : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
-                }`}
-              >
-                {statusLabel_(value)}
-              </button>
-            ))}
-          </div>
+          <StatusDropdown selected={statuses} onChange={handleStatusesChange} />
         </div>
       </Card>
 

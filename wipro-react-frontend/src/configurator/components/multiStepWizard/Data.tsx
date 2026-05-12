@@ -19,7 +19,7 @@ import { useSelector } from 'react-redux'
 import { useNavigate } from 'react-router'
 
 const SectionTitle = ({ text }: { text: string }) => (
-  <p className="text-[13px] font-semibold text-[var(--grey)] uppercase tracking-wide mt-2 mb-1">{text}</p>
+  <p className="text-[13px] font-semibold text-[var(--grey)] uppercase tracking-wide mb-4">{text}</p>
 )
 
 const Data = () => {

@@ -5,9 +5,10 @@ function Card({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
       className={cn(
-        'bg-card text-card-foreground flex flex-col gap-6 rounded-xl border',
+        'bg-card text-card-foreground flex flex-col gap-6 rounded-xl border border-gray-100',
         className,
       )}
+      style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)' }}
       {...props}
     />
   )

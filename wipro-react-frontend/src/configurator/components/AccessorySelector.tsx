@@ -1,3 +1,4 @@
+import ImageLightbox from '@/components/ImageLightbox'
 import { CabinAccessory } from '@/store/mainApi/response'
 import { useTranslation } from 'react-i18next'
 
@@ -34,7 +35,7 @@ const AccessorySelector = ({ title, items, currentValue, onChange }: Props) => {
                                 ].join(' ')}
                             >
                                 {item.image_url ? (
-                                    <img
+                                    <ImageLightbox
                                         src={item.image_url}
                                         alt={name}
                                         className="w-full h-[80px] object-cover rounded-[6px]"

@@ -7,6 +7,7 @@ import MainHeader from '@admin/components/layout/MainHeader'
 import api from '@admin/store/axiosInstance'
 import { adminViewStore } from '@admin/store/zustand/adminViewStore'
 import { Plus, RefreshCw, Shield, Mail, ToggleLeft, ToggleRight, Trash2, X, Check } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 interface Admin {
   id: number
@@ -18,6 +19,7 @@ interface Admin {
 }
 
 const AdminsPage = () => {
+  const { t } = useTranslation()
   const [admins, setAdmins] = useState<Admin[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -47,7 +49,7 @@ const AdminsPage = () => {
       setShowForm(false)
       load()
     } catch (err: any) {
-      const msg = err?.response?.data?.message ?? 'Błąd podczas tworzenia admina'
+      const msg = err?.response?.data?.message ?? t('admins.createError')
       setFormError(msg)
     } finally {
       setSaving(false)
@@ -65,7 +67,7 @@ const AdminsPage = () => {
   }
 
   const deleteAdmin = async (admin: Admin) => {
-    if (!confirm(`Czy na pewno chcesz usunąć konto ${admin.name}?`)) return
+    if (!confirm(t('admins.confirmDelete', { name: admin.name }))) return
     setSaving(true)
     try {
       await api.delete(`/admin/admins/${admin.id}`)
@@ -77,14 +79,14 @@ const AdminsPage = () => {
 
   return (
     <MainLayout headerComponent={
-      <MainHeader title="Zarządzanie adminami" subTitle="Konta administratorów systemu">
+      <MainHeader title={t('admins.title')} subTitle={t('admins.subtitle')}>
         <Button size="sm" variant="outline" onClick={() => load()}>
           <RefreshCw className="h-4 w-4" />
-          Odśwież
+          {t('common.refresh')}
         </Button>
         <Button size="sm" onClick={() => { setShowForm(true); setFormError('') }}>
           <Plus className="h-4 w-4" />
-          Nowy admin
+          {t('admins.newAdmin')}
         </Button>
       </MainHeader>
     }>
@@ -94,14 +96,14 @@ const AdminsPage = () => {
         {showForm && (
           <Card className="p-6 gap-0">
             <div className="flex items-center justify-between mb-5">
-              <h3 className="font-semibold text-gray-900">Nowe konto administratora</h3>
+              <h3 className="font-semibold text-gray-900">{t('admins.newAccount')}</h3>
               <button onClick={() => setShowForm(false)} className="text-gray-400 hover:text-gray-600 cursor-pointer">
                 <X className="h-5 w-5" />
               </button>
             </div>
             <form onSubmit={handleCreate} className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">Imię i nazwisko</label>
+                <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">{t('quoteRequests.detail.fields.name')}</label>
                 <input
                   type="text"
                   required
@@ -112,7 +114,7 @@ const AdminsPage = () => {
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">Email</label>
+                <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">{t('quoteRequests.detail.fields.email')}</label>
                 <input
                   type="email"
                   required
@@ -123,14 +125,14 @@ const AdminsPage = () => {
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">Hasło</label>
+                <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">{t('auth.password')}</label>
                 <input
                   type="password"
                   required
                   minLength={8}
                   value={form.password}
                   onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
-                  placeholder="min. 8 znaków"
+                  placeholder={t('admins.passwordPlaceholder')}
                   className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:bg-white"
                 />
               </div>
@@ -142,10 +144,10 @@ const AdminsPage = () => {
               <div className="sm:col-span-3 flex gap-2">
                 <Button type="submit" size="sm" disabled={saving}>
                   <Check className="h-4 w-4" />
-                  {saving ? 'Tworzenie...' : 'Utwórz konto'}
+                  {saving ? t('admins.creating') : t('admins.create')}
                 </Button>
                 <Button type="button" variant="outline" size="sm" onClick={() => setShowForm(false)}>
-                  Anuluj
+                  {t('common.cancel')}
                 </Button>
               </div>
             </form>
@@ -159,7 +161,7 @@ const AdminsPage = () => {
               <SkeletonLoader count={4} />
             </div>
           ) : admins.length === 0 ? (
-            <div className="p-12 text-center text-gray-400 text-sm">Brak kont administratorów</div>
+            <div className="p-12 text-center text-gray-400 text-sm">{t('admins.noAdmins')}</div>
           ) : (
             <div className="divide-y divide-gray-100">
               {admins.map(admin => (
@@ -180,7 +182,7 @@ const AdminsPage = () => {
                         </span>
                       )}
                       {!admin.is_active && (
-                        <span className="text-xs px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">Nieaktywny</span>
+                        <span className="text-xs px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">{t('admins.inactive')}</span>
                       )}
                     </div>
                     <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
@@ -193,7 +195,7 @@ const AdminsPage = () => {
                       <button
                         onClick={() => toggleActive(admin)}
                         disabled={saving}
-                        title={admin.is_active ? 'Dezaktywuj' : 'Aktywuj'}
+                        title={admin.is_active ? t('admins.deactivate') : t('admins.activate')}
                         className="text-gray-400 hover:text-amber-500 disabled:opacity-50 cursor-pointer transition-colors"
                       >
                         {admin.is_active
@@ -203,7 +205,7 @@ const AdminsPage = () => {
                       <button
                         onClick={() => deleteAdmin(admin)}
                         disabled={saving}
-                        title="Usuń konto"
+                        title={t('admins.deleteTitle')}
                         className="text-gray-300 hover:text-red-500 disabled:opacity-30 cursor-pointer transition-colors"
                       >
                         <Trash2 className="h-4 w-4" />

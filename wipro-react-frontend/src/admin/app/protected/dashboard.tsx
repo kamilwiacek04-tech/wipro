@@ -1,21 +1,34 @@
+import { Badge, statusBadge, statusLabel } from '@admin/components/Badge'
+import { Button } from '@admin/components/Button'
+import { Card } from '@admin/components/Cards'
+import SkeletonLoader from '@admin/components/SkeletonLoader'
+import MainHeader from '@admin/components/layout/MainHeader'
+import MainLayout from '@admin/components/layout/MainLayout'
+import formatDate from '@admin/functions/formatDate'
+import api from '@admin/store/axiosInstance'
+import { adminViewStore } from '@admin/store/zustand/adminViewStore'
+import {
+  Activity,
+  ArrowRight, CalendarDays,
+  CheckCircle, Clock,
+  FileText,
+  Server,
+  Users,
+} from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
 import {
-  AreaChart, Area, PieChart, Pie,
-  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
+  Area,
+  AreaChart,
+  CartesianGrid,
+  Legend,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis, YAxis,
 } from 'recharts'
-import {
-  FileText, Users, Activity, CheckCircle, Clock, Server, ArrowRight, CalendarDays,
-} from 'lucide-react'
-import { Card } from '@admin/components/Cards'
-import { Button } from '@admin/components/Button'
-import { Badge, statusBadge, statusLabel } from '@admin/components/Badge'
-import SkeletonLoader from '@admin/components/SkeletonLoader'
-import MainLayout from '@admin/components/layout/MainLayout'
-import MainHeader from '@admin/components/layout/MainHeader'
-import api from '@admin/store/axiosInstance'
-import formatDate from '@admin/functions/formatDate'
-import { useTranslation } from 'react-i18next'
 
 interface DashboardData {
   tiles: {
@@ -58,25 +71,29 @@ const fillTimeline = (items: { date: string; count: number }[], days = 30) => {
 const Dashboard = () => {
   const navigate = useNavigate()
   const { t } = useTranslation()
+  const { selectedAdminId } = adminViewStore()
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
 
   useEffect(() => {
-    api.get('/admin/dashboard')
+    setLoading(true)
+    setError(false)
+    const params = selectedAdminId ? { admin_id: selectedAdminId } : {}
+    api.get('/admin/dashboard', { params })
       .then(res => setData(res.data))
       .catch(() => setError(true))
       .finally(() => setLoading(false))
-  }, [])
+  }, [selectedAdminId])
 
   const timeline = useMemo(() => fillTimeline(data?.requests_timeline ?? []), [data])
 
   const tiles = data ? [
-    { label: t('dashboard.totalRequests'), value: data.tiles.total_requests, icon: FileText, bg: 'bg-blue-50', iconColor: 'text-blue-500', border: 'border-blue-100' },
-    { label: t('dashboard.newRequests'), value: data.tiles.pending_requests, icon: Clock, bg: 'bg-amber-50', iconColor: 'text-amber-500', border: 'border-amber-100' },
-    { label: t('dashboard.offersSent'), value: data.tiles.processed_requests, icon: CheckCircle, bg: 'bg-green-50', iconColor: 'text-green-500', border: 'border-green-100' },
-    { label: t('dashboard.clients'), value: data.tiles.total_clients, icon: Users, bg: 'bg-purple-50', iconColor: 'text-purple-500', border: 'border-purple-100' },
-    { label: t('dashboard.elevatorsInDb'), value: data.tiles.total_elevators, icon: Server, bg: 'bg-gray-50', iconColor: 'text-gray-500', border: 'border-gray-100' },
+    { label: t('dashboard.totalRequests'), value: data.tiles.total_requests, icon: FileText, bg: 'bg-amber-50', iconColor: 'text-amber-500', border: 'border-amber-100' },
+    { label: t('dashboard.newRequests'), value: data.tiles.pending_requests, icon: Clock, bg: 'bg-orange-50', iconColor: 'text-orange-500', border: 'border-orange-100' },
+    { label: t('dashboard.offersSent'), value: data.tiles.processed_requests, icon: CheckCircle, bg: 'bg-emerald-50', iconColor: 'text-emerald-500', border: 'border-emerald-100' },
+    { label: t('dashboard.clients'), value: data.tiles.total_clients, icon: Users, bg: 'bg-yellow-50', iconColor: 'text-yellow-600', border: 'border-yellow-100' },
+    { label: t('dashboard.elevatorsInDb'), value: data.tiles.total_elevators, icon: Server, bg: 'bg-stone-50', iconColor: 'text-stone-400', border: 'border-stone-100' },
   ] : []
 
   return (
@@ -98,18 +115,18 @@ const Dashboard = () => {
         <div className="flex flex-col gap-6">
 
           {/* Tiles */}
-          <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
+          <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
             {tiles.map((tile) => {
               const Icon = tile.icon
               return (
-                <Card key={tile.label} className={`p-5 lg:p-6 gap-0 border ${tile.border}`}>
-                  <div className="flex items-center justify-between gap-2">
+                <Card key={tile.label} className={`px-4 py-3 gap-0 border ${tile.border}`}>
+                  <div className="flex items-center justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="text-sm lg:text-base text-gray-500 mb-1.5 truncate">{tile.label}</p>
-                      <p className="text-3xl lg:text-4xl font-bold text-gray-900 leading-none">{tile.value}</p>
+                      <h3 className="font-semibold text-base text-gray-400 mb-1 mt-1">{tile.label}</h3>
+                      <p className="text-2xl font-bold text-gray-900 leading-none">{tile.value}</p>
                     </div>
-                    <div className={`inline-flex items-center justify-center w-12 h-12 lg:w-14 lg:h-14 rounded-xl ${tile.bg} shrink-0`}>
-                      <Icon className={`h-6 w-6 lg:h-7 lg:w-7 ${tile.iconColor}`} />
+                    <div className={`inline-flex items-center justify-center w-10 h-10 rounded-md ${tile.bg} shrink-0`}>
+                      <Icon className={`h-5 w-5 ${tile.iconColor}`} />
                     </div>
                   </div>
                 </Card>
@@ -127,8 +144,8 @@ const Dashboard = () => {
                 <AreaChart data={timeline} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.15} />
-                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                      <stop offset="5%" stopColor="#ffb400" stopOpacity={0.18} />
+                      <stop offset="95%" stopColor="#ffb400" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -151,7 +168,7 @@ const Dashboard = () => {
                     labelFormatter={v => fmtAxisDate(v as string)}
                     formatter={v => [v, t('dashboard.requests')]}
                   />
-                  <Area type="monotone" dataKey="count" stroke="#3b82f6" strokeWidth={2} fill="url(#grad)" dot={false} activeDot={{ r: 4 }} />
+                  <Area type="monotone" dataKey="count" stroke="#ffb400" strokeWidth={2.5} fill="url(#grad)" dot={false} activeDot={{ r: 4, fill: '#ffb400' }} />
                 </AreaChart>
               </ResponsiveContainer>
             </Card>
@@ -210,7 +227,7 @@ const Dashboard = () => {
                 {data.recent_requests.map((req) => (
                   <div
                     key={req.id}
-                    className="flex items-center justify-between gap-3 py-3.5 first:pt-0 last:pb-0 cursor-pointer hover:bg-gray-50 -mx-2 px-2 rounded-md transition-colors"
+                    className="flex items-center justify-between gap-3 py-2 first:pt-0 last:pb-0 cursor-pointer hover:bg-gray-50 -mx-2 px-2 rounded-md transition-colors"
                     onClick={() => navigate(`/quote-requests/${req.id}`)}
                   >
                     <div className="min-w-0 flex-1">

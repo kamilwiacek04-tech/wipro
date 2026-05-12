@@ -1,6 +1,6 @@
-import { AnimatePresence, motion } from 'framer-motion'
-import { X, AlertCircle, CheckCircle2, Info } from 'lucide-react'
-import { toastStore, type Toast, type ToastVariant } from '@admin/store/zustand/toastStore'
+import { toastStore, type Toast, type ToastVariant } from '@admin/store/zustand/toastStore';
+import { AnimatePresence, motion } from 'framer-motion';
+import { AlertCircle, CheckCircle2, Info, X } from 'lucide-react';
 
 const VARIANTS: Record<ToastVariant, { bar: string; icon: React.ReactNode; label: string }> = {
   error: {
@@ -31,7 +31,7 @@ const ToastItem = ({ toast }: { toast: Toast }) => {
       animate={{ opacity: 1, x: 0, scale: 1 }}
       exit={{ opacity: 0, x: 40, scale: 0.96 }}
       transition={{ type: 'spring', stiffness: 420, damping: 32 }}
-      className="relative flex items-start gap-3 w-80 bg-white rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.10)] border border-gray-100 overflow-hidden pr-9 pl-4 py-3.5"
+      className="relative flex items-start gap-3 w-80 bg-white rounded-r-xl shadow-[0_4px_20px_rgba(0,0,0,0.10)] border border-gray-100 overflow-hidden pr-9 pl-4 py-3.5"
     >
       {/* accent bar */}
       <span className={`absolute left-0 inset-y-0 w-[3px] rounded-l-xl ${v.bar}`} />

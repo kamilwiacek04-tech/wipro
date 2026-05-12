@@ -10,6 +10,7 @@ class Offer extends Model
 {
     protected $fillable = [
         'quote_request_id',
+        'created_by_admin_id',
         'offer_number',
         'version',
         'status',
@@ -18,6 +19,8 @@ class Offer extends Model
         'total_price_gross',
         'vat_rate',
         'notes',
+        'client_name',
+        'client_email',
         'pdf_path',
         'docx_path',
         'sent_at',
@@ -43,9 +46,21 @@ class Offer extends Model
         return sprintf('%s/OF/%d', $quoteRequest->request_number, $version);
     }
 
+    public static function generateStandaloneOfferNumber(): string
+    {
+        $year = date('Y');
+        $count = self::whereNull('quote_request_id')->whereYear('created_at', $year)->count() + 1;
+        return sprintf('OF/%s/%03d', $year, $count);
+    }
+
     public function quoteRequest(): BelongsTo
     {
         return $this->belongsTo(QuoteRequest::class);
+    }
+
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by_admin_id');
     }
 
     public function items(): HasMany

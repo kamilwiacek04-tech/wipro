@@ -6,11 +6,11 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class IsAdmin
+class IsSuperAdmin
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (!$request->user() || !in_array($request->user()->role, ['admin', 'superadmin'])) {
+        if (!$request->user() || $request->user()->role !== 'superadmin') {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 

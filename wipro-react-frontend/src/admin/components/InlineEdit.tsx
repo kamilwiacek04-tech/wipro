@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { cn } from '@admin/lib/utils'
+import { useTranslation } from 'react-i18next'
 
 interface InlineEditProps {
   value: string | number
@@ -11,6 +12,7 @@ interface InlineEditProps {
 }
 
 const InlineEdit = ({ value, onSave, type = 'text', className, inputClassName, unit }: InlineEditProps) => {
+  const { t } = useTranslation()
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(String(value))
   const inputRef = useRef<HTMLInputElement>(null)
@@ -47,23 +49,26 @@ const InlineEdit = ({ value, onSave, type = 'text', className, inputClassName, u
           if (e.key === 'Escape') cancel()
         }}
         className={cn(
-          'border border-blue-400 rounded px-2 py-0.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 w-full',
+          'border border-amber-400 rounded px-2 py-0.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-300 w-full',
           inputClassName,
         )}
       />
     )
   }
 
+  const isEmpty = value === '' || value === null || value === undefined
+
   return (
     <span
-      onClick={() => { setDraft(String(value)); setEditing(true) }}
+      onClick={() => { setDraft(isEmpty ? '' : String(value)); setEditing(true) }}
       className={cn(
-        'cursor-pointer hover:bg-blue-50 rounded px-1 py-0.5 border border-transparent hover:border-blue-200 transition-colors',
+        'cursor-pointer hover:bg-amber-50 rounded px-1 py-0.5 border border-transparent hover:border-amber-200 transition-colors inline-block min-w-12',
+        isEmpty && 'text-gray-300 italic',
         className,
       )}
-      title="Kliknij aby edytować"
+      title={t('quoteRequests.detail.clickToEdit')}
     >
-      {value ?? '—'}{unit ? ` ${unit}` : ''}
+      {isEmpty ? '—' : `${value}${unit ? ` ${unit}` : ''}`}
     </span>
   )
 }

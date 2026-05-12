@@ -90,8 +90,9 @@ Generuje PDF z fotografiami wybranych wykończeń (DomPDF, A4).
 1. Parsuje JSON z `additional_notes`
 2. Zbiera ID: `panelId`, `signalId`, `ceilingId`, `mirrorId`, `handrailId`, `flooringId` + `extraIds[]`
 3. Pobiera z bazy `CabinAccessory` dla każdego ID
-4. Układa zdjęcia w siatce (2 kolumny) — zdjęcie + nazwa akcesorium
-5. Zwraca zawartość PDF jako string (nie zapisuje — dołączany tylko do maila)
+4. Pobiera `CabinModel` dla `cabinModelId` — zdjęcie kabiny na początku PDF jako okładka/wyróżnienie
+5. Układa zdjęcia akcesoriów w siatce (2 kolumny) — zdjęcie + nazwa akcesorium
+6. Zwraca zawartość PDF jako string (nie zapisuje — dołączany tylko do maila)
 
 ### `QuoteMailService`
 
