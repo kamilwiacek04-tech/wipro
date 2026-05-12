@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Offer;
 use App\Models\OfferItem;
 use App\Models\QuoteRequest;
+use App\Models\Setting;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Storage;
 use PhpOffice\PhpWord\PhpWord;
@@ -416,5 +417,112 @@ class OfferService
         $offer->update(['docx_path' => $path]);
 
         return $path;
+    }
+
+    /**
+     * Creates OfferItem records for the given offer applying margin and EI pricing from settings.
+     * Loads elevator.elements relationship if not already loaded.
+     * Returns total net amount.
+     */
+    public function buildPricedItems(QuoteRequest $quoteRequest, Offer $offer): float
+    {
+        $quoteRequest->loadMissing(['elevator.elements']);
+
+        $margin   = 1 + ((float) Setting::get('profit_margin_percent', '0')) / 100;
+        $ei30Unit = (float) Setting::get('door_ei30_price', '0');
+        $ei60Unit = (float) Setting::get('door_ei60_price', '0');
+
+        $config   = $this->parseConfiguratorNotes($quoteRequest->additional_notes);
+        $ei30Count = (int) ($config['ei30DoorsCount'] ?? 0);
+        $ei60Count = (int) ($config['ei60DoorsCount'] ?? 0);
+
+        $totalNet   = 0.0;
+        $sortOrder  = 1;
+
+        if ($quoteRequest->elevator) {
+            $elevator  = $quoteRequest->elevator;
+            $basePrice = round((float) $elevator->base_price * $margin, 2);
+
+            OfferItem::create([
+                'offer_id'        => $offer->id,
+                'description'     => "Dźwig osobowy {$elevator->manufacturer} {$elevator->model} (udźwig {$elevator->capacity} kg, {$elevator->persons} os.)",
+                'quantity'        => 1,
+                'unit'            => 'szt.',
+                'unit_price_net'  => $basePrice,
+                'total_price_net' => $basePrice,
+                'sort_order'      => $sortOrder++,
+            ]);
+            $totalNet += $basePrice;
+
+            foreach ($elevator->elements as $element) {
+                $elemPrice = round((float) $element->price * $margin, 2);
+                OfferItem::create([
+                    'offer_id'        => $offer->id,
+                    'description'     => $element->name,
+                    'quantity'        => 1,
+                    'unit'            => 'szt.',
+                    'unit_price_net'  => $elemPrice,
+                    'total_price_net' => $elemPrice,
+                    'sort_order'      => $sortOrder++,
+                ]);
+                $totalNet += $elemPrice;
+            }
+        } else {
+            OfferItem::create([
+                'offer_id'        => $offer->id,
+                'description'     => 'Dźwig osobowy - wycena indywidualna',
+                'quantity'        => 1,
+                'unit'            => 'szt.',
+                'unit_price_net'  => 0,
+                'total_price_net' => 0,
+                'sort_order'      => $sortOrder++,
+            ]);
+        }
+
+        if ($ei30Count > 0 && $ei30Unit > 0) {
+            $unitPrice  = round($ei30Unit * $margin, 2);
+            $totalItem  = round($unitPrice * $ei30Count, 2);
+            OfferItem::create([
+                'offer_id'        => $offer->id,
+                'description'     => 'Drzwi przeciwpożarowe EI30',
+                'quantity'        => $ei30Count,
+                'unit'            => 'szt.',
+                'unit_price_net'  => $unitPrice,
+                'total_price_net' => $totalItem,
+                'sort_order'      => $sortOrder++,
+            ]);
+            $totalNet += $totalItem;
+        }
+
+        if ($ei60Count > 0 && $ei60Unit > 0) {
+            $unitPrice  = round($ei60Unit * $margin, 2);
+            $totalItem  = round($unitPrice * $ei60Count, 2);
+            OfferItem::create([
+                'offer_id'        => $offer->id,
+                'description'     => 'Drzwi przeciwpożarowe EI60',
+                'quantity'        => $ei60Count,
+                'unit'            => 'szt.',
+                'unit_price_net'  => $unitPrice,
+                'total_price_net' => $totalItem,
+                'sort_order'      => $sortOrder++,
+            ]);
+            $totalNet += $totalItem;
+        }
+
+        return $totalNet;
+    }
+
+    /**
+     * Extracts the JSON object embedded in additional_notes.
+     * The configurator appends a JSON block after two newlines.
+     */
+    public function parseConfiguratorNotes(?string $notes): array
+    {
+        if (!$notes) return [];
+        foreach (array_reverse(preg_split('/\n{2,}/', $notes)) as $part) {
+            $decoded = json_decode(trim($part), true);
+            if (is_array($decoded)) return $decoded;
+        }
+        return [];
     }
 }
