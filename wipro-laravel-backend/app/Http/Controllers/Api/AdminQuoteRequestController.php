@@ -241,9 +241,15 @@ class AdminQuoteRequestController extends Controller
 
     public function downloadPdf(int $offerId): \Symfony\Component\HttpFoundation\BinaryFileResponse
     {
-        $offer = Offer::with(['quoteRequest.elevator', 'items'])->findOrFail($offerId);
+        $offer = Offer::with(['quoteRequest.elevator.elements', 'items'])->findOrFail($offerId);
+        $quoteRequest = $offer->quoteRequest;
 
-        $path = (new OfferService())->generatePdf($offer);
+        // Reuse stored PDF if it exists; otherwise generate fresh with the same service used for email
+        if ($offer->pdf_path && Storage::exists($offer->pdf_path)) {
+            $path = $offer->pdf_path;
+        } else {
+            $path = (new \App\Services\OfferPdfService())->generate($quoteRequest, $offer);
+        }
 
         $filename = 'oferta-' . str_replace('/', '_', $offer->offer_number) . '.pdf';
 
