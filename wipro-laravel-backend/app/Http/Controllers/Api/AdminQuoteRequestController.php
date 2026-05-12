@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Mail\OfferSentMail;
 use App\Models\Offer;
 use App\Models\OfferItem;
 use App\Models\QuoteRequest;
@@ -11,18 +10,28 @@ use App\Services\OfferService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 
 class AdminQuoteRequestController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $query = QuoteRequest::with(['user', 'elevator'])
+        $user = $request->user();
+        $query = QuoteRequest::with(['user', 'elevator', 'assignedAdmin'])
             ->orderByDesc('created_at');
 
+        // Superadmin can filter by admin_id; regular admin sees only their own
+        if ($user->isSuperAdmin()) {
+            if ($request->filled('admin_id')) {
+                $query->where('assigned_admin_id', $request->admin_id);
+            }
+        } else {
+            $query->where('assigned_admin_id', $user->id);
+        }
+
         if ($request->filled('status')) {
-            $query->where('status', $request->status);
+            $statuses = array_values(array_filter(explode(',', $request->status)));
+            $query->whereIn('status', $statuses);
         }
 
         if ($request->filled('search')) {
@@ -40,12 +49,43 @@ class AdminQuoteRequestController extends Controller
         return response()->json($requests);
     }
 
+    public function store(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'investor_name'  => 'required|string|max:255',
+            'investor_email' => 'nullable|email|max:255',
+        ]);
+
+        $quoteRequest = QuoteRequest::create([
+            'request_number'    => QuoteRequest::generateRequestNumber(),
+            'status'            => 'new',
+            'investor_name'     => $data['investor_name'],
+            'investor_email'    => $data['investor_email'] ?? '',
+            'assigned_admin_id' => $request->user()->id,
+        ]);
+
+        return response()->json($quoteRequest->fresh(['user', 'elevator.elements', 'offers.items', 'assignedAdmin']), 201);
+    }
+
     public function show(int $id): JsonResponse
     {
-        $quoteRequest = QuoteRequest::with(['user', 'elevator.elements', 'offers.items'])
+        $quoteRequest = QuoteRequest::with(['user', 'elevator.elements', 'offers.items', 'assignedAdmin'])
             ->findOrFail($id);
 
         return response()->json($quoteRequest);
+    }
+
+    public function assign(Request $request, int $id): JsonResponse
+    {
+        $quoteRequest = QuoteRequest::findOrFail($id);
+
+        $data = $request->validate([
+            'assigned_admin_id' => 'nullable|integer|exists:users,id',
+        ]);
+
+        $quoteRequest->update(['assigned_admin_id' => $data['assigned_admin_id']]);
+
+        return response()->json($quoteRequest->fresh(['user', 'elevator.elements', 'offers.items', 'assignedAdmin']));
     }
 
     public function update(Request $request, int $id): JsonResponse
@@ -91,7 +131,7 @@ class AdminQuoteRequestController extends Controller
         return response()->json($quoteRequest->fresh(['user', 'elevator.elements', 'offers.items']));
     }
 
-    public function generateOffer(int $id): JsonResponse
+    public function generateOffer(Request $request, int $id): JsonResponse
     {
         $quoteRequest = QuoteRequest::with(['elevator.elements'])->findOrFail($id);
 
@@ -101,70 +141,28 @@ class AdminQuoteRequestController extends Controller
             __('messages.offer.no_new_accepted')
         );
 
-        $vatRate = 23.00;
-        $totalNet = 0.0;
-
-        // Delete existing draft offers FIRST, then compute version from remaining offers
         $quoteRequest->offers()->where('status', 'draft')->delete();
-        $version = $quoteRequest->offers()->count() + 1;
+        $version     = $quoteRequest->offers()->count() + 1;
         $offerNumber = sprintf('%s/OF/%d', $quoteRequest->request_number, $version);
 
         $offer = Offer::create([
-            'quote_request_id' => $quoteRequest->id,
-            'offer_number' => $offerNumber,
-            'version' => $version,
-            'status' => 'draft',
-            'total_price_net' => 0,
-            'total_price_gross' => 0,
-            'vat_rate' => $vatRate,
-            'valid_until' => now()->addDays(30)->toDateString(),
+            'quote_request_id'    => $quoteRequest->id,
+            'created_by_admin_id' => $request->user()->id,
+            'offer_number'        => $offerNumber,
+            'version'             => $version,
+            'status'              => 'draft',
+            'total_price_net'     => 0,
+            'total_price_gross'   => 0,
+            'vat_rate'            => 23.00,
+            'valid_until'         => now()->addDays(30)->toDateString(),
         ]);
 
-        $sortOrder = 1;
+        $offerService = new \App\Services\OfferService();
+        $totalNet     = $offerService->buildPricedItems($quoteRequest, $offer);
+        $totalGross   = round($totalNet * 1.23, 2);
 
-        if ($quoteRequest->elevator) {
-            $elevator = $quoteRequest->elevator;
-            $basePrice = (float) $elevator->base_price;
-
-            OfferItem::create([
-                'offer_id' => $offer->id,
-                'description' => "Dźwig osobowy {$elevator->manufacturer} {$elevator->model} (udźwig {$elevator->capacity} kg, {$elevator->persons} os.)",
-                'quantity' => 1,
-                'unit' => 'szt.',
-                'unit_price_net' => $basePrice,
-                'total_price_net' => $basePrice,
-                'sort_order' => $sortOrder++,
-            ]);
-            $totalNet += $basePrice;
-
-            foreach ($elevator->elements as $element) {
-                $elemPrice = (float) $element->price;
-                OfferItem::create([
-                    'offer_id' => $offer->id,
-                    'description' => $element->name,
-                    'quantity' => 1,
-                    'unit' => 'szt.',
-                    'unit_price_net' => $elemPrice,
-                    'total_price_net' => $elemPrice,
-                    'sort_order' => $sortOrder++,
-                ]);
-                $totalNet += $elemPrice;
-            }
-        } else {
-            OfferItem::create([
-                'offer_id' => $offer->id,
-                'description' => 'Dźwig osobowy - wycena indywidualna',
-                'quantity' => 1,
-                'unit' => 'szt.',
-                'unit_price_net' => 0,
-                'total_price_net' => 0,
-                'sort_order' => $sortOrder,
-            ]);
-        }
-
-        $totalGross = round($totalNet * (1 + $vatRate / 100), 2);
         $offer->update([
-            'total_price_net' => $totalNet,
+            'total_price_net'   => $totalNet,
             'total_price_gross' => $totalGross,
         ]);
 
@@ -232,10 +230,9 @@ class AdminQuoteRequestController extends Controller
             $offer->update(['sent_at' => now()]);
             $offer->quoteRequest()->update(['status' => 'offer_sent']);
 
-            $quoteRequest = $offer->quoteRequest()->with('user')->first();
-            if ($quoteRequest?->user) {
-                Mail::to($quoteRequest->user->email)
-                    ->send(new OfferSentMail($quoteRequest->user, $offer->load('items'), app()->getLocale()));
+            $quoteRequest = $offer->quoteRequest()->first();
+            if ($quoteRequest) {
+                (new \App\Services\QuoteMailService())->send($quoteRequest, $offer->load('items'));
             }
         }
 
