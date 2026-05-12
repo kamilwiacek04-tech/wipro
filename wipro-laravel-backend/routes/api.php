@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Controllers\Api\AdminContactController;
 use App\Http\Controllers\Api\AdminDashboardController;
 use App\Http\Controllers\Api\AdminManagementController;
+use App\Http\Controllers\Api\AdminOfferController;
 use App\Http\Controllers\Api\ElevFinderController;
 use App\Http\Controllers\Api\AdminQuoteRequestController;
 use App\Http\Controllers\Api\AdminUserController;
@@ -34,7 +36,12 @@ Route::middleware('auth:sanctum')->group(function () {
         // Dashboard
         Route::get('/dashboard', [AdminDashboardController::class, 'index']);
 
+        // Offers
+        Route::get('/offers', [AdminOfferController::class, 'index']);
+        Route::post('/offers', [AdminOfferController::class, 'store']);
+
         // Quote Requests
+        Route::post('/quote-requests', [AdminQuoteRequestController::class, 'store']);
         Route::get('/quote-requests', [AdminQuoteRequestController::class, 'index']);
         Route::get('/quote-requests/{id}', [AdminQuoteRequestController::class, 'show']);
         Route::patch('/quote-requests/{id}', [AdminQuoteRequestController::class, 'update']);
@@ -62,7 +69,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/elevators/{id}/drawings/{type}', [ElevatorController::class, 'uploadDrawings']);
         Route::get('/elevators/{id}/drawings/{type}/{ext}', [ElevatorController::class, 'downloadDrawing']);
 
-        // Address book (users)
+        // Address book (contacts grouped by investor_email)
+        Route::get('/contacts', [AdminContactController::class, 'index']);
+        Route::get('/contacts/requests', [AdminContactController::class, 'requests']);
+
+        // Legacy users endpoint
         Route::get('/users', [AdminUserController::class, 'index']);
         Route::get('/users/{id}', [AdminUserController::class, 'show']);
 
@@ -82,6 +93,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // Settings
         Route::patch('/settings', [SettingController::class, 'update']);
+        Route::post('/settings/logo', [SettingController::class, 'uploadLogo']);
 
         // Cabin models
         Route::get('/cabin-models', [CabinModelController::class, 'adminIndex']);
