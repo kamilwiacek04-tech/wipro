@@ -1,13 +1,16 @@
-FROM php:8.3-cli-bookworm
+FROM php:8.3-cli-alpine
 
-RUN apt-get update && apt-get install -y \
-    libicu-dev \
+RUN apk add --no-cache \
+    icu-dev \
     libzip-dev \
     libpng-dev \
-    libjpeg-dev \
-    libfreetype6-dev \
+    libjpeg-turbo-dev \
+    freetype-dev \
     libxml2-dev \
-    zip unzip curl git \
+    zip \
+    unzip \
+    curl \
+    git \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install \
         intl \
@@ -19,8 +22,7 @@ RUN apt-get update && apt-get install -y \
         xml \
         opcache \
         fileinfo \
-        pcntl \
-    && rm -rf /var/lib/apt/lists/*
+        pcntl
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
