@@ -47,9 +47,13 @@ interface CabinAccessory {
 type DetailRow = { label: string; value: string }
 
 const ACCESSORY_CATEGORIES = ['PANEL', 'SIGNAL', 'CEILING', 'MIRROR', 'HANDRAIL', 'FLOORING'] as const
-const CATEGORY_LABELS: Record<string, string> = {
+const CATEGORY_LABELS_PL: Record<string, string> = {
   PANEL: 'Panel dyspozycji', SIGNAL: 'Sygnalizacja', CEILING: 'Sufity',
   MIRROR: 'Lustra', HANDRAIL: 'Poręcze', FLOORING: 'Wykładzina', EXTRA: 'Dodatki',
+}
+const CATEGORY_LABELS_EN: Record<string, string> = {
+  PANEL: 'Control panel', SIGNAL: 'Signalization', CEILING: 'Ceilings',
+  MIRROR: 'Mirrors', HANDRAIL: 'Handrails', FLOORING: 'Flooring', EXTRA: 'Extras',
 }
 
 const CamSvg = () => (
@@ -67,6 +71,7 @@ const ImagePicker = ({
   onSelect?: (file: File) => void
   onUploaded?: (url: string) => void
 }) => {
+  const { t } = useTranslation()
   const [uploading, setUploading] = useState(false)
   const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -84,7 +89,7 @@ const ImagePicker = ({
     }
   }
   return (
-    <label className="relative block w-14 h-14 rounded-lg border-2 border-dashed border-gray-200 hover:border-amber-400 cursor-pointer overflow-hidden bg-gray-50 transition-colors flex-shrink-0" title="Kliknij, aby wgrać zdjęcie">
+    <label className="relative block w-14 h-14 rounded-lg border-2 border-dashed border-gray-200 hover:border-amber-400 cursor-pointer overflow-hidden bg-gray-50 transition-colors flex-shrink-0" title={t('database.uploadImage')}>
       <input type="file" accept="image/*" className="hidden" onChange={handleChange} />
       {uploading ? (
         <div className="absolute inset-0 flex items-center justify-center">
@@ -100,6 +105,7 @@ const ImagePicker = ({
 }
 
 const DetailsEditor = ({ value, onChange }: { value: DetailRow[]; onChange: (v: DetailRow[]) => void }) => {
+  const { t } = useTranslation()
   const update = (i: number, field: keyof DetailRow, v: string) =>
     onChange(value.map((row, j) => (j === i ? { ...row, [field]: v } : row)))
   const remove = (i: number) => onChange(value.filter((_, j) => j !== i))
@@ -107,16 +113,16 @@ const DetailsEditor = ({ value, onChange }: { value: DetailRow[]; onChange: (v: 
   const cls = 'border border-gray-200 rounded-lg px-2 py-1.5 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-amber-300 flex-1 min-w-0'
   return (
     <div className="flex flex-col gap-1.5">
-      {value.length === 0 && <p className="text-xs text-gray-400 italic">Brak szczegółów — kliknij „Dodaj wiersz"</p>}
+      {value.length === 0 && <p className="text-xs text-gray-400 italic">{t('database.cabinModels.noDetails')}</p>}
       {value.map((row, i) => (
         <div key={i} className="flex gap-1.5 items-center">
-          <input className={cls} placeholder="Etykieta (np. Sufit)" value={row.label} onChange={e => update(i, 'label', e.target.value)} />
-          <input className={cls} placeholder="Wartość (np. ST1)" value={row.value} onChange={e => update(i, 'value', e.target.value)} />
+          <input className={cls} placeholder={t('database.cabinModels.detailLabelPlaceholder')} value={row.label} onChange={e => update(i, 'label', e.target.value)} />
+          <input className={cls} placeholder={t('database.cabinModels.detailValuePlaceholder')} value={row.value} onChange={e => update(i, 'value', e.target.value)} />
           <button type="button" onClick={() => remove(i)} className="text-gray-400 hover:text-red-500 text-lg leading-none px-1 flex-shrink-0">×</button>
         </div>
       ))}
       <button type="button" onClick={add} className="flex items-center gap-1 text-xs text-amber-600 hover:text-amber-800 mt-0.5 w-fit">
-        <Plus className="w-3 h-3" /> Dodaj wiersz
+        <Plus className="w-3 h-3" /> {t('database.cabinModels.addRow')}
       </button>
     </div>
   )
@@ -239,7 +245,7 @@ const CabinModelsTab = ({ onCountChange }: { onCountChange?: (n: number) => void
   }, [])
 
   const deleteModel = async (id: number) => {
-    if (!confirm('Usunąć model kabiny?')) return
+    if (!confirm(t('database.cabinModels.confirmDelete'))) return
     await api.delete(`/admin/cabin-models/${id}`)
     setModels(prev => prev.filter(m => m.id !== id))
   }
@@ -287,24 +293,24 @@ const CabinModelsTab = ({ onCountChange }: { onCountChange?: (n: number) => void
   return (
     <Card className="gap-0 overflow-hidden">
       <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-        <h2 className="font-semibold text-gray-900">Modele kabin</h2>
-        <Button size="sm" onClick={() => setShowAdd(!showAdd)}><Plus className="h-4 w-4" />Dodaj model</Button>
+        <h2 className="font-semibold text-gray-900">{t('database.cabinModels.title')}</h2>
+        <Button size="sm" onClick={() => setShowAdd(!showAdd)}><Plus className="h-4 w-4" />{t('database.cabinModels.add')}</Button>
       </div>
       {showAdd && (
         <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/40">
           <div className="flex gap-4 mb-4">
             <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-500">Zdjęcie</label>
+              <label className="text-xs text-gray-500">{t('database.cabinModels.photo')}</label>
               <ImagePicker previewUrl={newImagePreview} onSelect={(file) => { setNewImageFile(file); setNewImagePreview(URL.createObjectURL(file)) }} />
             </div>
             <div className="flex-1 grid grid-cols-2 gap-3">
-              <div><label className="text-xs text-gray-500 mb-1 block">Nazwa PL</label><input {...inp('name_pl')} /></div>
-              <div><label className="text-xs text-gray-500 mb-1 block">Nazwa EN</label><input {...inp('name_en')} /></div>
-              <div><label className="text-xs text-gray-500 mb-1 block">Kolejność</label><input {...inp('sort_order')} type="number" min="0" /></div>
+              <div><label className="text-xs text-gray-500 mb-1 block">{t('settings.namePl')}</label><input {...inp('name_pl')} /></div>
+              <div><label className="text-xs text-gray-500 mb-1 block">{t('settings.nameEn')}</label><input {...inp('name_en')} /></div>
+              <div><label className="text-xs text-gray-500 mb-1 block">{t('database.cabinModels.sortOrder')}</label><input {...inp('sort_order')} type="number" min="0" /></div>
             </div>
           </div>
           <div className="mb-4">
-            <label className="text-xs text-gray-500 mb-2 block font-medium">Szczegóły modelu</label>
+            <label className="text-xs text-gray-500 mb-2 block font-medium">{t('database.cabinModels.detailsTitle')}</label>
             <DetailsEditor value={newDetails} onChange={setNewDetails} />
           </div>
           <div className="flex gap-2">
@@ -314,17 +320,17 @@ const CabinModelsTab = ({ onCountChange }: { onCountChange?: (n: number) => void
         </div>
       )}
       {loading ? <div className="p-6"><SkeletonLoader count={3} /></div> : models.length === 0 ? (
-        <div className="p-12 text-center text-gray-400 text-sm">Brak modeli kabin.</div>
+        <div className="p-12 text-center text-gray-400 text-sm">{t('database.cabinModels.noModels')}</div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead><tr className="border-b border-gray-100 bg-gray-50/50">
               <th className="px-4 py-3 w-20" />
-              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Nazwa PL</th>
-              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Nazwa EN</th>
-              <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">Kol.</th>
-              <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">Status</th>
-              <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">Szczeg.</th>
+              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('settings.namePl')}</th>
+              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('settings.nameEn')}</th>
+              <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.cabinModels.sortOrder')}</th>
+              <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('common.status')}</th>
+              <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.cabinModels.detailsCol')}</th>
               <th className="w-10" />
             </tr></thead>
             <tbody className="divide-y divide-gray-50">
@@ -352,10 +358,10 @@ const CabinModelsTab = ({ onCountChange }: { onCountChange?: (n: number) => void
                   {expandedId === m.id && (
                     <tr>
                       <td colSpan={7} className="px-6 py-4 bg-amber-50/40 border-b border-amber-100">
-                        <p className="text-xs font-medium text-gray-600 mb-2">Szczegóły modelu kabiny:</p>
+                        <p className="text-xs font-medium text-gray-600 mb-2">{t('database.cabinModels.detailsSectionTitle')}</p>
                         <DetailsEditor value={editingDetails} onChange={setEditingDetails} />
                         <div className="flex gap-2 mt-3">
-                          <Button size="sm" onClick={() => saveDetails(m.id)}><Save className="h-3 w-3" />Zapisz</Button>
+                          <Button size="sm" onClick={() => saveDetails(m.id)}><Save className="h-3 w-3" />{t('common.save')}</Button>
                           <Button variant="ghost" size="sm" onClick={() => setExpandedId(null)}>{t('common.cancel')}</Button>
                         </div>
                       </td>
@@ -375,7 +381,7 @@ const CabinModelsTab = ({ onCountChange }: { onCountChange?: (n: number) => void
 const EMPTY_ACC = { category: 'PANEL', name_pl: '', name_en: '', sort_order: 0 }
 
 const AccessoriesTab = ({ onCountChange }: { onCountChange?: (n: number) => void }) => {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [accessories, setAccessories] = useState<CabinAccessory[]>([])
   const [loading, setLoading] = useState(true)
   const [showAdd, setShowAdd] = useState(false)
@@ -391,7 +397,7 @@ const AccessoriesTab = ({ onCountChange }: { onCountChange?: (n: number) => void
   }, [])
 
   const deleteAcc = async (id: number) => {
-    if (!confirm('Usunąć akcesorium?')) return
+    if (!confirm(t('database.accessories.confirmDelete'))) return
     await api.delete(`/admin/cabin-accessories/${id}`)
     setAccessories(prev => prev.filter(a => a.id !== id))
   }
@@ -434,27 +440,27 @@ const AccessoriesTab = ({ onCountChange }: { onCountChange?: (n: number) => void
   return (
     <Card className="gap-0 overflow-hidden">
       <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-        <h2 className="font-semibold text-gray-900">Akcesoria kabin</h2>
-        <Button size="sm" onClick={() => setShowAdd(!showAdd)}><Plus className="h-4 w-4" />Dodaj</Button>
+        <h2 className="font-semibold text-gray-900">{t('database.accessories.title')}</h2>
+        <Button size="sm" onClick={() => setShowAdd(!showAdd)}><Plus className="h-4 w-4" />{t('database.accessories.add')}</Button>
       </div>
 
       {showAdd && (
         <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/40">
           <div className="flex gap-4 mb-3">
             <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-500">Zdjęcie</label>
+              <label className="text-xs text-gray-500">{t('database.accessories.photo')}</label>
               <ImagePicker previewUrl={newAccImagePreview} onSelect={(file) => { setNewAccImageFile(file); setNewAccImagePreview(URL.createObjectURL(file)) }} />
             </div>
             <div className="flex-1 grid grid-cols-2 sm:grid-cols-3 gap-3">
               <div className="col-span-2 sm:col-span-1">
-                <label className="text-xs text-gray-500 mb-1 block">Kategoria</label>
+                <label className="text-xs text-gray-500 mb-1 block">{t('elevators.category')}</label>
                 <select value={newAcc.category} onChange={e => setNewAcc(p => ({ ...p, category: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-300">
-                  {ACCESSORY_CATEGORIES.map(c => <option key={c} value={c}>{CATEGORY_LABELS[c]}</option>)}
+                  {ACCESSORY_CATEGORIES.map(c => <option key={c} value={c}>{i18n.resolvedLanguage === 'pl' ? CATEGORY_LABELS_PL[c] : CATEGORY_LABELS_EN[c]}</option>)}
                 </select>
               </div>
-              <div><label className="text-xs text-gray-500 mb-1 block">Nazwa PL</label><input {...inp('name_pl')} /></div>
-              <div><label className="text-xs text-gray-500 mb-1 block">Nazwa EN</label><input {...inp('name_en')} /></div>
-              <div><label className="text-xs text-gray-500 mb-1 block">Kolejność</label><input {...inp('sort_order')} type="number" min="0" /></div>
+              <div><label className="text-xs text-gray-500 mb-1 block">{t('settings.namePl')}</label><input {...inp('name_pl')} /></div>
+              <div><label className="text-xs text-gray-500 mb-1 block">{t('settings.nameEn')}</label><input {...inp('name_en')} /></div>
+              <div><label className="text-xs text-gray-500 mb-1 block">{t('database.accessories.sortOrder')}</label><input {...inp('sort_order')} type="number" min="0" /></div>
             </div>
           </div>
           <div className="flex gap-2">
@@ -469,11 +475,11 @@ const AccessoriesTab = ({ onCountChange }: { onCountChange?: (n: number) => void
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50/50">
-                <th className="px-4 py-2 w-20 text-left text-xs font-medium text-gray-500 uppercase">Foto</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Nazwa PL</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Nazwa EN</th>
-                <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">Kol.</th>
-                <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">Status</th>
+                <th className="px-4 py-2 w-20 text-left text-xs font-medium text-gray-500 uppercase">{t('database.accessories.photo')}</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('settings.namePl')}</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('settings.nameEn')}</th>
+                <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.accessories.sortOrder')}</th>
+                <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('common.status')}</th>
                 <th className="w-10" />
               </tr>
             </thead>
@@ -482,7 +488,7 @@ const AccessoriesTab = ({ onCountChange }: { onCountChange?: (n: number) => void
                 <>
                   <tr key={`cat-${cat}`} className="bg-gray-50/60 border-t border-gray-100">
                     <td colSpan={6} className="px-4 py-2">
-                      <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{CATEGORY_LABELS[cat]}</span>
+                      <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{i18n.resolvedLanguage === 'pl' ? CATEGORY_LABELS_PL[cat] : CATEGORY_LABELS_EN[cat]}</span>
                     </td>
                   </tr>
                   {grouped[cat].map(a => (
@@ -504,7 +510,7 @@ const AccessoriesTab = ({ onCountChange }: { onCountChange?: (n: number) => void
                 </>
               ))}
               {ACCESSORY_CATEGORIES.every(cat => grouped[cat].length === 0) && (
-                <tr><td colSpan={6} className="px-4 py-8 text-center text-sm text-gray-400">Brak akcesorii</td></tr>
+                <tr><td colSpan={6} className="px-4 py-8 text-center text-sm text-gray-400">{t('database.accessories.noAccessories')}</td></tr>
               )}
             </tbody>
           </table>
@@ -534,7 +540,7 @@ const ExtrasTab = ({ onCountChange }: { onCountChange?: (n: number) => void }) =
   }, [])
 
   const deleteExtra = async (id: number) => {
-    if (!confirm('Usunąć dodatek?')) return
+    if (!confirm(t('database.extras.confirmDelete'))) return
     await api.delete(`/admin/cabin-accessories/${id}`)
     setExtras(prev => prev.filter(a => a.id !== id))
   }
@@ -568,15 +574,15 @@ const ExtrasTab = ({ onCountChange }: { onCountChange?: (n: number) => void }) =
   return (
     <Card className="gap-0 overflow-hidden">
       <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-        <h2 className="font-semibold text-gray-900">Dodatki</h2>
-        <Button size="sm" onClick={() => setShowAdd(!showAdd)}><Plus className="h-4 w-4" />Dodaj</Button>
+        <h2 className="font-semibold text-gray-900">{t('database.extras.title')}</h2>
+        <Button size="sm" onClick={() => setShowAdd(!showAdd)}><Plus className="h-4 w-4" />{t('database.extras.add')}</Button>
       </div>
       {showAdd && (
         <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/40">
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-3">
-            <div><label className="text-xs text-gray-500 mb-1 block">Nazwa PL</label><input {...inp('name_pl')} /></div>
-            <div><label className="text-xs text-gray-500 mb-1 block">Nazwa EN</label><input {...inp('name_en')} /></div>
-            <div><label className="text-xs text-gray-500 mb-1 block">Kolejność</label><input {...inp('sort_order')} type="number" min="0" /></div>
+            <div><label className="text-xs text-gray-500 mb-1 block">{t('settings.namePl')}</label><input {...inp('name_pl')} /></div>
+            <div><label className="text-xs text-gray-500 mb-1 block">{t('settings.nameEn')}</label><input {...inp('name_en')} /></div>
+            <div><label className="text-xs text-gray-500 mb-1 block">{t('database.accessories.sortOrder')}</label><input {...inp('sort_order')} type="number" min="0" /></div>
           </div>
           <div className="flex gap-2">
             <Button size="sm" onClick={addExtra} disabled={saving}><Save className="h-3 w-3" />{saving ? t('common.saving') : t('common.save')}</Button>
@@ -588,15 +594,15 @@ const ExtrasTab = ({ onCountChange }: { onCountChange?: (n: number) => void }) =
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead><tr className="border-b border-gray-100 bg-gray-50/50">
-              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Nazwa PL</th>
-              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Nazwa EN</th>
-              <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">Kol.</th>
-              <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">Status</th>
+              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('settings.namePl')}</th>
+              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('settings.nameEn')}</th>
+              <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.accessories.sortOrder')}</th>
+              <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('common.status')}</th>
               <th className="w-10" />
             </tr></thead>
             <tbody className="divide-y divide-gray-50">
               {extras.length === 0 && (
-                <tr><td colSpan={5} className="px-4 py-6 text-center text-sm text-gray-400">Brak dodatków</td></tr>
+                <tr><td colSpan={5} className="px-4 py-6 text-center text-sm text-gray-400">{t('database.extras.noExtras')}</td></tr>
               )}
               {extras.map(a => (
                 <tr key={a.id} className="hover:bg-gray-50/50">
@@ -622,41 +628,205 @@ const ExtrasTab = ({ onCountChange }: { onCountChange?: (n: number) => void }) =
 // ─── General settings tab ─────────────────────────────────────────────────────
 const GeneralTab = () => {
   const { t } = useTranslation()
-  const [maxStops, setMaxStops] = useState(16)
   const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [saved, setSaved] = useState(false)
+
+  // max_stops
+  const [maxStops, setMaxStops] = useState(16)
+  const [savingStops, setSavingStops] = useState(false)
+  const [savedStops, setSavedStops] = useState(false)
+
+  // company
+  const [companyName, setCompanyName] = useState('')
+  const [companyAddress, setCompanyAddress] = useState('')
+  const [companyNip, setCompanyNip] = useState('')
+  const [companyRegon, setCompanyRegon] = useState('')
+  const [companyKrs, setCompanyKrs] = useState('')
+  const [logoUrl, setLogoUrl] = useState<string | null>(null)
+  const [savingCompany, setSavingCompany] = useState(false)
+  const [savedCompany, setSavedCompany] = useState(false)
+  const [uploadingLogo, setUploadingLogo] = useState(false)
+
+  // pricing
+  const [ei30Price, setEi30Price] = useState('')
+  const [ei60Price, setEi60Price] = useState('')
+  const [profitMargin, setProfitMargin] = useState('')
+  const [savingPricing, setSavingPricing] = useState(false)
+  const [savedPricing, setSavedPricing] = useState(false)
 
   useEffect(() => {
-    api.get('/admin/settings').then(r => setMaxStops(parseInt(r.data.max_stops ?? '16'))).finally(() => setLoading(false))
+    api.get('/admin/settings').then(r => {
+      const d = r.data
+      setMaxStops(parseInt(d.max_stops ?? '16'))
+      setCompanyName(d.company_name ?? '')
+      setCompanyAddress(d.company_address ?? '')
+      setCompanyNip(d.company_nip ?? '')
+      setCompanyRegon(d.company_regon ?? '')
+      setCompanyKrs(d.company_krs ?? '')
+      setEi30Price(d.door_ei30_price ?? '')
+      setEi60Price(d.door_ei60_price ?? '')
+      setProfitMargin(d.profit_margin_percent ?? '')
+      if (d.company_logo_path) {
+        const rel = (d.company_logo_path as string).replace(/^public\//, '')
+        setLogoUrl(`${apiBase.replace('/api', '')}/storage/${rel}`)
+      }
+    }).finally(() => setLoading(false))
   }, [])
 
-  const save = async () => {
-    setSaving(true); setSaved(false)
+  const saveStops = async () => {
+    setSavingStops(true); setSavedStops(false)
     try {
       await api.patch('/admin/settings', { max_stops: maxStops })
-      setSaved(true); setTimeout(() => setSaved(false), 2000)
-    } finally { setSaving(false) }
+      setSavedStops(true); setTimeout(() => setSavedStops(false), 2000)
+    } finally { setSavingStops(false) }
   }
 
+  const saveCompany = async () => {
+    setSavingCompany(true); setSavedCompany(false)
+    try {
+      await api.patch('/admin/settings', {
+        company_name: companyName,
+        company_address: companyAddress,
+        company_nip: companyNip,
+        company_regon: companyRegon,
+        company_krs: companyKrs,
+      })
+      setSavedCompany(true); setTimeout(() => setSavedCompany(false), 2000)
+    } finally { setSavingCompany(false) }
+  }
+
+  const savePricing = async () => {
+    setSavingPricing(true); setSavedPricing(false)
+    try {
+      await api.patch('/admin/settings', {
+        door_ei30_price: parseFloat(ei30Price) || 0,
+        door_ei60_price: parseFloat(ei60Price) || 0,
+        profit_margin_percent: parseFloat(profitMargin) || 0,
+      })
+      setSavedPricing(true); setTimeout(() => setSavedPricing(false), 2000)
+    } finally { setSavingPricing(false) }
+  }
+
+  const uploadLogo = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingLogo(true)
+    try {
+      const token = authStore.getState().token
+      const fd = new FormData()
+      fd.append('logo', file)
+      const res = await fetch(`${apiBase}/admin/settings/logo`, {
+        method: 'POST',
+        headers: { Authorization: token ? `Bearer ${token}` : '', Accept: 'application/json' },
+        body: fd,
+      })
+      if (!res.ok) throw new Error('Upload failed')
+      const data = await res.json()
+      setLogoUrl(data.logo_url)
+      e.target.value = ''
+    } catch { /* silent */ } finally { setUploadingLogo(false) }
+  }
+
+  const inputCls = 'w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-300'
+
+  if (loading) return <Card className="p-6"><SkeletonLoader count={3} /></Card>
+
   return (
-    <Card className="p-6 gap-4">
-      <h2 className="font-semibold text-gray-900">{t('settings.generalSettings')}</h2>
-      {loading ? <SkeletonLoader count={1} /> : (
+    <div className="flex flex-col gap-4">
+
+      {/* Max stops */}
+      <Card className="p-6 gap-4">
+        <h2 className="font-semibold text-gray-900">{t('settings.generalSettings')}</h2>
         <div className="flex items-end gap-4">
           <div className="flex-1 max-w-xs">
             <label className="text-xs text-gray-500 mb-1 block">{t('settings.maxStops')}</label>
-            <input type="number" min={2} max={50} value={maxStops} onChange={e => setMaxStops(parseInt(e.target.value) || 16)}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-300"
-            />
+            <input type="number" min={2} max={50} value={maxStops}
+              onChange={e => setMaxStops(parseInt(e.target.value) || 16)} className={inputCls} />
             <p className="text-xs text-gray-400 mt-1">{t('settings.maxStopsHint')}</p>
           </div>
-          <Button onClick={save} disabled={saving} className="mb-6">
-            {saving ? t('common.saving') : saved ? t('settings.saved') : t('settings.saveSettings')}
+          <Button onClick={saveStops} disabled={savingStops} className="mb-6">
+            {savingStops ? t('common.saving') : savedStops ? t('settings.saved') : t('settings.saveSettings')}
           </Button>
         </div>
-      )}
-    </Card>
+      </Card>
+
+      {/* Company info */}
+      <Card className="p-6 gap-4">
+        <h2 className="font-semibold text-gray-900">{t('settings.companyInfo')}</h2>
+
+        {/* Logo */}
+        <div className="flex items-center gap-4">
+          <div className="w-24 h-16 rounded-lg border-2 border-dashed border-gray-200 flex items-center justify-center bg-gray-50 overflow-hidden flex-shrink-0">
+            {logoUrl
+              ? <img src={logoUrl} alt="logo" className="w-full h-full object-contain p-1" />
+              : <span className="text-xs text-gray-400">{t('settings.companyLogo')}</span>
+            }
+          </div>
+          <label className="cursor-pointer">
+            <input type="file" accept="image/*" className="hidden" onChange={uploadLogo} />
+            <span className="text-sm text-amber-600 hover:text-amber-700 font-medium">
+              {uploadingLogo ? t('common.saving') + '...' : logoUrl ? t('settings.changeLogo') : t('settings.uploadLogo')}
+            </span>
+          </label>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="col-span-2">
+            <label className="text-xs text-gray-500 mb-1 block">{t('settings.companyName')}</label>
+            <input value={companyName} onChange={e => setCompanyName(e.target.value)} className={inputCls} />
+          </div>
+          <div className="col-span-2">
+            <label className="text-xs text-gray-500 mb-1 block">{t('settings.companyAddress')}</label>
+            <input value={companyAddress} onChange={e => setCompanyAddress(e.target.value)} className={inputCls} />
+          </div>
+          <div>
+            <label className="text-xs text-gray-500 mb-1 block">{t('settings.companyNip')}</label>
+            <input value={companyNip} onChange={e => setCompanyNip(e.target.value)} className={inputCls} />
+          </div>
+          <div>
+            <label className="text-xs text-gray-500 mb-1 block">{t('settings.companyRegon')}</label>
+            <input value={companyRegon} onChange={e => setCompanyRegon(e.target.value)} className={inputCls} />
+          </div>
+          <div>
+            <label className="text-xs text-gray-500 mb-1 block">{t('settings.companyKrs')}</label>
+            <input value={companyKrs} onChange={e => setCompanyKrs(e.target.value)} className={inputCls} />
+          </div>
+        </div>
+
+        <div className="flex justify-end">
+          <Button onClick={saveCompany} disabled={savingCompany}>
+            {savingCompany ? t('common.saving') : savedCompany ? t('settings.saved') : t('settings.saveCompany')}
+          </Button>
+        </div>
+      </Card>
+
+      {/* Pricing */}
+      <Card className="p-6 gap-4">
+        <h2 className="font-semibold text-gray-900">{t('settings.pricingTitle')}</h2>
+        <div className="grid grid-cols-3 gap-4">
+          <div>
+            <label className="text-xs text-gray-500 mb-1 block">{t('settings.ei30Price')}</label>
+            <input type="number" min={0} step={0.01} value={ei30Price}
+              onChange={e => setEi30Price(e.target.value)} className={inputCls} />
+          </div>
+          <div>
+            <label className="text-xs text-gray-500 mb-1 block">{t('settings.ei60Price')}</label>
+            <input type="number" min={0} step={0.01} value={ei60Price}
+              onChange={e => setEi60Price(e.target.value)} className={inputCls} />
+          </div>
+          <div>
+            <label className="text-xs text-gray-500 mb-1 block">{t('settings.profitMargin')}</label>
+            <input type="number" min={0} max={100} step={0.1} value={profitMargin}
+              onChange={e => setProfitMargin(e.target.value)} className={inputCls} />
+          </div>
+        </div>
+        <div className="flex justify-end">
+          <Button onClick={savePricing} disabled={savingPricing}>
+            {savingPricing ? t('common.saving') : savedPricing ? t('settings.saved') : t('settings.savePricing')}
+          </Button>
+        </div>
+      </Card>
+
+    </div>
   )
 }
 
@@ -748,26 +918,26 @@ const ElevatorRow = ({ elevator, onUpdate, onDelete }: {
     standard: { pdf: null, dwg: null, bim: null },
     throughway: { pdf: null, dwg: null, bim: null },
   })
-  const [drawingDoc, setDrawingDoc] = useState({
-    standard: elevator.drawing_standard_doc ?? '',
-    throughway: elevator.drawing_throughway_doc ?? '',
+  const [drawingDoc, setDrawingDoc] = useState<{ standard: File | null; throughway: File | null }>({
+    standard: null,
+    throughway: null,
   })
   const [uploadingDrawing, setUploadingDrawing] = useState<Record<string, boolean>>({})
 
   const uploadDrawing = async (type: 'standard' | 'throughway') => {
     const files = drawingFiles[type]
-    if (!files.pdf || !files.dwg || !files.bim) {
-      alert('Wgraj wszystkie 3 pliki (PDF, DWG, BIM).')
+    if (!files.pdf && !files.dwg && !files.bim && !drawingDoc[type]) {
+      alert(t('database.drawings.selectAtLeastOne'))
       return
     }
     setUploadingDrawing(prev => ({ ...prev, [type]: true }))
     try {
       const token = authStore.getState().token
       const fd = new FormData()
-      fd.append('pdf', files.pdf)
-      fd.append('dwg', files.dwg)
-      fd.append('bim', files.bim)
-      fd.append('doc', drawingDoc[type])
+      if (files.pdf) fd.append('pdf', files.pdf)
+      if (files.dwg) fd.append('dwg', files.dwg)
+      if (files.bim) fd.append('bim', files.bim)
+      if (drawingDoc[type]) fd.append('doc', drawingDoc[type]!)
       const res = await fetch(`${apiBase}/admin/elevators/${elevator.id}/drawings/${type}`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
@@ -777,24 +947,27 @@ const ElevatorRow = ({ elevator, onUpdate, onDelete }: {
       const updated = await res.json()
       setLocalElevator(updated)
       setDrawingFiles(prev => ({ ...prev, [type]: { pdf: null, dwg: null, bim: null } }))
+      setDrawingDoc(prev => ({ ...prev, [type]: null }))
     } catch {
-      alert('Błąd podczas wgrywania plików.')
+      alert(t('database.drawings.uploadError'))
     } finally {
       setUploadingDrawing(prev => ({ ...prev, [type]: false }))
     }
   }
 
-  const downloadDrawing = async (type: 'standard' | 'throughway', ext: 'pdf' | 'dwg' | 'bim') => {
+  const downloadDrawing = async (type: 'standard' | 'throughway', ext: 'pdf' | 'dwg' | 'bim' | 'doc') => {
     const token = authStore.getState().token
     const res = await fetch(`${apiBase}/admin/elevators/${elevator.id}/drawings/${type}/${ext}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
-    if (!res.ok) { alert('Plik niedostępny.'); return }
+    if (!res.ok) { alert(t('database.drawings.fileNotAvailable')); return }
     const blob = await res.blob()
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `rysunek-${type}-${elevator.model}.${ext}`
+    const cd = res.headers.get('Content-Disposition')
+    const match = cd?.match(/filename="?([^";]+)"?/)
+    a.download = match?.[1] ?? `rysunek-${type}-${elevator.model}.${ext}`
     document.body.appendChild(a); a.click(); document.body.removeChild(a)
     URL.revokeObjectURL(url)
   }
@@ -954,23 +1127,23 @@ const ElevatorRow = ({ elevator, onUpdate, onDelete }: {
 
             {/* Dane techniczne */}
             <div className="mt-5 pt-4 border-t border-gray-200">
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Dane techniczne</p>
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">{t('database.technical.sectionTitle')}</p>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-3">
-                <TechField label="Normy" value={elevator.standards} elevatorId={elevator.id} field="standards" onSaved={onUpdate} />
-                <TechField label="Maszynownia" value={elevator.machine_room} elevatorId={elevator.id} field="machine_room" onSaved={onUpdate} />
-                <TechField label="Wys. podnoszenia [m]" value={elevator.lifting_height} elevatorId={elevator.id} field="lifting_height" type="number" onSaved={onUpdate} />
-                <TechField label="Szer. drzwi [mm]" value={elevator.door_width} elevatorId={elevator.id} field="door_width" type="number" onSaved={onUpdate} />
-                <TechField label="Wys. drzwi [mm]" value={elevator.door_height} elevatorId={elevator.id} field="door_height" type="number" onSaved={onUpdate} />
-                <TechField label="Klasa EI drzwi" value={elevator.door_fire_class} elevatorId={elevator.id} field="door_fire_class" onSaved={onUpdate} />
-                <TechField label="Konstr. szybu" value={elevator.shaft_construction} elevatorId={elevator.id} field="shaft_construction" onSaved={onUpdate} />
-                <TechField label="Wentylacja szybu" value={elevator.shaft_ventilation} elevatorId={elevator.id} field="shaft_ventilation" onSaved={onUpdate} />
-                <TechField label="Temp. w szybie" value={elevator.shaft_temperature} elevatorId={elevator.id} field="shaft_temperature" onSaved={onUpdate} />
-                <TechField label="Montaż" value={elevator.installation_type} elevatorId={elevator.id} field="installation_type" onSaved={onUpdate} />
-                <TechField label="Wystrój kabiny" value={elevator.cabin_finish} elevatorId={elevator.id} field="cabin_finish" onSaved={onUpdate} />
-                <TechField label="Drzwi kabinowe" value={elevator.cabin_door_finish} elevatorId={elevator.id} field="cabin_door_finish" onSaved={onUpdate} />
-                <TechField label="Drzwi przystankowe" value={elevator.landing_door_finish} elevatorId={elevator.id} field="landing_door_finish" onSaved={onUpdate} />
+                <TechField label={t('database.technical.standards')} value={elevator.standards} elevatorId={elevator.id} field="standards" onSaved={onUpdate} />
+                <TechField label={t('database.technical.machineRoom')} value={elevator.machine_room} elevatorId={elevator.id} field="machine_room" onSaved={onUpdate} />
+                <TechField label={t('database.technical.liftingHeight')} value={elevator.lifting_height} elevatorId={elevator.id} field="lifting_height" type="number" onSaved={onUpdate} />
+                <TechField label={t('database.technical.doorWidth')} value={elevator.door_width} elevatorId={elevator.id} field="door_width" type="number" onSaved={onUpdate} />
+                <TechField label={t('database.technical.doorHeight')} value={elevator.door_height} elevatorId={elevator.id} field="door_height" type="number" onSaved={onUpdate} />
+                <TechField label={t('database.technical.doorFireClass')} value={elevator.door_fire_class} elevatorId={elevator.id} field="door_fire_class" onSaved={onUpdate} />
+                <TechField label={t('database.technical.shaftConstruction')} value={elevator.shaft_construction} elevatorId={elevator.id} field="shaft_construction" onSaved={onUpdate} />
+                <TechField label={t('database.technical.shaftVentilation')} value={elevator.shaft_ventilation} elevatorId={elevator.id} field="shaft_ventilation" onSaved={onUpdate} />
+                <TechField label={t('database.technical.shaftTemperature')} value={elevator.shaft_temperature} elevatorId={elevator.id} field="shaft_temperature" onSaved={onUpdate} />
+                <TechField label={t('database.technical.installationType')} value={elevator.installation_type} elevatorId={elevator.id} field="installation_type" onSaved={onUpdate} />
+                <TechField label={t('database.technical.cabinFinish')} value={elevator.cabin_finish} elevatorId={elevator.id} field="cabin_finish" onSaved={onUpdate} />
+                <TechField label={t('database.technical.cabinDoorFinish')} value={elevator.cabin_door_finish} elevatorId={elevator.id} field="cabin_door_finish" onSaved={onUpdate} />
+                <TechField label={t('database.technical.landingDoorFinish')} value={elevator.landing_door_finish} elevatorId={elevator.id} field="landing_door_finish" onSaved={onUpdate} />
                 <div className="col-span-2 sm:col-span-3 lg:col-span-4">
-                  <p className="text-xs text-gray-400 mb-0.5 uppercase tracking-wide">Wyposażenie</p>
+                  <p className="text-xs text-gray-400 mb-0.5 uppercase tracking-wide">{t('database.technical.equipment')}</p>
                   <InlineEdit value={elevator.equipment ?? ''} onSave={v => onUpdate(elevator.id, 'equipment', v)} />
                 </div>
               </div>
@@ -978,16 +1151,17 @@ const ElevatorRow = ({ elevator, onUpdate, onDelete }: {
 
             {/* Rysunki */}
             <div className="mt-5 pt-4 border-t border-gray-200">
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Rysunki</p>
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">{t('database.drawings.sectionTitle')}</p>
               {(['standard', 'throughway'] as const).map(type => (
                 <div key={type} className="mt-4 first:mt-0">
                   <p className="text-xs font-medium text-gray-600 mb-2">
-                    {type === 'standard' ? 'Kabina nieprzelotowa' : 'Kabina przelotowa'}
+                    {type === 'standard' ? t('database.drawings.standard') : t('database.drawings.throughway')}
                   </p>
                   {/* Current files */}
                   <div className="flex gap-2 mb-3 flex-wrap">
-                    {(['pdf', 'dwg', 'bim'] as const).map(ext => {
+                    {(['pdf', 'dwg', 'bim', 'doc'] as const).map(ext => {
                       const path = localElevator[`drawing_${type}_${ext}` as keyof typeof localElevator]
+                      const label = ext === 'doc' ? t('database.drawings.descDoc') : ext.toUpperCase()
                       return (
                         <button
                           key={ext}
@@ -1000,15 +1174,11 @@ const ElevatorRow = ({ elevator, onUpdate, onDelete }: {
                           }`}
                         >
                           <FileDown className="h-3 w-3" />
-                          {ext.toUpperCase()}
+                          {label}
                         </button>
                       )
                     })}
                   </div>
-                  {/* Doc description */}
-                  {localElevator[`drawing_${type}_doc` as keyof typeof localElevator] && (
-                    <p className="text-xs text-gray-500 mb-3 italic">{String(localElevator[`drawing_${type}_doc` as keyof typeof localElevator])}</p>
-                  )}
                   {/* Upload new set */}
                   <div className="flex flex-wrap gap-2 items-end">
                     {(['pdf', 'dwg', 'bim'] as const).map(ext => (
@@ -1022,14 +1192,13 @@ const ElevatorRow = ({ elevator, onUpdate, onDelete }: {
                         />
                       </div>
                     ))}
-                    <div className="flex flex-col gap-1 flex-1 min-w-40">
-                      <label className="text-xs text-gray-400">Opis</label>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs text-gray-400">{t('database.drawings.descDoc')}</label>
                       <input
-                        type="text"
-                        value={drawingDoc[type]}
-                        onChange={e => setDrawingDoc(prev => ({ ...prev, [type]: e.target.value }))}
-                        className="border border-gray-200 rounded px-2 py-1.5 text-xs bg-gray-50 focus:outline-none focus:ring-1 focus:ring-amber-300"
-                        placeholder="Opis rysunku..."
+                        type="file"
+                        accept=".doc,.docx"
+                        onChange={e => setDrawingDoc(prev => ({ ...prev, [type]: e.target.files?.[0] ?? null }))}
+                        className="text-xs text-gray-600 border border-gray-200 rounded px-2 py-1 w-44 bg-gray-50"
                       />
                     </div>
                     <Button
@@ -1037,7 +1206,7 @@ const ElevatorRow = ({ elevator, onUpdate, onDelete }: {
                       onClick={() => uploadDrawing(type)}
                       disabled={uploadingDrawing[type]}
                     >
-                      {uploadingDrawing[type] ? 'Wgrywanie...' : 'Wgraj'}
+                      {uploadingDrawing[type] ? t('database.drawings.uploading') : t('database.drawings.upload')}
                     </Button>
                   </div>
                 </div>
@@ -1084,26 +1253,31 @@ const EMPTY_ELEVATOR = {
 
 type DatabaseTab = 'elevators' | 'lift-types' | 'cabin-models' | 'accessories' | 'extras' | 'general'
 
-const DB_TABS: { id: DatabaseTab; label: string }[] = [
-  { id: 'elevators', label: 'Windy' },
-  { id: 'lift-types', label: 'Typy wind' },
-  { id: 'cabin-models', label: 'Modele kabin' },
-  { id: 'accessories', label: 'Akcesoria' },
-  { id: 'extras', label: 'Dodatki' },
-  { id: 'general', label: 'Ogólne' },
-]
-
-const TAB_SUBTITLES: Record<DatabaseTab, (n: number) => string> = {
-  'elevators':     n => `${n} wind w bazie`,
-  'lift-types':    n => `${n} typów wind w bazie`,
-  'cabin-models':  n => `${n} modeli kabin w bazie`,
-  'accessories':   n => `${n} akcesoriów w bazie`,
-  'extras':        n => `${n} dodatków w bazie`,
-  'general':       _  => 'Ustawienia ogólne',
-}
+const DB_TAB_IDS: DatabaseTab[] = ['elevators', 'lift-types', 'cabin-models', 'accessories', 'extras', 'general']
 
 const Database = () => {
   const { t } = useTranslation()
+
+  const DB_TABS = [
+    { id: 'elevators' as DatabaseTab,    label: t('database.tabs.elevators') },
+    { id: 'lift-types' as DatabaseTab,   label: t('database.tabs.liftTypes') },
+    { id: 'cabin-models' as DatabaseTab, label: t('database.tabs.cabinModels') },
+    { id: 'accessories' as DatabaseTab,  label: t('database.tabs.accessories') },
+    { id: 'extras' as DatabaseTab,       label: t('database.tabs.extras') },
+    { id: 'general' as DatabaseTab,      label: t('database.tabs.general') },
+  ]
+
+  const getTabSubtitle = (tab: DatabaseTab, n: number): string => {
+    if (tab === 'general') return t('database.subtitles.general')
+    const key = {
+      'elevators':    'database.subtitles.elevators',
+      'lift-types':   'database.subtitles.liftTypes',
+      'cabin-models': 'database.subtitles.cabinModels',
+      'accessories':  'database.subtitles.accessories',
+      'extras':       'database.subtitles.extras',
+    }[tab]
+    return t(key as any, { count: n })
+  }
   const [elevators, setElevators] = useState<Elevator[]>([])
   const [loading, setLoading] = useState(true)
   const [showAdd, setShowAdd] = useState(false)
@@ -1141,7 +1315,7 @@ const Database = () => {
       if (errors) {
         Object.values(errors).forEach(msgs => toast.error(msgs[0]))
       } else {
-        toast.error(err?.response?.data?.message ?? 'Błąd zapisu')
+        toast.error(err?.response?.data?.message ?? t('database.errorSave'))
       }
     }
   }
@@ -1188,7 +1362,7 @@ const Database = () => {
         setFormErrors(errors)
         Object.values(errors).forEach(msgs => toast.error(msgs[0]))
       } else {
-        toast.error(err?.response?.data?.message ?? 'Błąd zapisu')
+        toast.error(err?.response?.data?.message ?? t('database.errorSave'))
       }
     } finally {
       setSaving(false)
@@ -1210,7 +1384,7 @@ const Database = () => {
 
   return (
     <MainLayout headerComponent={
-      <MainHeader title={t('nav.database')} subTitle={TAB_SUBTITLES[tab](tab === 'elevators' ? elevators.length : (counts[tab] ?? 0))}>
+      <MainHeader title={t('nav.database')} subTitle={getTabSubtitle(tab, tab === 'elevators' ? elevators.length : (counts[tab] ?? 0))}>
         {tab === 'elevators' && (
           <Button size="sm" onClick={() => setShowAdd(!showAdd)}>
             <Plus className="h-4 w-4" />
@@ -1295,24 +1469,24 @@ const Database = () => {
             </div>
             {/* Technical parameters */}
             <div className="border-t border-gray-100 pt-4 mt-2">
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Parametry techniczne</p>
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">{t('database.technical.techParamsSection')}</p>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-3">
-                <div><label className="text-xs text-gray-500 mb-1 block">Normy</label><input {...optInp('standards')} /></div>
-                <div><label className="text-xs text-gray-500 mb-1 block">Maszynownia</label><input {...optInp('machine_room')} /></div>
-                <div><label className="text-xs text-gray-500 mb-1 block">Wys. podnoszenia [m]</label><input {...optInp('lifting_height')} type="number" step="0.01" /></div>
-                <div><label className="text-xs text-gray-500 mb-1 block">Szer. drzwi [mm]</label><input {...optInp('door_width')} type="number" /></div>
-                <div><label className="text-xs text-gray-500 mb-1 block">Wys. drzwi [mm]</label><input {...optInp('door_height')} type="number" /></div>
-                <div><label className="text-xs text-gray-500 mb-1 block">Klasa EI drzwi</label><input {...optInp('door_fire_class')} /></div>
-                <div><label className="text-xs text-gray-500 mb-1 block">Konstr. szybu</label><input {...optInp('shaft_construction')} /></div>
-                <div><label className="text-xs text-gray-500 mb-1 block">Wentylacja szybu</label><input {...optInp('shaft_ventilation')} /></div>
-                <div><label className="text-xs text-gray-500 mb-1 block">Temp. w szybie</label><input {...optInp('shaft_temperature')} /></div>
-                <div><label className="text-xs text-gray-500 mb-1 block">Montaż</label><input {...optInp('installation_type')} /></div>
-                <div><label className="text-xs text-gray-500 mb-1 block">Wystrój kabiny</label><input {...optInp('cabin_finish')} /></div>
-                <div><label className="text-xs text-gray-500 mb-1 block">Drzwi kabinowe</label><input {...optInp('cabin_door_finish')} /></div>
-                <div className="col-span-2"><label className="text-xs text-gray-500 mb-1 block">Drzwi przystankowe</label><input {...optInp('landing_door_finish')} /></div>
+                <div><label className="text-xs text-gray-500 mb-1 block">{t('database.technical.standards')}</label><input {...optInp('standards')} /></div>
+                <div><label className="text-xs text-gray-500 mb-1 block">{t('database.technical.machineRoom')}</label><input {...optInp('machine_room')} /></div>
+                <div><label className="text-xs text-gray-500 mb-1 block">{t('database.technical.liftingHeight')}</label><input {...optInp('lifting_height')} type="number" step="0.01" /></div>
+                <div><label className="text-xs text-gray-500 mb-1 block">{t('database.technical.doorWidth')}</label><input {...optInp('door_width')} type="number" /></div>
+                <div><label className="text-xs text-gray-500 mb-1 block">{t('database.technical.doorHeight')}</label><input {...optInp('door_height')} type="number" /></div>
+                <div><label className="text-xs text-gray-500 mb-1 block">{t('database.technical.doorFireClass')}</label><input {...optInp('door_fire_class')} /></div>
+                <div><label className="text-xs text-gray-500 mb-1 block">{t('database.technical.shaftConstruction')}</label><input {...optInp('shaft_construction')} /></div>
+                <div><label className="text-xs text-gray-500 mb-1 block">{t('database.technical.shaftVentilation')}</label><input {...optInp('shaft_ventilation')} /></div>
+                <div><label className="text-xs text-gray-500 mb-1 block">{t('database.technical.shaftTemperature')}</label><input {...optInp('shaft_temperature')} /></div>
+                <div><label className="text-xs text-gray-500 mb-1 block">{t('database.technical.installationType')}</label><input {...optInp('installation_type')} /></div>
+                <div><label className="text-xs text-gray-500 mb-1 block">{t('database.technical.cabinFinish')}</label><input {...optInp('cabin_finish')} /></div>
+                <div><label className="text-xs text-gray-500 mb-1 block">{t('database.technical.cabinDoorFinish')}</label><input {...optInp('cabin_door_finish')} /></div>
+                <div className="col-span-2"><label className="text-xs text-gray-500 mb-1 block">{t('database.technical.landingDoorFinish')}</label><input {...optInp('landing_door_finish')} /></div>
               </div>
               <div>
-                <label className="text-xs text-gray-500 mb-1 block">Wyposażenie</label>
+                <label className="text-xs text-gray-500 mb-1 block">{t('database.technical.equipment')}</label>
                 <textarea
                   value={form.equipment}
                   onChange={e => setForm(p => ({ ...p, equipment: e.target.value }))}
