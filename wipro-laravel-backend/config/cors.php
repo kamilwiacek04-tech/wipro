@@ -13,6 +13,7 @@ return [
         'https://wipro-wind.pl',
         'https://www.wipro-wind.pl',
         'https://konfigurator.wipro-wind.pl',
+        env('CLIENT_URL', 'https://wipro-sable.vercel.app'),
     ],
     'allowed_origins_patterns' => [],
     'allowed_headers' => ['*'],
