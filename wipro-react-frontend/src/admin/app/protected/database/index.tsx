@@ -889,7 +889,7 @@ const TechField = ({ label, value, elevatorId, field, onSaved, type = 'text' }: 
   elevatorId: number
   field: string
   onSaved: (elevatorId: number, field: string, value: string) => void
-  type?: string
+  type?: 'text' | 'number'
 }) => (
   <div>
     <p className="text-xs text-gray-400 mb-0.5 uppercase tracking-wide">{label}</p>
@@ -1253,7 +1253,6 @@ const EMPTY_ELEVATOR = {
 
 type DatabaseTab = 'elevators' | 'lift-types' | 'cabin-models' | 'accessories' | 'extras' | 'general'
 
-const DB_TAB_IDS: DatabaseTab[] = ['elevators', 'lift-types', 'cabin-models', 'accessories', 'extras', 'general']
 
 const Database = () => {
   const { t } = useTranslation()

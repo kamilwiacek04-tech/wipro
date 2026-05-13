@@ -56,7 +56,7 @@ const OffersPage = () => {
 
   const [data, setData] = useState<Paginated | null>(null)
   const [loading, setLoading] = useState(true)
-  const [page, setPage] = useState(1)
+  const [_page, setPage] = useState(1)
   const [status, setStatus] = useState('')
 
   const [showForm, setShowForm] = useState(false)

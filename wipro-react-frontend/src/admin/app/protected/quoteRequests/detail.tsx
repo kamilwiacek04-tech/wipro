@@ -23,7 +23,6 @@ import {
   MapPin,
   MessageSquare,
   Pencil,
-  Phone,
   Plus,
   Save,
   Search,
