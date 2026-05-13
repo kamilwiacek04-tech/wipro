@@ -9,6 +9,7 @@ return [
         'http://localhost:3000',
         'http://localhost:3001',
         'http://localhost:3002',
+        'http://localhost:4173',
         'https://wipro-laravel-backend.ddev.site',
         'https://wipro-wind.pl',
         'https://www.wipro-wind.pl',

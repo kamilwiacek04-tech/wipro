@@ -3,11 +3,10 @@ import { createRoot } from 'react-dom/client'
 
 const isAdmin = window.location.pathname.startsWith('/w-admin')
 
-const App = lazy(() =>
-  isAdmin
-    ? import('./admin/AdminApp')
-    : import('./configurator/ConfiguratorApp')
-)
+const AdminApp = lazy(() => import('./admin/AdminApp'))
+const ConfiguratorApp = lazy(() => import('./configurator/ConfiguratorApp'))
+
+const App = isAdmin ? AdminApp : ConfiguratorApp
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
