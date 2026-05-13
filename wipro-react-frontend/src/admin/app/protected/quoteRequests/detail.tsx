@@ -1221,19 +1221,6 @@ const QuoteRequestDetail = () => {
                         </span>
                       </div>
                     )}
-                    {offer.status === 'sent' && !offer.client_response && (
-                      <div className="mt-2 pt-2 border-t border-gray-100">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          disabled={saving}
-                          onClick={() => cancelOffer(offer.id)}
-                          className="w-full text-red-500 hover:text-red-700 hover:bg-red-50"
-                        >
-                          {t('quoteRequests.detail.cancelOffer')}
-                        </Button>
-                      </div>
-                    )}
                   </div>
                 ))}
               </div>
