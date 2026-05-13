@@ -660,7 +660,10 @@ const QuoteRequestDetail = () => {
     setDownloading(prev => ({ ...prev, [key]: true }))
     try {
       const res = await api.get(`/admin/offers/${offerId}/${type}`, { responseType: 'blob' })
-      const url = URL.createObjectURL(new Blob([res.data]))
+      const mimeType = type === 'pdf'
+        ? 'application/pdf'
+        : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      const url = URL.createObjectURL(new Blob([res.data], { type: mimeType }))
       const a = document.createElement('a')
       a.href = url
       a.download = `oferta-${offerNumber.replace(/\//g, '_')}.${type}`

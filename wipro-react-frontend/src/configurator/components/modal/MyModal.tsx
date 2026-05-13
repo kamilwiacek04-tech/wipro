@@ -3,6 +3,7 @@ import { useAppDispatch, useAppSelector } from '@/store';
 import { resetState } from '@/store/slices/formSlice';
 import { closeModal, ModalType } from '@/store/slices/modalSlice';
 import { useFormStore } from '@/store/zustand/formStore';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
@@ -30,6 +31,11 @@ const MyModal = ({type}: Props) => {
             return;
         }
     }
+
+    useEffect(() => {
+        document.body.style.overflow = 'hidden'
+        return () => { document.body.style.overflow = '' }
+      }, [])
 
     return (
         <div className="fixed top-0 left-0 w-screen h-screen bg-black/50 z-[1000] flex justify-center items-center">

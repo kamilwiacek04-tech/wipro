@@ -82,6 +82,7 @@ body {
 }
 .conf-btn:hover { color: var(--white); }
 .conf-btn:hover::before { width: 100%; }
+.conf-btn:disabled { opacity: 0.6; cursor: not-allowed; pointer-events: none; }
 .conf-btn-right { align-self: flex-start; }
 .conf-btn-right::before { left: auto; right: 0; }
 

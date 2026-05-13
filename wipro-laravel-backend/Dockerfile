@@ -31,6 +31,8 @@ WORKDIR /var/www/html
 
 COPY . .
 
+COPY php.ini /usr/local/etc/php/conf.d/uploads.ini
+
 RUN composer install --optimize-autoloader --no-dev --no-interaction --no-scripts
 
 RUN php artisan storage:link || true

@@ -1,9 +1,9 @@
 import AccessorySelector from '@/components/AccessorySelector'
-import CheckboxElement from '@/components/CheckboxElement'
 import AnimatedPage from '@/components/AnimatedPage'
 import AnimatedPageSide from '@/components/AnimatedPageSide'
 import BorderInput from '@/components/BorderInput'
 import CarouselaImage from '@/components/carouselaImage/CarouselaImage'
+import CheckboxElement from '@/components/CheckboxElement'
 import FormContent from '@/components/FormContent'
 import Loading from '@/components/Loading'
 import FinishesAndAccessoriesSummary from '@/components/multiStepWizardSummary/FinishesAndAccessoriesSummary'
@@ -201,7 +201,7 @@ const FinishesAndAccessories = () => {
                                 </BorderInput>
                             )}
 
-                            <SubmitButton title={t('form.submit')} />
+                            <SubmitButton title={t('form.submit')} isLoading={isLoading} />
                         </form>
                     )}
                 </FormContent>

@@ -290,5 +290,14 @@ table.sec tr.sep td { border-top:1px solid #efefef; }
   Pozwoli nam to na sprawne przeprowadzenie dalszych etapów realizacji.
 </div>
 
+@if($cabinImageBase64)
+{{-- PAGE 3 - Cabin photo --}}
+<div style="page-break-before:always;"></div>
+<div style="padding:28px; text-align:center;">
+  <div style="font-size:13px; font-weight:bold; margin-bottom:16px; color:#1a1a1a;">Wizualizacja kabiny</div>
+  <img src="{{ $cabinImageBase64 }}" style="max-width:480px; max-height:600px; border-radius:8px; display:block; margin:0 auto;">
+</div>
+@endif
+
 </body>
 </html>

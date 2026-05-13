@@ -1,8 +1,8 @@
-import { RootState, useAppDispatch, useAppSelector } from '@/store'
-import { PropsWithChildren } from 'react'
-import MyModal from '@/components/modal/MyModal';
 import CabinInfoModal from '@/components/CabinInfoModal';
+import MyModal from '@/components/modal/MyModal';
+import { RootState, useAppDispatch, useAppSelector } from '@/store';
 import { closeModal } from '@/store/slices/modalSlice';
+import { PropsWithChildren } from 'react';
 
 const ModalProvider = ({children}: PropsWithChildren) => {
     const modal = useAppSelector((state: RootState) => state.modal);

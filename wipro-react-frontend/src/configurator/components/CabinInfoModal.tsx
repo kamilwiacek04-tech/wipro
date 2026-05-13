@@ -1,5 +1,6 @@
-import { CabinModel } from '@/store/mainApi/response'
-import { useTranslation } from 'react-i18next'
+import { CabinModel } from '@/store/mainApi/response';
+import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
     item: CabinModel;
@@ -9,6 +10,11 @@ interface Props {
 const CabinInfoModal = ({ item, onClose }: Props) => {
     const { i18n, t } = useTranslation()
     const name = i18n.language === 'pl' ? item.name_pl : item.name_en
+
+    useEffect(() => {
+        document.body.style.overflow = 'hidden'
+        return () => { document.body.style.overflow = '' }
+      }, [])
 
     return (
         <div
@@ -23,14 +29,6 @@ const CabinInfoModal = ({ item, onClose }: Props) => {
                     <h2 style={{ fontSize: 20, fontWeight: 700, color: '#1a1a1a', margin: 0 }}>{name}</h2>
                     <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: '#999', lineHeight: 1 }}>×</button>
                 </div>
-
-                {item.image_url && (
-                    <img
-                        src={item.image_url}
-                        alt={name}
-                        style={{ width: '100%', borderRadius: 8, marginBottom: 20, objectFit: 'cover' }}
-                    />
-                )}
 
                 {item.details && item.details.length > 0 && (
                     <>
