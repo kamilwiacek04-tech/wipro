@@ -693,17 +693,6 @@ const QuoteRequestDetail = () => {
     }
   }
 
-  const cancelOffer = async (offerId: number) => {
-    if (!confirm(t('quoteRequests.detail.confirmCancel'))) return
-    setSaving(true)
-    try {
-      await api.post(`/admin/offers/${offerId}/cancel`)
-      await load()
-    } finally {
-      setSaving(false)
-    }
-  }
-
   const assignAdmin = async (adminId: number | null) => {
     setAssigning(true)
     try {
