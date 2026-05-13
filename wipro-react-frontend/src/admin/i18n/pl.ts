@@ -100,6 +100,8 @@ const pl = {
       offerAcceptedNoNew: 'Oferta zaakceptowana — nie można generować nowych',
       cancelOffer: 'Anuluj ofertę',
       confirmCancel: 'Anulować ofertę? Klient zobaczy że oferta jest nieaktywna.',
+      deleteDraft: 'Usuń szkic',
+      confirmDeleteDraft: 'Usunąć szkic oferty? Tej operacji nie można cofnąć.',
       offerCancelled: 'Anulowana',
       cancelledAt: 'Anulowana',
       submittedAt: 'Złożone {{date}}',

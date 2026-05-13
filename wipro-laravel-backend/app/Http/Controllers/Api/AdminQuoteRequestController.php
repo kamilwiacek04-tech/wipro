@@ -286,4 +286,16 @@ class AdminQuoteRequestController extends Controller
 
         return response()->json($offer->fresh('items'));
     }
+
+    public function deleteDraft(int $offerId): JsonResponse
+    {
+        $offer = Offer::with(['quoteRequest'])->findOrFail($offerId);
+
+        abort_if($offer->status !== 'draft', 422, 'Only draft offers can be deleted.');
+
+        $offer->items()->delete();
+        $offer->delete();
+
+        return response()->json(['ok' => true]);
+    }
 }

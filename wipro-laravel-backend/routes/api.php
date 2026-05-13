@@ -49,6 +49,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/quote-requests/{id}/generate-offer', [AdminQuoteRequestController::class, 'generateOffer']);
         Route::patch('/offers/{offerId}', [AdminQuoteRequestController::class, 'updateOffer']);
         Route::post('/offers/{offerId}/cancel', [AdminQuoteRequestController::class, 'cancelOffer']);
+        Route::delete('/offers/{offerId}/draft', [AdminQuoteRequestController::class, 'deleteDraft']);
         Route::get('/offers/{offerId}/pdf', [AdminQuoteRequestController::class, 'downloadPdf']);
         Route::get('/offers/{offerId}/docx', [AdminQuoteRequestController::class, 'downloadDocx']);
 

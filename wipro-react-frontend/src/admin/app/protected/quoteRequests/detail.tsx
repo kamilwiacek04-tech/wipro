@@ -648,7 +648,24 @@ const QuoteRequestDetail = () => {
     if (!confirm(t('quoteRequests.detail.fields.confirmSend'))) return
     setSaving(true)
     try {
+      await api.patch(`/admin/offers/${draft.id}`, { items: offerItems })
       await api.patch(`/admin/offers/${draft.id}`, { status: 'sent' })
+      setEditingOffer(false)
+      await load()
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const deleteDraft = async () => {
+    if (!data) return
+    const draft = data.offers.find(o => o.status === 'draft')
+    if (!draft) return
+    if (!confirm(t('quoteRequests.detail.confirmDeleteDraft'))) return
+    setSaving(true)
+    try {
+      await api.delete(`/admin/offers/${draft.id}/draft`)
+      setEditingOffer(false)
       await load()
     } finally {
       setSaving(false)
@@ -725,7 +742,7 @@ const QuoteRequestDetail = () => {
   )
 
   const draftOffer = data.offers.find(o => o.status === 'draft')
-  const sentOffers = data.offers.filter(o => o.status !== 'draft')
+  const sentOffers = [...data.offers.filter(o => o.status !== 'draft')].reverse()
   const hasAcceptedOffer = data.offers.some(o => o.status === 'accepted')
   const offerTotal = offerItems.reduce((sum, i) => sum + Number(i.unit_price_net) * Number(i.quantity), 0)
   const { userNote, config } = parseNotes(data.additional_notes)
@@ -1144,6 +1161,12 @@ const QuoteRequestDetail = () => {
                   <Mail className="h-4 w-4" />
                   {t('quoteRequests.detail.markAsSent')}
                 </Button>
+                {draftOffer && (
+                  <Button size="sm" variant="ghost" onClick={deleteDraft} disabled={saving} className="w-full text-red-500 hover:text-red-700 hover:bg-red-50">
+                    <Trash2 className="h-4 w-4" />
+                    {t('quoteRequests.detail.deleteDraft')}
+                  </Button>
+                )}
               </div>
             </Card>
           )}

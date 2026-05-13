@@ -102,6 +102,8 @@ const en: AdminTranslations = {
       offerAcceptedNoNew: 'Offer accepted — no new offers can be generated',
       cancelOffer: 'Cancel offer',
       confirmCancel: 'Cancel this offer? The client will see it as inactive.',
+      deleteDraft: 'Delete draft',
+      confirmDeleteDraft: 'Delete this draft offer? This cannot be undone.',
       offerCancelled: 'Cancelled',
       cancelledAt: 'Cancelled',
       submittedAt: 'Submitted {{date}}',
