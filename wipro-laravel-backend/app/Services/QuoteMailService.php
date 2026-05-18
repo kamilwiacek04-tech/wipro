@@ -13,6 +13,10 @@ class QuoteMailService
 {
     public function send(QuoteRequest $quoteRequest, Offer $offer): void
     {
+        if (!config('mail.enabled', true)) {
+            return;
+        }
+
         $quoteRequest->loadMissing(['elevator']);
         $offer->loadMissing(['items']);
 
