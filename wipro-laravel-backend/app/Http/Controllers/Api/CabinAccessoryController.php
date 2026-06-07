@@ -31,11 +31,12 @@ class CabinAccessoryController extends Controller
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'category'   => 'required|string|in:PANEL,SIGNAL,CEILING,MIRROR,HANDRAIL,FLOORING,EXTRA',
-            'name_pl'    => 'required|string|max:200',
-            'name_en'    => 'required|string|max:200',
-            'sort_order' => 'integer|min:0',
-            'is_active'  => 'boolean',
+            'category'       => 'required|string|in:PANEL,SIGNAL,CEILING,MIRROR,HANDRAIL,FLOORING,EXTRA',
+            'name_pl'        => 'required|string|max:200',
+            'name_en'        => 'required|string|max:200',
+            'sort_order'     => 'integer|min:0',
+            'is_active'      => 'boolean',
+            'price_addition' => 'nullable|numeric|min:0',
         ]);
 
         if ($request->hasFile('image')) {
@@ -54,11 +55,12 @@ class CabinAccessoryController extends Controller
         $accessory = CabinAccessory::findOrFail($id);
 
         $data = $request->validate([
-            'category'   => 'sometimes|string|in:PANEL,SIGNAL,CEILING,MIRROR,HANDRAIL,FLOORING,EXTRA',
-            'name_pl'    => 'sometimes|string|max:200',
-            'name_en'    => 'sometimes|string|max:200',
-            'sort_order' => 'sometimes|integer|min:0',
-            'is_active'  => 'sometimes|boolean',
+            'category'       => 'sometimes|string|in:PANEL,SIGNAL,CEILING,MIRROR,HANDRAIL,FLOORING,EXTRA',
+            'name_pl'        => 'sometimes|string|max:200',
+            'name_en'        => 'sometimes|string|max:200',
+            'sort_order'     => 'sometimes|integer|min:0',
+            'is_active'      => 'sometimes|boolean',
+            'price_addition' => 'sometimes|nullable|numeric|min:0',
         ]);
 
         $accessory->update($data);
