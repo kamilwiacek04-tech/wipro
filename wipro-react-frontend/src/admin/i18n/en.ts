@@ -336,6 +336,7 @@ const en: AdminTranslations = {
       detailLabelPlaceholder: 'Label (e.g. Ceiling)',
       detailValuePlaceholder: 'Value (e.g. ST1)',
       addRow: 'Add row',
+      priceAddition: 'Price addition (PLN)',
     },
     accessories: {
       title: 'Cabin accessories',
@@ -344,6 +345,7 @@ const en: AdminTranslations = {
       photo: 'Photo',
       sortOrder: 'Ord.',
       confirmDelete: 'Delete accessory?',
+      priceAddition: 'Price addition (PLN)',
     },
     extras: {
       title: 'Extras',

@@ -334,6 +334,7 @@ const pl = {
       detailLabelPlaceholder: 'Etykieta (np. Sufit)',
       detailValuePlaceholder: 'Wartość (np. ST1)',
       addRow: 'Dodaj wiersz',
+      priceAddition: 'Dopłata (PLN)',
     },
     accessories: {
       title: 'Akcesoria kabin',
@@ -342,6 +343,7 @@ const pl = {
       photo: 'Foto',
       sortOrder: 'Kol.',
       confirmDelete: 'Usunąć akcesorium?',
+      priceAddition: 'Dopłata (PLN)',
     },
     extras: {
       title: 'Dodatki',
