@@ -162,6 +162,18 @@ const en: Translations = {
             }
         }
     },
+    terms: {
+        bar: {
+            text: 'By continuing to the next step, you accept our',
+            link: 'terms of service',
+        },
+        link: 'Terms of Service',
+        page: {
+            title: 'Terms of Service',
+            placeholder: 'The terms of service will be published here.',
+            backToForm: '← Back to form',
+        },
+    },
     elevatorDetail: {
         details: 'Details',
         basePrice: 'Base price',

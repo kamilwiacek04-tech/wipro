@@ -160,6 +160,18 @@ const pl = {
             }
         }
     },
+    terms: {
+        bar: {
+            text: 'Przechodząc do kolejnego kroku, akceptujesz nasz',
+            link: 'regulamin',
+        },
+        link: 'Regulamin',
+        page: {
+            title: 'Regulamin',
+            placeholder: 'Treść regulaminu zostanie tutaj opublikowana.',
+            backToForm: '← Wróć do formularza',
+        },
+    },
     elevatorDetail: {
         details: 'Szczegóły',
         basePrice: 'Cena bazowa',
