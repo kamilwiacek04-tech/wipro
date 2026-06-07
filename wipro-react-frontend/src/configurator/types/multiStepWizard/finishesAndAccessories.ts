@@ -1,5 +1,7 @@
 export interface FormFinishesAndAccessories {
     cabinModelId: number;
+    cabinColorId: number;
+    doorColorId: number;
     panelId: number;
     signalId: number;
     ceilingId: number;

@@ -138,6 +138,8 @@ const en: Translations = {
             field: {
                 extras: 'Extras',
                 cabinModel: 'Cabin model',
+                cabinColor: 'Cabin color',
+                doorColor: 'Door color',
                 panel: 'Cabin control panel',
                 signal: 'Floor indicator',
                 ceiling: 'Ceilings',

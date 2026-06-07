@@ -10,7 +10,8 @@ import FinishesAndAccessoriesSummary from '@/components/multiStepWizardSummary/F
 import SubmitButton from '@/components/SubmitButton'
 import TitleParagraph from '@/components/TitleParagraph'
 import { RootState, useAppDispatch, useAppSelector } from '@/store'
-import { useGetCabinAccessoriesQuery, useGetCabinModelsQuery, useStoreQuoteRequestMutation } from '@/store/mainApi/response'
+import { useGetCabinAccessoriesQuery, useGetCabinColorsQuery, useGetCabinModelsQuery, useStoreQuoteRequestMutation } from '@/store/mainApi/response'
+import ColorSelector from '@/components/ColorSelector'
 import { fillField, formSelectors } from '@/store/slices/formSlice'
 import { openModal } from '@/store/slices/modalSlice'
 import { useFormStore } from '@/store/zustand/formStore'
@@ -45,6 +46,7 @@ const FinishesAndAccessories = () => {
     const [sendData, { data: apiData, isLoading, isSuccess, isError, error }] = useStoreQuoteRequestMutation()
     const { data: cabinModels, isLoading: loadingModels } = useGetCabinModelsQuery()
     const { data: accessories, isLoading: loadingAccessories } = useGetCabinAccessoriesQuery()
+    const { data: cabinColors, isLoading: loadingColors } = useGetCabinColorsQuery()
 
     const formData = useAppSelector(formSelectors.data)
     const shaftParameters = useAppSelector(formSelectors.shaftParameters)
@@ -87,6 +89,8 @@ const FinishesAndAccessories = () => {
                     leftSideMechanic: shaftParameters.leftSideMechanic,
                     status: formData.status,
                     cabinModelId: dataCurr.cabinModelId,
+                    cabinColorId: dataCurr.cabinColorId || undefined,
+                    doorColorId: dataCurr.doorColorId || undefined,
                     panelId: dataCurr.panelId || undefined,
                     signalId: dataCurr.signalId || undefined,
                     ceilingId: dataCurr.ceilingId || undefined,
@@ -108,7 +112,7 @@ const FinishesAndAccessories = () => {
         }
     }, [isLoading, isSuccess, apiData, error, isError])
 
-    const isLoadingAll = loadingModels || loadingAccessories
+    const isLoadingAll = loadingModels || loadingAccessories || loadingColors
 
     return (
         <div className="flex flex-row flex-1 overflow-hidden max-[1200px]:flex-col max-[1200px]:gap-5">
@@ -143,6 +147,46 @@ const FinishesAndAccessories = () => {
                                     <p className="text-[14px] text-[var(--red)] mt-1">{t(errors.cabinModelId.message ?? '')}</p>
                                 )}
                             </BorderInput>
+
+                            {/* Kolor kabiny */}
+                            {(cabinColors?.filter(c => c.visible_for_cabin) ?? []).length > 0 && (
+                                <BorderInput title={t(`${textPath}.field.cabinColor`)}>
+                                    <Controller
+                                        control={control}
+                                        name='cabinColorId'
+                                        render={({field}) => (
+                                            <ColorSelector
+                                                items={cabinColors?.filter(c => c.visible_for_cabin) ?? []}
+                                                currentValue={field.value}
+                                                onChange={(id) => {
+                                                    updateField('finishesAndAccessories', 'cabinColorId', id)
+                                                    field.onChange(id)
+                                                }}
+                                            />
+                                        )}
+                                    />
+                                </BorderInput>
+                            )}
+
+                            {/* Kolor drzwi */}
+                            {(cabinColors?.filter(c => c.visible_for_door) ?? []).length > 0 && (
+                                <BorderInput title={t(`${textPath}.field.doorColor`)}>
+                                    <Controller
+                                        control={control}
+                                        name='doorColorId'
+                                        render={({field}) => (
+                                            <ColorSelector
+                                                items={cabinColors?.filter(c => c.visible_for_door) ?? []}
+                                                currentValue={field.value}
+                                                onChange={(id) => {
+                                                    updateField('finishesAndAccessories', 'doorColorId', id)
+                                                    field.onChange(id)
+                                                }}
+                                            />
+                                        )}
+                                    />
+                                </BorderInput>
+                            )}
 
                             {/* Sekcje akcesoriów */}
                             {ACCESSORY_SECTIONS.map(({ key, category, labelKey }) => {

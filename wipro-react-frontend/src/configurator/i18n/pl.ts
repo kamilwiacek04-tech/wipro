@@ -136,6 +136,8 @@ const pl = {
             field: {
                 extras: 'Dodatki',
                 cabinModel: 'Model kabiny',
+                cabinColor: 'Kolor kabiny',
+                doorColor: 'Kolor drzwi',
                 panel: 'Panel dyspozycji w kabinie',
                 signal: 'Sygnalizacja przystanków',
                 ceiling: 'Sufity',
