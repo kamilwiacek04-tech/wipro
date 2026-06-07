@@ -306,6 +306,7 @@ const pl = {
       cabinModels: 'Modele kabin',
       accessories: 'Akcesoria',
       extras: 'Dodatki',
+      cabinColors: 'Kolory',
       general: 'Ogólne',
     },
     subtitles: {
@@ -314,6 +315,7 @@ const pl = {
       cabinModels: '{{count}} modeli kabin w bazie',
       accessories: '{{count}} akcesoriów w bazie',
       extras: '{{count}} dodatków w bazie',
+      cabinColors: '{{count}} kolorów w bazie',
       general: 'Ustawienia ogólne',
     },
     liftTypes: {
@@ -350,6 +352,20 @@ const pl = {
       add: 'Dodaj',
       noExtras: 'Brak dodatków',
       confirmDelete: 'Usunąć dodatek?',
+    },
+    colors: {
+      title: 'Kolory kabin i drzwi',
+      add: 'Dodaj kolor',
+      noColors: 'Brak kolorów',
+      confirmDelete: 'Usunąć ten kolor?',
+      namePl: 'Nazwa (PL)',
+      nameEn: 'Nazwa (EN)',
+      hexColor: 'Kolor HEX',
+      visibleForCabin: 'Widoczny dla kabiny',
+      visibleForDoor: 'Widoczny dla drzwi',
+      priceAdditionCabin: 'Dopłata kabina (PLN)',
+      priceAdditionDoor: 'Dopłata drzwi (PLN)',
+      sortOrder: 'Kolejność',
     },
     technical: {
       sectionTitle: 'Dane techniczne',

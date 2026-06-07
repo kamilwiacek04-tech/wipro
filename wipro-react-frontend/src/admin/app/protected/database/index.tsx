@@ -44,6 +44,18 @@ interface CabinModel {
 interface CabinAccessory {
   id: number; category: string; name_pl: string; name_en: string; image_url: string | null; sort_order: number; is_active: boolean; price_addition: number
 }
+interface CabinColor {
+  id: number
+  name_pl: string
+  name_en: string
+  hex_color: string | null
+  visible_for_cabin: boolean
+  visible_for_door: boolean
+  price_addition_cabin: number
+  price_addition_door: number
+  sort_order: number
+  is_active: boolean
+}
 type DetailRow = { label: string; value: string }
 
 const ACCESSORY_CATEGORIES = ['PANEL', 'SIGNAL', 'CEILING', 'MIRROR', 'HANDRAIL', 'FLOORING'] as const
@@ -718,6 +730,170 @@ const ExtrasTab = ({ onCountChange }: { onCountChange?: (n: number) => void }) =
   )
 }
 
+// ─── Cabin colors tab ─────────────────────────────────────────────────────────
+const EMPTY_COLOR = {
+  name_pl: '', name_en: '', hex_color: '#ffffff',
+  visible_for_cabin: true, visible_for_door: true,
+  price_addition_cabin: 0, price_addition_door: 0,
+  sort_order: 0,
+}
+
+const CabinColorsTab = ({ onCountChange }: { onCountChange?: (n: number) => void }) => {
+  const { t } = useTranslation()
+  const [colors, setColors] = useState<CabinColor[]>([])
+  const [loadingColors, setLoadingColors] = useState(true)
+  const [showAddColor, setShowAddColor] = useState(false)
+  const [newColor, setNewColor] = useState(EMPTY_COLOR)
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => { onCountChange?.(colors.length) }, [colors.length])
+
+  const loadColors = () => {
+    setLoadingColors(true)
+    api.get('/admin/cabin-colors').then(r => setColors(r.data)).finally(() => setLoadingColors(false))
+  }
+
+  useEffect(() => { loadColors() }, [])
+
+  const deleteColor = async (id: number) => {
+    if (!confirm(t('database.colors.confirmDelete'))) return
+    await api.delete(`/admin/cabin-colors/${id}`)
+    loadColors()
+  }
+
+  const handleColorField = async (id: number, field: string, value: unknown) => {
+    await api.patch(`/admin/cabin-colors/${id}`, { [field]: value })
+    loadColors()
+  }
+
+  const createColor = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSaving(true)
+    try {
+      await api.post('/admin/cabin-colors', newColor)
+      setNewColor(EMPTY_COLOR)
+      setShowAddColor(false)
+      loadColors()
+    } finally { setSaving(false) }
+  }
+
+  const INPUT_CLASS = 'w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-300'
+
+  return (
+    <Card className="gap-0 overflow-hidden">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <h2 className="font-semibold text-gray-900">{t('database.colors.title')}</h2>
+        <Button size="sm" onClick={() => setShowAddColor(!showAddColor)}><Plus className="h-4 w-4" />{t('database.colors.add')}</Button>
+      </div>
+
+      {showAddColor && (
+        <form onSubmit={createColor} className="px-6 py-4 border-b border-gray-100 bg-gray-50/40">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-3">
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">{t('database.colors.namePl')}</label>
+              <input required className={INPUT_CLASS} value={newColor.name_pl} onChange={e => setNewColor(p => ({ ...p, name_pl: e.target.value }))} />
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">{t('database.colors.nameEn')}</label>
+              <input required className={INPUT_CLASS} value={newColor.name_en} onChange={e => setNewColor(p => ({ ...p, name_en: e.target.value }))} />
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">{t('database.colors.hexColor')}</label>
+              <div className="flex items-center gap-2">
+                <input type="color" value={newColor.hex_color ?? '#ffffff'} onChange={e => setNewColor(p => ({ ...p, hex_color: e.target.value }))} className="w-10 h-8 cursor-pointer rounded border" />
+                <input className={INPUT_CLASS} value={newColor.hex_color ?? ''} onChange={e => setNewColor(p => ({ ...p, hex_color: e.target.value }))} maxLength={7} placeholder="#ffffff" />
+              </div>
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">{t('database.colors.sortOrder')}</label>
+              <input type="number" min="0" className={INPUT_CLASS} value={newColor.sort_order} onChange={e => setNewColor(p => ({ ...p, sort_order: parseInt(e.target.value) || 0 }))} />
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">{t('database.colors.priceAdditionCabin')}</label>
+              <input type="number" min="0" step="0.01" className={INPUT_CLASS} placeholder="0.00" value={newColor.price_addition_cabin} onChange={e => setNewColor(p => ({ ...p, price_addition_cabin: parseFloat(e.target.value) || 0 }))} />
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">{t('database.colors.priceAdditionDoor')}</label>
+              <input type="number" min="0" step="0.01" className={INPUT_CLASS} placeholder="0.00" value={newColor.price_addition_door} onChange={e => setNewColor(p => ({ ...p, price_addition_door: parseFloat(e.target.value) || 0 }))} />
+            </div>
+            <div className="flex flex-col gap-2 justify-end">
+              <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
+                <input type="checkbox" checked={newColor.visible_for_cabin} onChange={e => setNewColor(p => ({ ...p, visible_for_cabin: e.target.checked }))} className="rounded" />
+                {t('database.colors.visibleForCabin')}
+              </label>
+              <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
+                <input type="checkbox" checked={newColor.visible_for_door} onChange={e => setNewColor(p => ({ ...p, visible_for_door: e.target.checked }))} className="rounded" />
+                {t('database.colors.visibleForDoor')}
+              </label>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button type="submit" size="sm" disabled={saving}><Save className="h-3 w-3" />{saving ? t('common.saving') : t('common.save')}</Button>
+            <Button type="button" variant="ghost" size="sm" onClick={() => { setShowAddColor(false); setNewColor(EMPTY_COLOR) }}>{t('common.cancel')}</Button>
+          </div>
+        </form>
+      )}
+
+      {loadingColors ? <div className="p-6"><SkeletonLoader count={4} /></div> : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead><tr className="border-b border-gray-100 bg-gray-50/50">
+              <th className="px-4 py-3 w-16 text-left text-xs font-medium text-gray-500 uppercase">{t('database.colors.hexColor')}</th>
+              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.colors.namePl')}</th>
+              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.colors.nameEn')}</th>
+              <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.colors.visibleForCabin')}</th>
+              <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.colors.visibleForDoor')}</th>
+              <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.colors.priceAdditionCabin')}</th>
+              <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.colors.priceAdditionDoor')}</th>
+              <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.colors.sortOrder')}</th>
+              <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('common.status')}</th>
+              <th className="w-10" />
+            </tr></thead>
+            <tbody className="divide-y divide-gray-50">
+              {colors.length === 0 && (
+                <tr><td colSpan={10} className="px-4 py-8 text-center text-sm text-gray-400">{t('database.colors.noColors')}</td></tr>
+              )}
+              {colors.map(c => (
+                <tr key={c.id} className="hover:bg-gray-50/50">
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded border border-gray-200 flex-shrink-0" style={{ backgroundColor: c.hex_color ?? '#cccccc' }} />
+                      <input type="color" defaultValue={c.hex_color ?? '#ffffff'} className="w-8 h-6 cursor-pointer rounded" onBlur={e => handleColorField(c.id, 'hex_color', e.target.value)} />
+                    </div>
+                  </td>
+                  <td className="px-4 py-3"><InlineEdit value={c.name_pl} onSave={v => handleColorField(c.id, 'name_pl', v)} /></td>
+                  <td className="px-4 py-3"><InlineEdit value={c.name_en} onSave={v => handleColorField(c.id, 'name_en', v)} /></td>
+                  <td className="px-4 py-3 text-center">
+                    <input type="checkbox" checked={c.visible_for_cabin} onChange={e => handleColorField(c.id, 'visible_for_cabin', e.target.checked)} className="rounded cursor-pointer" />
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <input type="checkbox" checked={c.visible_for_door} onChange={e => handleColorField(c.id, 'visible_for_door', e.target.checked)} className="rounded cursor-pointer" />
+                  </td>
+                  <td className="px-4 py-3">
+                    <input type="number" min="0" step="0.01" className="w-24 border border-gray-200 rounded px-2 py-1 text-sm" defaultValue={c.price_addition_cabin} onBlur={e => handleColorField(c.id, 'price_addition_cabin', parseFloat(e.target.value) || 0)} />
+                  </td>
+                  <td className="px-4 py-3">
+                    <input type="number" min="0" step="0.01" className="w-24 border border-gray-200 rounded px-2 py-1 text-sm" defaultValue={c.price_addition_door} onBlur={e => handleColorField(c.id, 'price_addition_door', parseFloat(e.target.value) || 0)} />
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <input type="number" min="0" className="w-16 border border-gray-200 rounded px-2 py-1 text-sm text-center" defaultValue={c.sort_order} onBlur={e => handleColorField(c.id, 'sort_order', parseInt(e.target.value) || 0)} />
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <button onClick={() => handleColorField(c.id, 'is_active', !c.is_active)} className={`text-xs px-2 py-0.5 rounded-full cursor-pointer ${c.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                      {c.is_active ? t('settings.active') : t('settings.inactive')}
+                    </button>
+                  </td>
+                  <td className="px-2 py-3"><Button variant="ghost" size="icon" onClick={() => deleteColor(c.id)} className="h-8 w-8 text-red-400 hover:text-red-600"><Trash2 className="h-4 w-4" /></Button></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </Card>
+  )
+}
+
 // ─── General settings tab ─────────────────────────────────────────────────────
 const GeneralTab = () => {
   const { t } = useTranslation()
@@ -1344,7 +1520,7 @@ const EMPTY_ELEVATOR = {
   equipment: '',
 }
 
-type DatabaseTab = 'elevators' | 'lift-types' | 'cabin-models' | 'accessories' | 'extras' | 'general'
+type DatabaseTab = 'elevators' | 'lift-types' | 'cabin-models' | 'accessories' | 'extras' | 'cabin-colors' | 'general'
 
 
 const Database = () => {
@@ -1354,19 +1530,21 @@ const Database = () => {
     { id: 'elevators' as DatabaseTab,    label: t('database.tabs.elevators') },
     { id: 'lift-types' as DatabaseTab,   label: t('database.tabs.liftTypes') },
     { id: 'cabin-models' as DatabaseTab, label: t('database.tabs.cabinModels') },
-    { id: 'accessories' as DatabaseTab,  label: t('database.tabs.accessories') },
-    { id: 'extras' as DatabaseTab,       label: t('database.tabs.extras') },
-    { id: 'general' as DatabaseTab,      label: t('database.tabs.general') },
+    { id: 'accessories' as DatabaseTab,   label: t('database.tabs.accessories') },
+    { id: 'extras' as DatabaseTab,        label: t('database.tabs.extras') },
+    { id: 'cabin-colors' as DatabaseTab,  label: t('database.tabs.cabinColors') },
+    { id: 'general' as DatabaseTab,       label: t('database.tabs.general') },
   ]
 
   const getTabSubtitle = (tab: DatabaseTab, n: number): string => {
     if (tab === 'general') return t('database.subtitles.general')
     const key = {
-      'elevators':    'database.subtitles.elevators',
-      'lift-types':   'database.subtitles.liftTypes',
-      'cabin-models': 'database.subtitles.cabinModels',
-      'accessories':  'database.subtitles.accessories',
-      'extras':       'database.subtitles.extras',
+      'elevators':     'database.subtitles.elevators',
+      'lift-types':    'database.subtitles.liftTypes',
+      'cabin-models':  'database.subtitles.cabinModels',
+      'accessories':   'database.subtitles.accessories',
+      'extras':        'database.subtitles.extras',
+      'cabin-colors':  'database.subtitles.cabinColors',
     }[tab]
     return t(key as any, { count: n })
   }
@@ -1641,6 +1819,7 @@ const Database = () => {
       {tab === 'cabin-models' && <CabinModelsTab onCountChange={n => setCounts(p => ({ ...p, 'cabin-models': n }))} />}
       {tab === 'accessories' && <AccessoriesTab onCountChange={n => setCounts(p => ({ ...p, 'accessories': n }))} />}
       {tab === 'extras' && <ExtrasTab onCountChange={n => setCounts(p => ({ ...p, 'extras': n }))} />}
+      {tab === 'cabin-colors' && <CabinColorsTab onCountChange={n => setCounts(p => ({ ...p, 'cabin-colors': n }))} />}
       {tab === 'general' && <GeneralTab />}
     </MainLayout>
   )

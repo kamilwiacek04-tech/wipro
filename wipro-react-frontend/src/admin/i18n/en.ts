@@ -308,6 +308,7 @@ const en: AdminTranslations = {
       cabinModels: 'Cabin models',
       accessories: 'Accessories',
       extras: 'Extras',
+      cabinColors: 'Colors',
       general: 'General',
     },
     subtitles: {
@@ -316,6 +317,7 @@ const en: AdminTranslations = {
       cabinModels: '{{count}} cabin models in database',
       accessories: '{{count}} accessories in database',
       extras: '{{count}} extras in database',
+      cabinColors: '{{count}} colors in database',
       general: 'General settings',
     },
     liftTypes: {
@@ -352,6 +354,20 @@ const en: AdminTranslations = {
       add: 'Add',
       noExtras: 'No extras',
       confirmDelete: 'Delete extra?',
+    },
+    colors: {
+      title: 'Cabin and door colors',
+      add: 'Add color',
+      noColors: 'No colors',
+      confirmDelete: 'Delete this color?',
+      namePl: 'Name (PL)',
+      nameEn: 'Name (EN)',
+      hexColor: 'HEX Color',
+      visibleForCabin: 'Visible for cabin',
+      visibleForDoor: 'Visible for door',
+      priceAdditionCabin: 'Price addition cabin (PLN)',
+      priceAdditionDoor: 'Price addition door (PLN)',
+      sortOrder: 'Sort order',
     },
     technical: {
       sectionTitle: 'Technical data',
