@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Offer;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -70,5 +71,37 @@ class AdminManagementController extends Controller
         $admin->delete();
 
         return response()->json(['message' => 'Admin usunięty.']);
+    }
+
+    public function adminOffers(Request $request, int $id): JsonResponse
+    {
+        User::whereIn('role', ['admin', 'superadmin'])->findOrFail($id);
+        $targetAdminId = $request->user()->id;
+
+        $offers = Offer::where('created_by_admin_id', $id)
+            ->with(['sharedAdmins' => fn($q) => $q->where('users.id', $targetAdminId)])
+            ->orderByDesc('created_at')
+            ->get(['id', 'offer_number', 'status', 'client_name', 'created_at']);
+
+        $offers->each(function ($offer) {
+            $offer->is_shared_with_me = $offer->sharedAdmins->isNotEmpty();
+            unset($offer->sharedAdmins);
+        });
+
+        return response()->json($offers);
+    }
+
+    public function shareOffers(Request $request, int $id): JsonResponse
+    {
+        $admin = User::where('role', 'admin')->findOrFail($id);
+
+        $data = $request->validate([
+            'offer_ids'   => 'required|array',
+            'offer_ids.*' => 'integer|exists:offers,id',
+        ]);
+
+        $admin->sharedOffers()->sync($data['offer_ids']);
+
+        return response()->json(['message' => 'Zaktualizowano dostęp.']);
     }
 }

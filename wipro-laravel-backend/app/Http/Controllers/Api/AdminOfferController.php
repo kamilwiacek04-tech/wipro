@@ -14,7 +14,7 @@ class AdminOfferController extends Controller
     {
         $user = $request->user();
 
-        $query = Offer::with(['quoteRequest', 'createdBy', 'items'])
+        $query = Offer::with(['quoteRequest', 'createdBy', 'items', 'sharedAdmins'])
             ->orderByDesc('created_at');
 
         if ($user->isSuperAdmin()) {
@@ -22,7 +22,10 @@ class AdminOfferController extends Controller
                 $query->where('created_by_admin_id', $request->admin_id);
             }
         } else {
-            $query->where('created_by_admin_id', $user->id);
+            $query->where(function ($q) use ($user) {
+                $q->where('created_by_admin_id', $user->id)
+                  ->orWhereHas('sharedAdmins', fn($sq) => $sq->where('users.id', $user->id));
+            });
         }
 
         if ($request->filled('status')) {
@@ -91,5 +94,19 @@ class AdminOfferController extends Controller
         ]);
 
         return response()->json($offer->load(['items', 'createdBy']), 201);
+    }
+
+    public function shareWithAdmins(Request $request, int $offerId): JsonResponse
+    {
+        $offer = Offer::findOrFail($offerId);
+
+        $data = $request->validate([
+            'admin_ids'   => 'required|array',
+            'admin_ids.*' => 'integer|exists:users,id',
+        ]);
+
+        $offer->sharedAdmins()->sync($data['admin_ids']);
+
+        return response()->json(['message' => 'Udostępniono.', 'shared_admin_ids' => $data['admin_ids']]);
     }
 }

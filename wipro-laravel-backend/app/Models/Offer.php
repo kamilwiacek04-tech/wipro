@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Offer extends Model
@@ -66,5 +67,11 @@ class Offer extends Model
     public function items(): HasMany
     {
         return $this->hasMany(OfferItem::class)->orderBy('sort_order');
+    }
+
+    public function sharedAdmins(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'offer_admin_shares', 'offer_id', 'admin_id')
+            ->withTimestamps();
     }
 }
