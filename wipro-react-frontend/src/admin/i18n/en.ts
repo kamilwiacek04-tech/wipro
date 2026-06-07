@@ -318,6 +318,10 @@ const en: AdminTranslations = {
       extras: '{{count}} extras in database',
       general: 'General settings',
     },
+    liftTypes: {
+      basePrice: 'Base price (PLN)',
+      pricePerStop: 'Price per stop (PLN)',
+    },
     cabinModels: {
       title: 'Cabin models',
       add: 'Add model',

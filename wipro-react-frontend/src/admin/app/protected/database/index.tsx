@@ -36,7 +36,7 @@ async function uploadImage(path: string, file: File): Promise<string> {
 }
 
 interface LiftType {
-  id: number; key: string; name_pl: string; name_en: string; sort_order: number; is_active: boolean
+  id: number; key: string; name_pl: string; name_en: string; sort_order: number; is_active: boolean; base_price: number | null; price_per_stop: number | null
 }
 interface CabinModel {
   id: number; name_pl: string; name_en: string; image_url: string | null; details: DetailRow[] | null; sort_order: number; is_active: boolean
@@ -134,7 +134,7 @@ const LiftTypesTab = ({ onCountChange }: { onCountChange?: (n: number) => void }
   const [liftTypes, setLiftTypes] = useState<LiftType[]>([])
   const [loading, setLoading] = useState(true)
   const [showAdd, setShowAdd] = useState(false)
-  const [newType, setNewType] = useState({ key: '', name_pl: '', name_en: '', sort_order: 0 })
+  const [newType, setNewType] = useState({ key: '', name_pl: '', name_en: '', sort_order: 0, base_price: null as number | null, price_per_stop: null as number | null })
   const [saving, setSaving] = useState(false)
 
   useEffect(() => { onCountChange?.(liftTypes.length) }, [liftTypes.length])
@@ -143,7 +143,7 @@ const LiftTypesTab = ({ onCountChange }: { onCountChange?: (n: number) => void }
     api.get('/admin/lift-types').then(r => setLiftTypes(r.data)).finally(() => setLoading(false))
   }, [])
 
-  const updateType = async (id: number, field: string, value: string | boolean | number) => {
+  const updateType = async (id: number, field: string, value: string | boolean | number | null) => {
     await api.patch(`/admin/lift-types/${id}`, { [field]: value })
     setLiftTypes(prev => prev.map(lt => lt.id === id ? { ...lt, [field]: value } : lt))
   }
@@ -158,7 +158,7 @@ const LiftTypesTab = ({ onCountChange }: { onCountChange?: (n: number) => void }
     try {
       const res = await api.post('/admin/lift-types', { ...newType, is_active: true })
       setLiftTypes(prev => [...prev, res.data])
-      setNewType({ key: '', name_pl: '', name_en: '', sort_order: 0 }); setShowAdd(false)
+      setNewType({ key: '', name_pl: '', name_en: '', sort_order: 0, base_price: null, price_per_stop: null }); setShowAdd(false)
     } finally { setSaving(false) }
   }
   const inp = (key: keyof typeof newType) => ({
@@ -176,11 +176,35 @@ const LiftTypesTab = ({ onCountChange }: { onCountChange?: (n: number) => void }
       </div>
       {showAdd && (
         <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/40">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-3">
             <div><label className="text-xs text-gray-500 mb-1 block">{t('settings.key')}</label><input {...inp('key')} placeholder="PASSENGER" /></div>
             <div><label className="text-xs text-gray-500 mb-1 block">{t('settings.namePl')}</label><input {...inp('name_pl')} /></div>
             <div><label className="text-xs text-gray-500 mb-1 block">{t('settings.nameEn')}</label><input {...inp('name_en')} /></div>
             <div><label className="text-xs text-gray-500 mb-1 block">{t('settings.sortOrder')}</label><input {...inp('sort_order')} type="number" min="0" /></div>
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">{t('database.liftTypes.basePrice')}</label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-300"
+                placeholder="0.00"
+                value={newType.base_price ?? ''}
+                onChange={e => setNewType(prev => ({ ...prev, base_price: e.target.value === '' ? null : parseFloat(e.target.value) }))}
+              />
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">{t('database.liftTypes.pricePerStop')}</label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-300"
+                placeholder="0.00"
+                value={newType.price_per_stop ?? ''}
+                onChange={e => setNewType(prev => ({ ...prev, price_per_stop: e.target.value === '' ? null : parseFloat(e.target.value) }))}
+              />
+            </div>
           </div>
           <div className="flex gap-2">
             <Button size="sm" onClick={addType} disabled={saving}><Save className="h-3 w-3" />{saving ? t('common.saving') : t('common.save')}</Button>
@@ -197,6 +221,8 @@ const LiftTypesTab = ({ onCountChange }: { onCountChange?: (n: number) => void }
               <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('settings.nameEn')}</th>
               <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('settings.sortOrder')}</th>
               <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('common.status')}</th>
+              <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.liftTypes.basePrice')}</th>
+              <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.liftTypes.pricePerStop')}</th>
               <th className="w-10" />
             </tr></thead>
             <tbody className="divide-y divide-gray-50">
@@ -210,6 +236,26 @@ const LiftTypesTab = ({ onCountChange }: { onCountChange?: (n: number) => void }
                     <button onClick={() => updateType(lt.id, 'is_active', !lt.is_active)} className={`text-xs px-2 py-0.5 rounded-full cursor-pointer ${lt.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
                       {lt.is_active ? t('settings.active') : t('settings.inactive')}
                     </button>
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-600">
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      className="w-24 border border-gray-200 rounded px-2 py-1 text-sm"
+                      defaultValue={lt.base_price ?? ''}
+                      onBlur={e => updateType(lt.id, 'base_price', e.target.value === '' ? null : parseFloat(e.target.value))}
+                    />
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-600">
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      className="w-24 border border-gray-200 rounded px-2 py-1 text-sm"
+                      defaultValue={lt.price_per_stop ?? ''}
+                      onBlur={e => updateType(lt.id, 'price_per_stop', e.target.value === '' ? null : parseFloat(e.target.value))}
+                    />
                   </td>
                   <td className="px-2 py-3"><Button variant="ghost" size="icon" onClick={() => deleteType(lt.id)} className="h-8 w-8 text-red-400 hover:text-red-600"><Trash2 className="h-4 w-4" /></Button></td>
                 </tr>

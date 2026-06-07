@@ -316,6 +316,10 @@ const pl = {
       extras: '{{count}} dodatków w bazie',
       general: 'Ustawienia ogólne',
     },
+    liftTypes: {
+      basePrice: 'Cena bazowa (PLN)',
+      pricePerStop: 'Cena za przystanek (PLN)',
+    },
     cabinModels: {
       title: 'Modele kabin',
       add: 'Dodaj model',
