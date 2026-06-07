@@ -25,10 +25,11 @@ class CabinModelController extends Controller
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'name_pl'    => 'required|string|max:200',
-            'name_en'    => 'required|string|max:200',
-            'sort_order' => 'integer|min:0',
-            'is_active'  => 'boolean',
+            'name_pl'        => 'required|string|max:200',
+            'name_en'        => 'required|string|max:200',
+            'sort_order'     => 'integer|min:0',
+            'is_active'      => 'boolean',
+            'price_addition' => 'nullable|numeric|min:0',
         ]);
 
         if ($request->hasFile('image')) {
@@ -49,10 +50,11 @@ class CabinModelController extends Controller
         $model = CabinModel::findOrFail($id);
 
         $data = $request->validate([
-            'name_pl'    => 'sometimes|string|max:200',
-            'name_en'    => 'sometimes|string|max:200',
-            'sort_order' => 'sometimes|integer|min:0',
-            'is_active'  => 'sometimes|boolean',
+            'name_pl'        => 'sometimes|string|max:200',
+            'name_en'        => 'sometimes|string|max:200',
+            'sort_order'     => 'sometimes|integer|min:0',
+            'is_active'      => 'sometimes|boolean',
+            'price_addition' => 'sometimes|nullable|numeric|min:0',
         ]);
 
         if ($request->has('details')) {
