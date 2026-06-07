@@ -123,25 +123,11 @@ interface QuoteRequestDetail {
 
 // ─── Enum option maps ─────────────────────────────────────────────────────────
 
-const LIFT_PURPOSE_OPTIONS = [
-  { value: 'PASSENGER',          label: 'Osobowa' },
-  { value: 'FREIGHT_PASSENGER',  label: 'Towarowo-osobowa' },
-  { value: 'HOSPITAL',           label: 'Szpitalna' },
-  { value: 'FIRE',               label: 'Pożarowa' },
-  { value: 'FREIGHT',            label: 'Towarowa' },
-  { value: 'SERVICE',            label: 'Serwisowa' },
-  { value: 'RESIDENTIAL',        label: 'Mieszkalna' },
-]
-
 const ACCESS_DIAGRAM_OPTIONS = [
-  { value: 'FRONT',      label: 'Czołowy (przód)' },
-  { value: 'BACK',       label: 'Tylny (tył)' },
-  { value: 'THROUGH',    label: 'Przelotowy' },
-  { value: 'THROUGHT',   label: 'Przelotowy (alt.)' },
-  { value: 'CORNER',     label: 'Narożny' },
-  { value: 'TRIPARTITE', label: 'Trójstronny' },
-  { value: 'LEFT',       label: 'Lewy' },
-  { value: 'RIGHT',      label: 'Prawy' },
+  { value: 'FRONT',      label: 'Frontowe' },
+  { value: 'THROUGHT',   label: 'Przelotowe' },
+  { value: 'CORNER',     label: 'Kątowe' },
+  { value: 'TRIPARTITE', label: 'Trójstronne' },
 ]
 
 const INVESTOR_STATUS_OPTIONS = [
@@ -513,6 +499,7 @@ const QuoteRequestDetail = () => {
   const [cabinModels, setCabinModels] = useState<{ id: number; name_pl: string }[]>([])
   const [cabinAccessories, setCabinAccessories] = useState<{ id: number; name_pl: string; category: string }[]>([])
   const [elevators, setElevators] = useState<ElevatorBrief[]>([])
+  const [liftTypes, setLiftTypes] = useState<{ value: string; label: string }[]>([])
 
   // Elevator picker
   const [showElevatorPicker, setShowElevatorPicker] = useState(false)
@@ -532,6 +519,9 @@ const QuoteRequestDetail = () => {
     api.get('/admin/cabin-models').then(r => setCabinModels(r.data)).catch(() => {})
     api.get('/admin/cabin-accessories').then(r => setCabinAccessories(r.data)).catch(() => {})
     api.get('/admin/elevators').then(r => setElevators(Array.isArray(r.data) ? r.data : r.data?.data ?? [])).catch(() => {})
+    api.get('/admin/lift-types').then(res => {
+      setLiftTypes(res.data.map((lt: { key: string; name_pl: string }) => ({ value: lt.key, label: lt.name_pl })))
+    }).catch(() => {})
   }, [])
 
   useEffect(() => { load() }, [id])
@@ -829,7 +819,7 @@ const QuoteRequestDetail = () => {
               <EditableSelect
                 label={t('quoteRequests.detail.elevatorTypeLabel')}
                 value={data.drive_type}
-                options={LIFT_PURPOSE_OPTIONS}
+                options={liftTypes}
                 onSave={val => saveTextField('drive_type', val ?? '')}
               />
               <EditableSelect
