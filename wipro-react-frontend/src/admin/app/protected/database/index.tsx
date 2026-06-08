@@ -1,15 +1,15 @@
-import { useEffect, useState } from 'react'
-import { Plus, ChevronDown, ChevronRight, Trash2, Save, FileDown } from 'lucide-react'
-import { Card } from '@admin/components/Cards'
 import { Button } from '@admin/components/Button'
-import SkeletonLoader from '@admin/components/SkeletonLoader'
-import MainLayout from '@admin/components/layout/MainLayout'
-import MainHeader from '@admin/components/layout/MainHeader'
+import { Card } from '@admin/components/Cards'
 import InlineEdit from '@admin/components/InlineEdit'
+import SkeletonLoader from '@admin/components/SkeletonLoader'
+import MainHeader from '@admin/components/layout/MainHeader'
+import MainLayout from '@admin/components/layout/MainLayout'
 import api from '@admin/store/axiosInstance'
-import { useTranslation } from 'react-i18next'
 import { authStore } from '@admin/store/zustand/authStore'
 import { toast } from '@admin/store/zustand/toastStore'
+import { ChevronDown, ChevronRight, FileDown, Plus, Save, Trash2 } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 // ─── Settings helpers ─────────────────────────────────────────────────────────
 
@@ -48,7 +48,7 @@ interface CabinColor {
   id: number
   name_pl: string
   name_en: string
-  hex_color: string | null
+  image_url: string | null
   visible_for_cabin: boolean
   visible_for_door: boolean
   price_addition_cabin: number
@@ -249,7 +249,7 @@ const LiftTypesTab = ({ onCountChange }: { onCountChange?: (n: number) => void }
                       {lt.is_active ? t('settings.active') : t('settings.inactive')}
                     </button>
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-600">
+                  <td className="px-4 py-3 text-sm text-gray-600 text-center">
                     <input
                       type="number"
                       min="0"
@@ -259,7 +259,7 @@ const LiftTypesTab = ({ onCountChange }: { onCountChange?: (n: number) => void }
                       onBlur={e => updateType(lt.id, 'base_price', e.target.value === '' ? null : parseFloat(e.target.value))}
                     />
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-600">
+                  <td className="px-4 py-3 text-sm text-gray-600 text-center">
                     <input
                       type="number"
                       min="0"
@@ -425,7 +425,7 @@ const CabinModelsTab = ({ onCountChange }: { onCountChange?: (n: number) => void
                         {m.details?.length ?? 0} poz.
                       </button>
                     </td>
-                    <td className="px-4 py-3 text-sm">
+                    <td className="px-4 py-3 text-sm text-center">
                       <input
                         type="number"
                         min="0"
@@ -599,7 +599,7 @@ const AccessoriesTab = ({ onCountChange }: { onCountChange?: (n: number) => void
                           {a.is_active ? t('settings.active') : t('settings.inactive')}
                         </button>
                       </td>
-                      <td className="px-4 py-3 text-sm">
+                      <td className="px-4 py-3 text-sm text-center">
                         <input
                           type="number"
                           min="0"
@@ -626,7 +626,7 @@ const AccessoriesTab = ({ onCountChange }: { onCountChange?: (n: number) => void
 }
 
 // ─── Extras tab ───────────────────────────────────────────────────────────────
-const EMPTY_EXTRA = { name_pl: '', name_en: '', sort_order: 0 }
+const EMPTY_EXTRA = { name_pl: '', name_en: '', sort_order: 0, price_addition: 0 }
 
 const ExtrasTab = ({ onCountChange }: { onCountChange?: (n: number) => void }) => {
   const { t } = useTranslation()
@@ -663,7 +663,7 @@ const ExtrasTab = ({ onCountChange }: { onCountChange?: (n: number) => void }) =
     try {
       const res = await api.post('/admin/cabin-accessories', {
         category: 'EXTRA', name_pl: newExtra.name_pl, name_en: newExtra.name_en,
-        sort_order: newExtra.sort_order, is_active: true,
+        sort_order: newExtra.sort_order, price_addition: newExtra.price_addition, is_active: true,
       })
       setExtras(prev => [...prev, res.data])
       setNewExtra(EMPTY_EXTRA); setShowAdd(false)
@@ -684,9 +684,10 @@ const ExtrasTab = ({ onCountChange }: { onCountChange?: (n: number) => void }) =
       </div>
       {showAdd && (
         <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/40">
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
             <div><label className="text-xs text-gray-500 mb-1 block">{t('settings.namePl')}</label><input {...inp('name_pl')} /></div>
             <div><label className="text-xs text-gray-500 mb-1 block">{t('settings.nameEn')}</label><input {...inp('name_en')} /></div>
+            <div><label className="text-xs text-gray-500 mb-1 block">{t('database.accessories.priceAddition')}</label><input {...inp('price_addition')} type="number" min="0" step="0.01" /></div>
             <div><label className="text-xs text-gray-500 mb-1 block">{t('database.accessories.sortOrder')}</label><input {...inp('sort_order')} type="number" min="0" /></div>
           </div>
           <div className="flex gap-2">
@@ -701,18 +702,22 @@ const ExtrasTab = ({ onCountChange }: { onCountChange?: (n: number) => void }) =
             <thead><tr className="border-b border-gray-100 bg-gray-50/50">
               <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('settings.namePl')}</th>
               <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('settings.nameEn')}</th>
+              <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.accessories.priceAddition')}</th>
               <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.accessories.sortOrder')}</th>
               <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('common.status')}</th>
               <th className="w-10" />
             </tr></thead>
             <tbody className="divide-y divide-gray-50">
               {extras.length === 0 && (
-                <tr><td colSpan={5} className="px-4 py-6 text-center text-sm text-gray-400">{t('database.extras.noExtras')}</td></tr>
+                <tr><td colSpan={6} className="px-4 py-6 text-center text-sm text-gray-400">{t('database.extras.noExtras')}</td></tr>
               )}
               {extras.map(a => (
                 <tr key={a.id} className="hover:bg-gray-50/50">
                   <td className="px-4 py-3"><InlineEdit value={a.name_pl} onSave={v => updateExtra(a.id, 'name_pl', v)} /></td>
                   <td className="px-4 py-3"><InlineEdit value={a.name_en} onSave={v => updateExtra(a.id, 'name_en', v)} /></td>
+                  <td className="px-4 py-3 text-center">
+                    <input type="number" min="0" step="0.01" className="w-24 border border-gray-200 rounded px-2 py-1 text-sm" defaultValue={a.price_addition ?? 0} onBlur={e => api.patch(`/admin/cabin-accessories/${a.id}`, { price_addition: parseFloat(e.target.value) || 0 })} />
+                  </td>
                   <td className="px-4 py-3 text-center"><InlineEdit value={a.sort_order} type="number" onSave={v => updateExtra(a.id, 'sort_order', parseInt(v))} /></td>
                   <td className="px-4 py-3 text-center">
                     <button onClick={() => toggleActive(a)} className={`text-xs px-2 py-0.5 rounded-full cursor-pointer ${a.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
@@ -732,7 +737,7 @@ const ExtrasTab = ({ onCountChange }: { onCountChange?: (n: number) => void }) =
 
 // ─── Cabin colors tab ─────────────────────────────────────────────────────────
 const EMPTY_COLOR = {
-  name_pl: '', name_en: '', hex_color: '#ffffff',
+  name_pl: '', name_en: '',
   visible_for_cabin: true, visible_for_door: true,
   price_addition_cabin: 0, price_addition_door: 0,
   sort_order: 0,
@@ -754,6 +759,10 @@ const CabinColorsTab = ({ onCountChange }: { onCountChange?: (n: number) => void
   }
 
   useEffect(() => { loadColors() }, [])
+
+  const handleImageUploaded = (id: number, url: string) => {
+    setColors(prev => prev.map(c => c.id === id ? { ...c, image_url: url } : c))
+  }
 
   const deleteColor = async (id: number) => {
     if (!confirm(t('database.colors.confirmDelete'))) return
@@ -797,12 +806,9 @@ const CabinColorsTab = ({ onCountChange }: { onCountChange?: (n: number) => void
               <label className="text-xs text-gray-500 mb-1 block">{t('database.colors.nameEn')}</label>
               <input required className={INPUT_CLASS} value={newColor.name_en} onChange={e => setNewColor(p => ({ ...p, name_en: e.target.value }))} />
             </div>
-            <div>
-              <label className="text-xs text-gray-500 mb-1 block">{t('database.colors.hexColor')}</label>
-              <div className="flex items-center gap-2">
-                <input type="color" value={newColor.hex_color ?? '#ffffff'} onChange={e => setNewColor(p => ({ ...p, hex_color: e.target.value }))} className="w-10 h-8 cursor-pointer rounded border" />
-                <input className={INPUT_CLASS} value={newColor.hex_color ?? ''} onChange={e => setNewColor(p => ({ ...p, hex_color: e.target.value }))} maxLength={7} placeholder="#ffffff" />
-              </div>
+            <div className="sm:col-span-1">
+              <label className="text-xs text-gray-500 mb-1 block">{t('database.colors.image')}</label>
+              <p className="text-xs text-gray-400 italic">{t('database.colors.imageAfterCreate')}</p>
             </div>
             <div>
               <label className="text-xs text-gray-500 mb-1 block">{t('database.colors.sortOrder')}</label>
@@ -838,7 +844,7 @@ const CabinColorsTab = ({ onCountChange }: { onCountChange?: (n: number) => void
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead><tr className="border-b border-gray-100 bg-gray-50/50">
-              <th className="px-4 py-3 w-16 text-left text-xs font-medium text-gray-500 uppercase">{t('database.colors.hexColor')}</th>
+              <th className="px-4 py-3 w-20 text-left text-xs font-medium text-gray-500 uppercase">{t('database.colors.image')}</th>
               <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.colors.namePl')}</th>
               <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.colors.nameEn')}</th>
               <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.colors.visibleForCabin')}</th>
@@ -856,10 +862,11 @@ const CabinColorsTab = ({ onCountChange }: { onCountChange?: (n: number) => void
               {colors.map(c => (
                 <tr key={c.id} className="hover:bg-gray-50/50">
                   <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded border border-gray-200 flex-shrink-0" style={{ backgroundColor: c.hex_color ?? '#cccccc' }} />
-                      <input type="color" defaultValue={c.hex_color ?? '#ffffff'} className="w-8 h-6 cursor-pointer rounded" onBlur={e => handleColorField(c.id, 'hex_color', e.target.value)} />
-                    </div>
+                    <ImagePicker
+                      previewUrl={c.image_url}
+                      uploadUrl={`/admin/cabin-colors/${c.id}/image`}
+                      onUploaded={(url) => handleImageUploaded(c.id, url)}
+                    />
                   </td>
                   <td className="px-4 py-3"><InlineEdit value={c.name_pl} onSave={v => handleColorField(c.id, 'name_pl', v)} /></td>
                   <td className="px-4 py-3"><InlineEdit value={c.name_en} onSave={v => handleColorField(c.id, 'name_en', v)} /></td>
@@ -869,10 +876,10 @@ const CabinColorsTab = ({ onCountChange }: { onCountChange?: (n: number) => void
                   <td className="px-4 py-3 text-center">
                     <input type="checkbox" checked={c.visible_for_door} onChange={e => handleColorField(c.id, 'visible_for_door', e.target.checked)} className="rounded cursor-pointer" />
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 text-center">
                     <input type="number" min="0" step="0.01" className="w-24 border border-gray-200 rounded px-2 py-1 text-sm" defaultValue={c.price_addition_cabin} onBlur={e => handleColorField(c.id, 'price_addition_cabin', parseFloat(e.target.value) || 0)} />
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 text-center">
                     <input type="number" min="0" step="0.01" className="w-24 border border-gray-200 rounded px-2 py-1 text-sm" defaultValue={c.price_addition_door} onBlur={e => handleColorField(c.id, 'price_addition_door', parseFloat(e.target.value) || 0)} />
                   </td>
                   <td className="px-4 py-3 text-center">

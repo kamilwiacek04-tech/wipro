@@ -119,6 +119,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/cabin-colors', [CabinColorController::class, 'adminIndex']);
         Route::post('/cabin-colors', [CabinColorController::class, 'store']);
         Route::patch('/cabin-colors/{id}', [CabinColorController::class, 'update']);
+        Route::post('/cabin-colors/{id}/image', [CabinColorController::class, 'uploadImage']);
         Route::delete('/cabin-colors/{id}', [CabinColorController::class, 'destroy']);
     });
 });

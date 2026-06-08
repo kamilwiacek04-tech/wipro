@@ -45,7 +45,7 @@ export interface CabinColor {
     id: number;
     name_pl: string;
     name_en: string;
-    hex_color: string | null;
+    image_url: string | null;
     visible_for_cabin: boolean;
     visible_for_door: boolean;
     price_addition_cabin: string;

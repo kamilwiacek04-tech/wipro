@@ -34,7 +34,7 @@ interface Offer {
   quote_request_id: number | null
   quote_request?: { request_number: string; investor_name: string } | null
   created_by?: { id: number; name: string } | null
-  shared_admin_ids?: number[]
+  shared_admins?: {id: number; name: string}[]
 }
 
 interface Paginated {
@@ -140,7 +140,7 @@ const OffersPage = () => {
 
   const openShareModal = async (offer: Offer) => {
     setShareModalOfferId(offer.id)
-    setShareAdminIds(offer.shared_admin_ids ?? [])
+    setShareAdminIds(offer.shared_admins?.map(a => a.id) ?? [])
     if (allAdmins.length === 0) {
       const res = await api.get('/admin/admins')
       setAllAdmins(res.data.filter((a: { id: number; role: string }) => a.role === 'admin'))

@@ -108,7 +108,7 @@ const AdminsPage = () => {
     }
     setExpandedAdminId(sourceAdminId)
     if (!adminOffersMap[sourceAdminId]) {
-      const res = await api.get(`/admin/admins/${sourceAdminId}/offers`)
+      const res = await api.get(`/admin/admins/${sourceAdminId}/offers?target_admin_id=${shareTargetAdmin!.id}`)
       const offers = res.data as SharedOffer[]
       setAdminOffersMap(prev => ({ ...prev, [sourceAdminId]: offers }))
       const alreadyShared = offers.filter(o => o.is_shared_with_me).map(o => o.id)
@@ -256,12 +256,13 @@ const AdminsPage = () => {
 
                   {admin.role !== 'superadmin' && (
                     <div className="flex items-center gap-2 shrink-0">
-                      <button
+                      <Button
+                        size="sm"
+                        variant="outline"
                         onClick={() => openShareModal(admin)}
-                        className="text-xs text-blue-600 hover:text-blue-800 font-medium underline"
                       >
                         Udostępnij oferty
-                      </button>
+                      </Button>
                       <button
                         onClick={() => toggleActive(admin)}
                         disabled={saving}
@@ -357,20 +358,13 @@ const AdminsPage = () => {
               })}
             </div>
 
-            <div className="flex gap-2 justify-end mt-4 pt-4 border-t border-gray-100 flex-shrink-0">
-              <button
-                onClick={() => setShareTargetAdmin(null)}
-                className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50"
-              >
+            <div className="flex gap-2 justify-end mt-4 pt-4 border-t border-gray-100 shrink-0">
+              <Button variant="outline" size="sm" onClick={() => setShareTargetAdmin(null)}>
                 Anuluj
-              </button>
-              <button
-                onClick={saveShares}
-                disabled={savingShare}
-                className="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
-              >
+              </Button>
+              <Button size="sm" onClick={saveShares} disabled={savingShare}>
                 {savingShare ? 'Zapisuję...' : 'Zapisz dostęp'}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

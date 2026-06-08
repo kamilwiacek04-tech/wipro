@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class CabinColor extends Model
 {
     protected $fillable = [
-        'name_pl', 'name_en', 'hex_color',
+        'name_pl', 'name_en', 'image_url',
         'visible_for_cabin', 'visible_for_door',
         'price_addition_cabin', 'price_addition_door',
         'sort_order', 'is_active',

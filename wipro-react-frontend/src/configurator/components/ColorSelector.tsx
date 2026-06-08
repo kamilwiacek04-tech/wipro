@@ -28,10 +28,15 @@ const ColorSelector = ({items, currentValue, onChange}: Props) => {
                                 : 'border-gray-200 hover:border-gray-300'
                         }`}
                     >
-                        <div
-                            className='w-10 h-10 rounded-full border border-gray-200 shadow-sm flex-shrink-0'
-                            style={{backgroundColor: color.hex_color ?? '#cccccc'}}
-                        />
+                        {color.image_url ? (
+                            <img
+                                src={color.image_url}
+                                alt={name}
+                                className='w-10 h-10 rounded-md object-cover border border-gray-200 shadow-sm shrink-0'
+                            />
+                        ) : (
+                            <div className='w-10 h-10 rounded-md border border-gray-200 bg-gray-100 shrink-0' />
+                        )}
                         <span className='text-[12px] text-gray-600 text-center max-w-[70px] leading-tight'>{name}</span>
                     </button>
                 )

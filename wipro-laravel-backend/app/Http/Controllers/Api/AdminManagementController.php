@@ -76,7 +76,7 @@ class AdminManagementController extends Controller
     public function adminOffers(Request $request, int $id): JsonResponse
     {
         User::whereIn('role', ['admin', 'superadmin'])->findOrFail($id);
-        $targetAdminId = $request->user()->id;
+        $targetAdminId = (int) $request->input('target_admin_id', $request->user()->id);
 
         $offers = Offer::where('created_by_admin_id', $id)
             ->with(['sharedAdmins' => fn($q) => $q->where('users.id', $targetAdminId)])
