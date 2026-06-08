@@ -18,11 +18,11 @@ interface Admin {
   created_at: string
 }
 
-interface SharedOffer {
+interface SharedQuoteRequest {
   id: number
-  offer_number: string
+  request_number: string
   status: string
-  client_name: string | null
+  investor_name: string | null
   is_shared_with_me: boolean
 }
 
@@ -38,7 +38,7 @@ const AdminsPage = () => {
   const [shareTargetAdmin, setShareTargetAdmin] = useState<Admin | null>(null)
   const [shareSourceAdmins, setShareSourceAdmins] = useState<Admin[]>([])
   const [expandedAdminId, setExpandedAdminId] = useState<number | null>(null)
-  const [adminOffersMap, setAdminOffersMap] = useState<Record<number, SharedOffer[]>>({})
+  const [adminOffersMap, setAdminOffersMap] = useState<Record<number, SharedQuoteRequest[]>>({})
   const [selectedOfferIds, setSelectedOfferIds] = useState<number[]>([])
   const [savingShare, setSavingShare] = useState(false)
 
@@ -108,8 +108,8 @@ const AdminsPage = () => {
     }
     setExpandedAdminId(sourceAdminId)
     if (!adminOffersMap[sourceAdminId]) {
-      const res = await api.get(`/admin/admins/${sourceAdminId}/offers?target_admin_id=${shareTargetAdmin!.id}`)
-      const offers = res.data as SharedOffer[]
+      const res = await api.get(`/admin/admins/${sourceAdminId}/quote-requests?target_admin_id=${shareTargetAdmin!.id}`)
+      const offers = res.data as SharedQuoteRequest[]
       setAdminOffersMap(prev => ({ ...prev, [sourceAdminId]: offers }))
       const alreadyShared = offers.filter(o => o.is_shared_with_me).map(o => o.id)
       setSelectedOfferIds(prev => [...new Set([...prev, ...alreadyShared])])
@@ -134,7 +134,7 @@ const AdminsPage = () => {
     if (!shareTargetAdmin) return
     setSavingShare(true)
     try {
-      await api.post(`/admin/admins/${shareTargetAdmin.id}/share-offers`, { offer_ids: selectedOfferIds })
+      await api.post(`/admin/admins/${shareTargetAdmin.id}/share-quote-requests`, { quote_request_ids: selectedOfferIds })
       setShareTargetAdmin(null)
     } finally {
       setSavingShare(false)
@@ -294,9 +294,9 @@ const AdminsPage = () => {
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-lg flex flex-col" style={{ maxHeight: '80vh' }}>
             <h3 className="font-semibold text-gray-900 mb-1">
-              Udostępnij oferty dla: {shareTargetAdmin.name}
+              Udostępnij zapytania dla: {shareTargetAdmin.name}
             </h3>
-            <p className="text-sm text-gray-500 mb-4">Wybierz oferty innych adminów do udostępnienia</p>
+            <p className="text-sm text-gray-500 mb-4">Wybierz zapytania ofertowe innych adminów do udostępnienia</p>
 
             <div className="flex-1 overflow-y-auto divide-y divide-gray-100 min-h-0">
               {shareSourceAdmins.length === 0 && (
@@ -324,7 +324,7 @@ const AdminsPage = () => {
                       >
                         {sourceAdmin.name}
                         {offers && (
-                          <span className="ml-2 text-xs text-gray-400">({offers.length} ofert)</span>
+                          <span className="ml-2 text-xs text-gray-400">({offers.length} zapytań)</span>
                         )}
                       </button>
                       <span className="text-xs text-gray-400">{isExpanded ? '▲' : '▼'}</span>
@@ -336,7 +336,7 @@ const AdminsPage = () => {
                     {isExpanded && offers && (
                       <div className="pl-8 pb-2 flex flex-col gap-1">
                         {offers.length === 0 && (
-                          <p className="text-xs text-gray-400 italic">Brak ofert</p>
+                          <p className="text-xs text-gray-400 italic">Brak zapytań</p>
                         )}
                         {offers.map(offer => (
                           <label key={offer.id} className="flex items-center gap-2 cursor-pointer py-0.5">
@@ -345,9 +345,9 @@ const AdminsPage = () => {
                               checked={selectedOfferIds.includes(offer.id)}
                               onChange={() => toggleOffer(offer.id)}
                             />
-                            <span className="text-sm text-gray-700">{offer.offer_number}</span>
-                            {offer.client_name && (
-                              <span className="text-xs text-gray-400">— {offer.client_name}</span>
+                            <span className="text-sm text-gray-700">{offer.request_number}</span>
+                            {offer.investor_name && (
+                              <span className="text-xs text-gray-400">— {offer.investor_name}</span>
                             )}
                           </label>
                         ))}

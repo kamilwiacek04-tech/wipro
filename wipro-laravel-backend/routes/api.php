@@ -86,9 +86,8 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/admins', [AdminManagementController::class, 'store']);
             Route::patch('/admins/{id}', [AdminManagementController::class, 'update']);
             Route::delete('/admins/{id}', [AdminManagementController::class, 'destroy']);
-            Route::post('/offers/{offerId}/share', [AdminOfferController::class, 'shareWithAdmins']);
-            Route::get('/admins/{id}/offers', [AdminManagementController::class, 'adminOffers']);
-            Route::post('/admins/{id}/share-offers', [AdminManagementController::class, 'shareOffers']);
+            Route::get('/admins/{id}/quote-requests', [AdminManagementController::class, 'adminQuoteRequests']);
+            Route::post('/admins/{id}/share-quote-requests', [AdminManagementController::class, 'shareQuoteRequests']);
         });
 
         // Lift types

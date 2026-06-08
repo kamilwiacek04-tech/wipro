@@ -494,6 +494,7 @@ const QuoteRequestDetail = () => {
   const [editingOffer, setEditingOffer] = useState(false)
   const [assigning, setAssigning] = useState(false)
   const [assignedAdminIds, setAssignedAdminIds] = useState<number[]>([])
+  const [showAdminModal, setShowAdminModal] = useState(false)
 
   // Lookup data
   const [cabinModels, setCabinModels] = useState<{ id: number; name_pl: string }[]>([])
@@ -993,31 +994,30 @@ const QuoteRequestDetail = () => {
         {/* ── RIGHT COLUMN ────────────────────────────────────────────────── */}
         <div className="flex flex-col gap-6">
 
-          {/* Assign admins (multi-select) */}
+          {/* Assign admins */}
           {isSuperAdmin && (
             <Card className="p-6 gap-0">
-              <div className="flex items-center gap-2 mb-3">
-                <UserCheck className="h-4 w-4 text-amber-500" />
-                <h3 className="font-medium text-gray-900">{t('quoteRequests.detail.assignedAdmin')}</h3>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <UserCheck className="h-4 w-4 text-amber-500" />
+                  <h3 className="font-medium text-gray-900">{t('quoteRequests.detail.assignedAdmin')}</h3>
+                </div>
+                <Button size="sm" variant="outline" onClick={() => setShowAdminModal(true)}>
+                  Zarządzaj
+                </Button>
               </div>
-              <div className={`flex flex-col gap-1.5 ${assigning ? 'opacity-60 pointer-events-none' : ''}`}>
-                {admins.filter(a => a.role !== 'superadmin').length === 0 ? (
-                  <p className="text-sm text-gray-400 italic">{t('quoteRequests.detail.noAssignedAdmin')}</p>
-                ) : (
-                  admins.filter(a => a.role !== 'superadmin').map(a => (
-                    <label key={a.id} className="flex items-center gap-2.5 cursor-pointer py-1 group">
-                      <input
-                        type="checkbox"
-                        checked={assignedAdminIds.includes(a.id)}
-                        onChange={e => toggleAssignedAdmin(a.id, e.target.checked)}
-                        className="rounded border-gray-300 text-amber-500 focus:ring-amber-300 cursor-pointer"
-                      />
-                      <span className="text-sm text-gray-700 group-hover:text-gray-900">{a.name}</span>
-                    </label>
-                  ))
-                )}
-              </div>
-              {assigning && <p className="text-xs text-gray-400 mt-2">{t('common.saving')}</p>}
+              {assignedAdminIds.length === 0 ? (
+                <p className="text-sm text-gray-400 italic">{t('quoteRequests.detail.noAssignedAdmin')}</p>
+              ) : (
+                <div className="flex flex-col gap-1">
+                  {admins.filter(a => assignedAdminIds.includes(a.id)).map(a => (
+                    <div key={a.id} className="flex items-center gap-2 py-0.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
+                      <span className="text-sm text-gray-700">{a.name}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </Card>
           )}
 
@@ -1272,6 +1272,41 @@ const QuoteRequestDetail = () => {
                   ))}
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+      {showAdminModal && isSuperAdmin && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm flex flex-col" style={{maxHeight: '80vh'}}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-gray-900">{t('quoteRequests.detail.assignedAdmin')}</h3>
+              <button onClick={() => setShowAdminModal(false)} className="text-gray-400 hover:text-gray-600 cursor-pointer">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className={`flex-1 overflow-y-auto flex flex-col gap-1.5 min-h-0 ${assigning ? 'opacity-60 pointer-events-none' : ''}`}>
+              {admins.filter(a => a.role !== 'superadmin').length === 0 ? (
+                <p className="text-sm text-gray-400 italic">{t('quoteRequests.detail.noAssignedAdmin')}</p>
+              ) : (
+                admins.filter(a => a.role !== 'superadmin').map(a => (
+                  <label key={a.id} className="flex items-center gap-2.5 cursor-pointer py-1 group">
+                    <input
+                      type="checkbox"
+                      checked={assignedAdminIds.includes(a.id)}
+                      onChange={e => toggleAssignedAdmin(a.id, e.target.checked)}
+                      className="rounded border-gray-300 text-amber-500 focus:ring-amber-300 cursor-pointer"
+                    />
+                    <span className="text-sm text-gray-700 group-hover:text-gray-900">{a.name}</span>
+                  </label>
+                ))
+              )}
+            </div>
+            {assigning && <p className="text-xs text-gray-400 mt-2">{t('common.saving')}</p>}
+            <div className="mt-4 pt-4 border-t border-gray-100 flex justify-end">
+              <Button size="sm" onClick={() => setShowAdminModal(false)}>
+                Gotowe
+              </Button>
             </div>
           </div>
         </div>

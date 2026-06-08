@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Models\Offer;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
@@ -70,9 +69,8 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(QuoteRequest::class);
     }
 
-    public function sharedOffers(): BelongsToMany
+    public function sharedQuoteRequests(): BelongsToMany
     {
-        return $this->belongsToMany(Offer::class, 'offer_admin_shares', 'admin_id', 'offer_id')
-            ->withTimestamps();
+        return $this->belongsToMany(QuoteRequest::class, 'quote_request_admin_shares', 'admin_id', 'quote_request_id');
     }
 }

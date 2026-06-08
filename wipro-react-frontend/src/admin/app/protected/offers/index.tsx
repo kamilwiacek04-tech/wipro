@@ -9,7 +9,7 @@ import api from '@admin/store/axiosInstance'
 import { adminViewStore } from '@admin/store/zustand/adminViewStore'
 import { authStore } from '@admin/store/zustand/authStore'
 import formatDate from '@admin/functions/formatDate'
-import { Plus, RefreshCw, X, Check, Trash2, Link, Share2 } from 'lucide-react'
+import { Plus, RefreshCw, X, Check, Trash2, Link } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
 
@@ -34,7 +34,6 @@ interface Offer {
   quote_request_id: number | null
   quote_request?: { request_number: string; investor_name: string } | null
   created_by?: { id: number; name: string } | null
-  shared_admins?: {id: number; name: string}[]
 }
 
 interface Paginated {
@@ -73,11 +72,6 @@ const OffersPage = () => {
     notes: '',
   })
   const [items, setItems] = useState<OfferItem[]>([emptyItem()])
-
-  const [shareModalOfferId, setShareModalOfferId] = useState<number | null>(null)
-  const [shareAdminIds, setShareAdminIds] = useState<number[]>([])
-  const [allAdmins, setAllAdmins] = useState<{ id: number; name: string; role: string }[]>([])
-  const [sharing, setSharing] = useState(false)
 
   const load = (p = 1, st = status) => {
     setLoading(true)
@@ -135,27 +129,6 @@ const OffersPage = () => {
       setFormError(err?.response?.data?.message ?? t('offers.errorCreate'))
     } finally {
       setSaving(false)
-    }
-  }
-
-  const openShareModal = async (offer: Offer) => {
-    setShareModalOfferId(offer.id)
-    setShareAdminIds(offer.shared_admins?.map(a => a.id) ?? [])
-    if (allAdmins.length === 0) {
-      const res = await api.get('/admin/admins')
-      setAllAdmins(res.data.filter((a: { id: number; role: string }) => a.role === 'admin'))
-    }
-  }
-
-  const saveShare = async () => {
-    if (shareModalOfferId === null) return
-    setSharing(true)
-    try {
-      await api.post(`/admin/offers/${shareModalOfferId}/share`, { admin_ids: shareAdminIds })
-      setShareModalOfferId(null)
-      load()
-    } finally {
-      setSharing(false)
     }
   }
 
@@ -394,7 +367,6 @@ const OffersPage = () => {
                       <th className="text-right px-4 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('offers.total')}</th>
                       <th className="text-left px-4 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('offers.createdBy')}</th>
                       <th className="text-left px-4 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('offers.date')}</th>
-                      {user?.role === 'superadmin' && <th className="px-4 py-3.5 w-10" />}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
@@ -435,17 +407,6 @@ const OffersPage = () => {
                         <td className="px-4 py-4 text-sm text-gray-500 whitespace-nowrap">
                           {formatDate(offer.created_at)}
                         </td>
-                        {user?.role === 'superadmin' && (
-                          <td className="px-4 py-4" onClick={e => e.stopPropagation()}>
-                            <button
-                              onClick={() => openShareModal(offer)}
-                              className="text-gray-400 hover:text-blue-500 transition-colors"
-                              title="Przypisz do adminów"
-                            >
-                              <Share2 className="h-4 w-4" />
-                            </button>
-                          </td>
-                        )}
                       </tr>
                     ))}
                   </tbody>
@@ -496,45 +457,6 @@ const OffersPage = () => {
         </Card>
       </div>
 
-      {shareModalOfferId !== null && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm">
-            <h3 className="font-semibold text-gray-900 mb-4">Przypisz ofertę do adminów</h3>
-            <div className="flex flex-col gap-2 max-h-64 overflow-y-auto mb-4">
-              {allAdmins.map(admin => (
-                <label key={admin.id} className="flex items-center gap-3 cursor-pointer py-1">
-                  <input
-                    type="checkbox"
-                    checked={shareAdminIds.includes(admin.id)}
-                    onChange={e => setShareAdminIds(prev =>
-                      e.target.checked ? [...prev, admin.id] : prev.filter(id => id !== admin.id)
-                    )}
-                  />
-                  <span className="text-sm text-gray-700">{admin.name}</span>
-                </label>
-              ))}
-              {allAdmins.length === 0 && (
-                <p className="text-sm text-gray-400 italic">Brak adminów</p>
-              )}
-            </div>
-            <div className="flex gap-2 justify-end">
-              <button
-                onClick={() => setShareModalOfferId(null)}
-                className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50"
-              >
-                Anuluj
-              </button>
-              <button
-                onClick={saveShare}
-                disabled={sharing}
-                className="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
-              >
-                {sharing ? 'Zapisuję...' : 'Przypisz'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </MainLayout>
   )
 }
