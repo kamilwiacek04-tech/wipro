@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class QuoteRequest extends Model
@@ -44,7 +45,6 @@ class QuoteRequest extends Model
         'additional_notes',
         'raw_data',
         'elevator_id',
-        'assigned_admin_id',
     ];
 
     protected $casts = [
@@ -75,9 +75,9 @@ class QuoteRequest extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function assignedAdmin(): BelongsTo
+    public function sharedAdmins(): BelongsToMany
     {
-        return $this->belongsTo(User::class, 'assigned_admin_id');
+        return $this->belongsToMany(User::class, 'quote_request_admin_shares', 'quote_request_id', 'admin_id');
     }
 
     public function elevator(): BelongsTo

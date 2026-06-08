@@ -84,8 +84,7 @@ interface QuoteRequestDetail {
   request_number: string
   status: string
   created_at: string
-  assigned_admin_id: number | null
-  assigned_admin: AdminBrief | null
+  shared_admins: AdminBrief[]
   investor_name: string
   investor_email: string
   investor_phone: string | null
@@ -494,6 +493,7 @@ const QuoteRequestDetail = () => {
   const [offerItems, setOfferItems] = useState<OfferItem[]>([])
   const [editingOffer, setEditingOffer] = useState(false)
   const [assigning, setAssigning] = useState(false)
+  const [assignedAdminIds, setAssignedAdminIds] = useState<number[]>([])
 
   // Lookup data
   const [cabinModels, setCabinModels] = useState<{ id: number; name_pl: string }[]>([])
@@ -509,6 +509,7 @@ const QuoteRequestDetail = () => {
     api.get(`/admin/quote-requests/${id}`)
       .then(res => {
         setData(res.data)
+        setAssignedAdminIds((res.data.shared_admins ?? []).map((a: AdminBrief) => a.id))
         const draft = res.data.offers?.find((o: Offer) => o.status === 'draft')
         if (draft) setOfferItems([...draft.items].sort((a: OfferItem, b: OfferItem) => a.sort_order - b.sort_order))
       })
@@ -683,11 +684,16 @@ const QuoteRequestDetail = () => {
     }
   }
 
-  const assignAdmin = async (adminId: number | null) => {
+  const toggleAssignedAdmin = async (adminId: number, checked: boolean) => {
+    const next = checked
+      ? [...assignedAdminIds, adminId]
+      : assignedAdminIds.filter(i => i !== adminId)
+    setAssignedAdminIds(next)
     setAssigning(true)
     try {
-      const res = await api.patch(`/admin/quote-requests/${id}/assign`, { assigned_admin_id: adminId })
+      const res = await api.patch(`/admin/quote-requests/${id}/assign`, {admin_ids: next})
       setData(res.data)
+      setAssignedAdminIds((res.data.shared_admins ?? []).map((a: AdminBrief) => a.id))
     } finally {
       setAssigning(false)
     }
@@ -987,32 +993,30 @@ const QuoteRequestDetail = () => {
         {/* ── RIGHT COLUMN ────────────────────────────────────────────────── */}
         <div className="flex flex-col gap-6">
 
-          {/* Assign admin */}
+          {/* Assign admins (multi-select) */}
           {isSuperAdmin && (
             <Card className="p-6 gap-0">
               <div className="flex items-center gap-2 mb-3">
                 <UserCheck className="h-4 w-4 text-amber-500" />
                 <h3 className="font-medium text-gray-900">{t('quoteRequests.detail.assignedAdmin')}</h3>
               </div>
-              {data.assigned_admin ? (
-                <div className="mb-3 p-2.5 rounded-lg bg-amber-50 border border-amber-100">
-                  <p className="text-sm font-medium text-gray-900">{data.assigned_admin.name}</p>
-                  <p className="text-xs text-gray-500">{data.assigned_admin.email}</p>
-                </div>
-              ) : (
-                <p className="text-sm text-gray-400 mb-3">{t('quoteRequests.detail.noAssignedAdmin')}</p>
-              )}
-              <select
-                value={data.assigned_admin_id ?? ''}
-                onChange={e => assignAdmin(e.target.value ? Number(e.target.value) : null)}
-                disabled={assigning}
-                className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:bg-white disabled:opacity-50"
-              >
-                <option value="">{t('quoteRequests.detail.noAssignment')}</option>
-                {admins.filter(a => a.role !== 'superadmin').map(a => (
-                  <option key={a.id} value={a.id}>{a.name}</option>
-                ))}
-              </select>
+              <div className={`flex flex-col gap-1.5 ${assigning ? 'opacity-60 pointer-events-none' : ''}`}>
+                {admins.filter(a => a.role !== 'superadmin').length === 0 ? (
+                  <p className="text-sm text-gray-400 italic">{t('quoteRequests.detail.noAssignedAdmin')}</p>
+                ) : (
+                  admins.filter(a => a.role !== 'superadmin').map(a => (
+                    <label key={a.id} className="flex items-center gap-2.5 cursor-pointer py-1 group">
+                      <input
+                        type="checkbox"
+                        checked={assignedAdminIds.includes(a.id)}
+                        onChange={e => toggleAssignedAdmin(a.id, e.target.checked)}
+                        className="rounded border-gray-300 text-amber-500 focus:ring-amber-300 cursor-pointer"
+                      />
+                      <span className="text-sm text-gray-700 group-hover:text-gray-900">{a.name}</span>
+                    </label>
+                  ))
+                )}
+              </div>
               {assigning && <p className="text-xs text-gray-400 mt-2">{t('common.saving')}</p>}
             </Card>
           )}

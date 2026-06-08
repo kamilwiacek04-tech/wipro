@@ -23,7 +23,7 @@ class AdminDashboardController extends Controller
         }
 
         $baseQuery = fn() => $adminId
-            ? QuoteRequest::where('assigned_admin_id', $adminId)
+            ? QuoteRequest::whereHas('sharedAdmins', fn($q) => $q->where('users.id', $adminId))
             : QuoteRequest::query();
 
         $totalRequests     = $baseQuery()->count();
