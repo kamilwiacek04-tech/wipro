@@ -1,15 +1,14 @@
-import { useEffect, useState } from 'react'
-import { Card } from '@admin/components/Cards'
-import { Button } from '@admin/components/Button'
 import { Badge, statusBadge, statusLabel } from '@admin/components/Badge'
+import { Button } from '@admin/components/Button'
+import { Card } from '@admin/components/Cards'
 import SkeletonLoader from '@admin/components/SkeletonLoader'
-import MainLayout from '@admin/components/layout/MainLayout'
 import MainHeader from '@admin/components/layout/MainHeader'
+import MainLayout from '@admin/components/layout/MainLayout'
+import formatDate from '@admin/functions/formatDate'
 import api from '@admin/store/axiosInstance'
 import { adminViewStore } from '@admin/store/zustand/adminViewStore'
-import { authStore } from '@admin/store/zustand/authStore'
-import formatDate from '@admin/functions/formatDate'
-import { Plus, RefreshCw, X, Check, Trash2, Link } from 'lucide-react'
+import { Check, Link, Plus, RefreshCw, Trash2, X } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
 
@@ -54,7 +53,6 @@ const OffersPage = () => {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const { selectedAdminId } = adminViewStore()
-  const { user } = authStore()
 
   const [data, setData] = useState<Paginated | null>(null)
   const [loading, setLoading] = useState(true)
