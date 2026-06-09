@@ -1157,6 +1157,13 @@ interface Elevator {
   drawing_throughway_dwg?: string | null
   drawing_throughway_bim?: string | null
   drawing_throughway_doc?: string | null
+  coeff_stops?: number | null
+  coeff_cabin_model?: number | null
+  coeff_cabin_throughway?: number | null
+  coeff_cabin_doors?: number | null
+  coeff_landing_doors?: number | null
+  coeff_ei30?: number | null
+  coeff_ei60?: number | null
 }
 
 const TechField = ({ label, value, elevatorId, field, onSaved, type = 'text' }: {
@@ -1488,6 +1495,22 @@ const ElevatorRow = ({ elevator, onUpdate, onDelete }: {
                 </div>
               ))}
             </div>
+
+            {/* Współczynniki rekompensujące udźwig */}
+            <div className="mt-5 pt-4 border-t border-gray-200">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
+                {t('database.coefficients.sectionTitle')}
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                <TechField label={t('database.coefficients.stops')} value={localElevator.coeff_stops} elevatorId={localElevator.id} field="coeff_stops" onSaved={(id, f, v) => { onUpdate(id, f, v); setLocalElevator(prev => ({ ...prev, coeff_stops: v ? parseFloat(v) : null })) }} type="number" />
+                <TechField label={t('database.coefficients.cabinModel')} value={localElevator.coeff_cabin_model} elevatorId={localElevator.id} field="coeff_cabin_model" onSaved={(id, f, v) => { onUpdate(id, f, v); setLocalElevator(prev => ({ ...prev, coeff_cabin_model: v ? parseFloat(v) : null })) }} type="number" />
+                <TechField label={t('database.coefficients.cabinThroughway')} value={localElevator.coeff_cabin_throughway} elevatorId={localElevator.id} field="coeff_cabin_throughway" onSaved={(id, f, v) => { onUpdate(id, f, v); setLocalElevator(prev => ({ ...prev, coeff_cabin_throughway: v ? parseFloat(v) : null })) }} type="number" />
+                <TechField label={t('database.coefficients.cabinDoors')} value={localElevator.coeff_cabin_doors} elevatorId={localElevator.id} field="coeff_cabin_doors" onSaved={(id, f, v) => { onUpdate(id, f, v); setLocalElevator(prev => ({ ...prev, coeff_cabin_doors: v ? parseFloat(v) : null })) }} type="number" />
+                <TechField label={t('database.coefficients.landingDoors')} value={localElevator.coeff_landing_doors} elevatorId={localElevator.id} field="coeff_landing_doors" onSaved={(id, f, v) => { onUpdate(id, f, v); setLocalElevator(prev => ({ ...prev, coeff_landing_doors: v ? parseFloat(v) : null })) }} type="number" />
+                <TechField label={t('database.coefficients.ei30')} value={localElevator.coeff_ei30} elevatorId={localElevator.id} field="coeff_ei30" onSaved={(id, f, v) => { onUpdate(id, f, v); setLocalElevator(prev => ({ ...prev, coeff_ei30: v ? parseFloat(v) : null })) }} type="number" />
+                <TechField label={t('database.coefficients.ei60')} value={localElevator.coeff_ei60} elevatorId={localElevator.id} field="coeff_ei60" onSaved={(id, f, v) => { onUpdate(id, f, v); setLocalElevator(prev => ({ ...prev, coeff_ei60: v ? parseFloat(v) : null })) }} type="number" />
+              </div>
+            </div>
           </td>
         </tr>
       )}
@@ -1576,7 +1599,11 @@ const Database = () => {
   const updateElevator = async (id: number, field: string, value: string) => {
     const payload: Record<string, string | boolean | number | null> = {}
     const nullableInts = ['shaft_width', 'shaft_depth', 'pit_depth', 'overhead', 'door_width', 'door_height']
-    const nullableFloats = ['base_price', 'lifting_height']
+    const nullableFloats = [
+      'base_price', 'lifting_height',
+      'coeff_stops', 'coeff_cabin_model', 'coeff_cabin_throughway',
+      'coeff_cabin_doors', 'coeff_landing_doors', 'coeff_ei30', 'coeff_ei60',
+    ]
     if (field === 'is_active') payload[field] = value === '1'
     else if (['capacity', 'persons', 'cabin_width', 'cabin_depth', 'cabin_height', 'max_stops'].includes(field)) payload[field] = parseInt(value)
     else if (nullableInts.includes(field)) payload[field] = value.trim() !== '' ? parseInt(value) : null
