@@ -181,6 +181,9 @@ const pl = {
       clearElevator: 'Usuń przypisaną windę',
       searchElevator: 'Szukaj po producencie lub modelu...',
       noElevatorsFound: 'Brak wind spełniających kryteria',
+      cabinColor: 'Kolor kabiny',
+      landingDoorColor: 'Kolor drzwi przystankowych',
+      cabinDoorColor: 'Kolor drzwi kabinowych',
     },
   },
   elevators: {

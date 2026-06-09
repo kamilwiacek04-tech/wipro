@@ -183,6 +183,9 @@ const en: AdminTranslations = {
       clearElevator: 'Remove assigned elevator',
       searchElevator: 'Search by manufacturer or model...',
       noElevatorsFound: 'No elevators match your search',
+      cabinColor: 'Cabin color',
+      landingDoorColor: 'Landing door color',
+      cabinDoorColor: 'Cabin door color',
     },
   },
   elevators: {

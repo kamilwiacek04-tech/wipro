@@ -159,6 +159,10 @@ interface ConfiguratorData {
   handrailId?: number
   flooringId?: number
   extraIds?: number[]
+  cabinColorId?: number
+  doorColorId?: number
+  cabinDoorSameAsLanding?: boolean
+  cabinDoorColorId?: number
   [key: string]: unknown
 }
 
@@ -499,6 +503,7 @@ const QuoteRequestDetail = () => {
   // Lookup data
   const [cabinModels, setCabinModels] = useState<{ id: number; name_pl: string }[]>([])
   const [cabinAccessories, setCabinAccessories] = useState<{ id: number; name_pl: string; category: string }[]>([])
+  const [cabinColors, setCabinColors] = useState<{ id: number; name_pl: string }[]>([])
   const [elevators, setElevators] = useState<ElevatorBrief[]>([])
   const [liftTypes, setLiftTypes] = useState<{ value: string; label: string }[]>([])
 
@@ -520,6 +525,7 @@ const QuoteRequestDetail = () => {
   useEffect(() => {
     api.get('/admin/cabin-models').then(r => setCabinModels(r.data)).catch(() => {})
     api.get('/admin/cabin-accessories').then(r => setCabinAccessories(r.data)).catch(() => {})
+    api.get('/admin/cabin-colors').then(r => setCabinColors(r.data)).catch(() => {})
     api.get('/admin/elevators').then(r => setElevators(Array.isArray(r.data) ? r.data : r.data?.data ?? [])).catch(() => {})
     api.get('/admin/lift-types').then(res => {
       setLiftTypes(res.data.map((lt: { key: string; name_pl: string }) => ({ value: lt.key, label: lt.name_pl })))
@@ -921,6 +927,26 @@ const QuoteRequestDetail = () => {
                 onSave={aid => saveAccessory('flooringId', aid, 'floor_material')}
               />
               <EditableField label={t('quoteRequests.detail.fields.lighting')} value={data.lighting} field="lighting" onSave={saveTextField} />
+              <DbPickerField
+                label={t('quoteRequests.detail.cabinColor')}
+                selectedId={config?.cabinColorId}
+                options={cabinColors.map(c => ({id: c.id, name: c.name_pl}))}
+                onSave={id => saveConfigKey('cabinColorId', id ?? undefined)}
+              />
+              <DbPickerField
+                label={t('quoteRequests.detail.landingDoorColor')}
+                selectedId={config?.doorColorId}
+                options={cabinColors.map(c => ({id: c.id, name: c.name_pl}))}
+                onSave={id => saveConfigKey('doorColorId', id ?? undefined)}
+              />
+              {config?.cabinDoorSameAsLanding === false && (
+                <DbPickerField
+                  label={t('quoteRequests.detail.cabinDoorColor')}
+                  selectedId={config?.cabinDoorColorId}
+                  options={cabinColors.map(c => ({id: c.id, name: c.name_pl}))}
+                  onSave={id => saveConfigKey('cabinDoorColorId', id ?? undefined)}
+                />
+              )}
             </div>
             <div className="mt-5 pt-4 border-t border-gray-50">
               <ExtrasPickerField
