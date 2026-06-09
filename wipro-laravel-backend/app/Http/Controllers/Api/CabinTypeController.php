@@ -49,12 +49,12 @@ class CabinTypeController extends Controller
         $type = CabinType::findOrFail($id);
         $field = $side === 'right' ? 'image_right_url' : 'image_left_url';
 
-        if ($type->$field) {
-            Storage::disk('public')->delete(str_replace('/storage/', '', $type->$field));
+        if ($type->$field && preg_match('#/storage/(.+)$#', $type->$field, $m)) {
+            Storage::disk('public')->delete($m[1]);
         }
 
         $path = $request->file('image')->store("cabin-types/{$type->key}", 'public');
-        $type->update([$field => '/storage/' . $path]);
+        $type->update([$field => Storage::disk('public')->url($path)]);
 
         return response()->json($type);
     }
