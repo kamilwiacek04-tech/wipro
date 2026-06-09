@@ -276,12 +276,34 @@ class OfferService
         }
 
         // ── Finishes ─────────────────────────────────────────
+        $config           = $this->parseConfiguratorNotes($qr->additional_notes);
+        $cabinColorId     = (int) ($config['cabinColorId'] ?? 0);
+        $doorColorId      = (int) ($config['doorColorId'] ?? 0);
+        $sameAsDoor       = $config['cabinDoorSameAsLanding'] ?? true;
+        $cabinDoorColorId = (int) ($config['cabinDoorColorId'] ?? 0);
+
+        $colorNames = [];
+        $colorIdsToLookup = array_filter(array_unique([$cabinColorId, $doorColorId, $cabinDoorColorId]));
+        if (!empty($colorIdsToLookup)) {
+            \App\Models\CabinColor::whereIn('id', $colorIdsToLookup)->get()
+                ->each(fn($c) => $colorNames[$c->id] = $c->name_pl);
+        }
+
+        $cabinColorName = $cabinColorId && isset($colorNames[$cabinColorId]) ? $colorNames[$cabinColorId] : null;
+        $doorColorName  = $doorColorId  && isset($colorNames[$doorColorId])  ? $colorNames[$doorColorId]  : null;
+        $cabinDoorName  = (!$sameAsDoor && $cabinDoorColorId && isset($colorNames[$cabinDoorColorId]))
+            ? $colorNames[$cabinDoorColorId]
+            : ($doorColorName ? $doorColorName . ' (jak przystankowe)' : null);
+
         $finishes = array_filter([
-            'Poręcze'       => $qr->handrail,
-            'Podsufitka'    => $qr->ceiling,
-            'Oświetlenie'   => $qr->lighting,
-            'Podłoga'       => $qr->floor_material,
-            'Panel sterow.' => $qr->control_panel,
+            'Poręcze'             => $qr->handrail,
+            'Podsufitka'          => $qr->ceiling,
+            'Oświetlenie'         => $qr->lighting,
+            'Podłoga'             => $qr->floor_material,
+            'Panel sterow.'       => $qr->control_panel,
+            'Kolor kabiny'        => $cabinColorName,
+            'Kolor drzwi przyst.' => $doorColorName,
+            'Kolor drzwi kabin.'  => $cabinDoorName,
         ]);
 
         if (!empty($finishes)) {
