@@ -751,7 +751,6 @@ const CabinTypesTab = ({ onCountChange }: { onCountChange?: (n: number) => void 
   const { t } = useTranslation()
   const [cabinTypes, setCabinTypes] = useState<CabinType[]>([])
   const [loadingCabinTypes, setLoadingCabinTypes] = useState(true)
-  const [uploadingTypeImage, setUploadingTypeImage] = useState<Record<string, boolean>>({})
 
   useEffect(() => { onCountChange?.(cabinTypes.length) }, [cabinTypes.length])
 
@@ -765,27 +764,6 @@ const CabinTypesTab = ({ onCountChange }: { onCountChange?: (n: number) => void 
   const updateCabinType = async (id: number, field: string, value: unknown) => {
     await api.patch(`/admin/cabin-types/${id}`, { [field]: value })
     loadCabinTypes()
-  }
-
-  const uploadCabinTypeImage = async (id: number, side: 'right' | 'left', file: File) => {
-    const key = `${id}-${side}`
-    setUploadingTypeImage(prev => ({ ...prev, [key]: true }))
-    try {
-      const token = authStore.getState().token
-      const fd = new FormData()
-      fd.append('image', file)
-      const res = await fetch(`${apiBase}/admin/cabin-types/${id}/image/${side}`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
-        body: fd,
-      })
-      if (!res.ok) throw new Error('Upload failed')
-      loadCabinTypes()
-    } catch {
-      toast.error(t('database.errorSave'))
-    } finally {
-      setUploadingTypeImage(prev => ({ ...prev, [key]: false }))
-    }
   }
 
   return (
@@ -832,28 +810,13 @@ const CabinTypesTab = ({ onCountChange }: { onCountChange?: (n: number) => void 
                 </td>
                 {(['right', 'left'] as const).map(side => {
                   const urlField = side === 'right' ? 'image_right_url' : 'image_left_url'
-                  const uploadKey = `${ct.id}-${side}`
                   return (
                     <td key={side} className="px-4 py-3">
-                      <div className="flex flex-col gap-1 items-start">
-                        {ct[urlField] ? (
-                          <img src={ct[urlField]!} alt="" className="h-12 w-16 object-contain rounded border border-gray-200 bg-gray-50" />
-                        ) : (
-                          <div className="h-12 w-16 rounded border border-dashed border-gray-200 bg-gray-50 flex items-center justify-center text-gray-300 text-xs">—</div>
-                        )}
-                        <label className="text-xs text-blue-600 cursor-pointer hover:underline">
-                          {uploadingTypeImage[uploadKey] ? t('database.drawings.uploading') : t('database.uploadImage')}
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={e => {
-                              const file = e.target.files?.[0]
-                              if (file) uploadCabinTypeImage(ct.id, side, file)
-                            }}
-                          />
-                        </label>
-                      </div>
+                      <ImagePicker
+                        previewUrl={ct[urlField]}
+                        uploadUrl={`/admin/cabin-types/${ct.id}/image/${side}`}
+                        onUploaded={() => loadCabinTypes()}
+                      />
                     </td>
                   )
                 })}
