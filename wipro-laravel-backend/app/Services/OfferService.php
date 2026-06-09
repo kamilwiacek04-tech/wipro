@@ -390,7 +390,7 @@ class OfferService
             if (!empty($extraNames)) {
                 $section->addText('DODATKI', $h2Font);
                 foreach ($extraNames as $name) {
-                    $section->addListItem($name, 0, $bodyFont, ['listType' => \PhpOffice\PhpWord\Style\ListItem::TYPE_BULLET]);
+                    $section->addListItem($name, 0, $bodyFont);
                 }
                 $section->addTextBreak(1);
             }
@@ -402,6 +402,28 @@ class OfferService
             foreach ($offer->items as $item) {
                 $section->addListItem($item->description, 0, $bodyFont, ['listType' => \PhpOffice\PhpWord\Style\ListItem::TYPE_NUMBER]);
             }
+            $section->addTextBreak(1);
+        }
+
+        // ── Indicative price ─────────────────────────────────
+        if ($offer->total_price_net > 0) {
+            $section->addText('ORIENTACYJNA WYCENA', $h2Font);
+            $priceTable = $section->addTable(['borderSize' => 6, 'borderColor' => '1a1a2e', 'cellMargin' => 120]);
+            $priceTable->addRow(500);
+            $priceTable->addCell(7200, ['bgColor' => '1a1a2e'])->addText(
+                'Orientacyjna wartość netto',
+                ['bold' => true, 'size' => 12, 'color' => 'ffffff']
+            );
+            $priceTable->addCell(2400, ['bgColor' => '1a1a2e'])->addText(
+                number_format($offer->total_price_net, 2, ',', ' ') . ' PLN',
+                ['bold' => true, 'size' => 13, 'color' => 'ffb400'],
+                $rightPara
+            );
+            $section->addTextBreak(1);
+            $section->addText(
+                'Podana kwota ma charakter orientacyjny i nie stanowi wiążącej oferty handlowej. Ostateczna cena zostanie ustalona po szczegółowej analizie projektu.',
+                ['size' => 9, 'color' => '888888', 'italic' => true]
+            );
             $section->addTextBreak(1);
         }
 

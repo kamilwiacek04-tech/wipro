@@ -110,6 +110,13 @@ table.sec tr.sep td { border-top:1px solid #efefef; }
 
 <hr style="margin-top:0">
 
+@if($offer->total_price_net > 0)
+<div class="summary">
+  <span class="s-row s-total">Orientacyjna wartość netto:&nbsp;&nbsp;{{ number_format((float)$offer->total_price_net, 2, ',', ' ') }} zł</span>
+  <span class="s-row" style="font-size:8px; color:#888; font-style:italic;">Kwota orientacyjna — nie stanowi wiążącej oferty handlowej.</span>
+</div>
+@endif
+
 @if($pasekBase64)
 <div class="pasek"><img src="{{ $pasekBase64 }}"></div>
 @endif
