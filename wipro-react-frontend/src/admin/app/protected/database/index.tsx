@@ -7,7 +7,7 @@ import MainLayout from '@admin/components/layout/MainLayout'
 import api from '@admin/store/axiosInstance'
 import { authStore } from '@admin/store/zustand/authStore'
 import { toast } from '@admin/store/zustand/toastStore'
-import { ChevronDown, ChevronRight, FileDown, Plus, Save, Trash2 } from 'lucide-react'
+import { ChevronDown, ChevronRight, FileDown, Plus, Save, ToggleLeft, ToggleRight, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -53,6 +53,17 @@ interface CabinColor {
   visible_for_door: boolean
   price_addition_cabin: number
   price_addition_door: number
+  sort_order: number
+  is_active: boolean
+}
+interface CabinType {
+  id: number
+  key: string
+  name_pl: string
+  name_en: string
+  image_right_url: string | null
+  image_left_url: string | null
+  price: string
   sort_order: number
   is_active: boolean
 }
@@ -730,6 +741,143 @@ const ExtrasTab = ({ onCountChange }: { onCountChange?: (n: number) => void }) =
             </tbody>
           </table>
         </div>
+      )}
+    </Card>
+  )
+}
+
+// ─── Cabin types tab ──────────────────────────────────────────────────────────
+const CabinTypesTab = ({ onCountChange }: { onCountChange?: (n: number) => void }) => {
+  const { t } = useTranslation()
+  const [cabinTypes, setCabinTypes] = useState<CabinType[]>([])
+  const [loadingCabinTypes, setLoadingCabinTypes] = useState(true)
+  const [uploadingTypeImage, setUploadingTypeImage] = useState<Record<string, boolean>>({})
+
+  useEffect(() => { onCountChange?.(cabinTypes.length) }, [cabinTypes.length])
+
+  const loadCabinTypes = () => {
+    setLoadingCabinTypes(true)
+    api.get('/admin/cabin-types').then(r => setCabinTypes(r.data)).finally(() => setLoadingCabinTypes(false))
+  }
+
+  useEffect(() => { loadCabinTypes() }, [])
+
+  const updateCabinType = async (id: number, field: string, value: unknown) => {
+    await api.patch(`/admin/cabin-types/${id}`, { [field]: value })
+    loadCabinTypes()
+  }
+
+  const uploadCabinTypeImage = async (id: number, side: 'right' | 'left', file: File) => {
+    const key = `${id}-${side}`
+    setUploadingTypeImage(prev => ({ ...prev, [key]: true }))
+    try {
+      const token = authStore.getState().token
+      const fd = new FormData()
+      fd.append('image', file)
+      const res = await fetch(`${apiBase}/admin/cabin-types/${id}/image/${side}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
+        body: fd,
+      })
+      if (!res.ok) throw new Error('Upload failed')
+      loadCabinTypes()
+    } catch {
+      toast.error(t('database.errorSave'))
+    } finally {
+      setUploadingTypeImage(prev => ({ ...prev, [key]: false }))
+    }
+  }
+
+  return (
+    <Card className="p-6">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h2 className="font-semibold text-gray-900">{t('database.cabinTypes.title')}</h2>
+          <p className="text-xs text-gray-400 mt-0.5">{t('database.cabinTypes.subtitle')}</p>
+        </div>
+      </div>
+
+      {loadingCabinTypes ? (
+        <div className="flex justify-center py-8"><SkeletonLoader count={4} /></div>
+      ) : (
+        <table className="w-full text-left">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.cabinTypes.key')}</th>
+              <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.cabinTypes.namePl')}</th>
+              <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.cabinTypes.nameEn')}</th>
+              <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.cabinTypes.imageRight')}</th>
+              <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.cabinTypes.imageLeft')}</th>
+              <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.cabinTypes.price')}</th>
+              <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('settings.active')}</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-50">
+            {cabinTypes.map(ct => (
+              <tr key={ct.id} className="hover:bg-gray-50">
+                <td className="px-4 py-3 text-sm font-mono text-gray-500">{ct.key}</td>
+                <td className="px-4 py-3">
+                  <input
+                    className="border border-gray-200 rounded px-2 py-1 text-sm w-32"
+                    defaultValue={ct.name_pl}
+                    onBlur={e => updateCabinType(ct.id, 'name_pl', e.target.value)}
+                  />
+                </td>
+                <td className="px-4 py-3">
+                  <input
+                    className="border border-gray-200 rounded px-2 py-1 text-sm w-32"
+                    defaultValue={ct.name_en}
+                    onBlur={e => updateCabinType(ct.id, 'name_en', e.target.value)}
+                  />
+                </td>
+                {(['right', 'left'] as const).map(side => {
+                  const urlField = side === 'right' ? 'image_right_url' : 'image_left_url'
+                  const uploadKey = `${ct.id}-${side}`
+                  return (
+                    <td key={side} className="px-4 py-3">
+                      <div className="flex flex-col gap-1 items-start">
+                        {ct[urlField] ? (
+                          <img src={ct[urlField]!} alt="" className="h-12 w-16 object-contain rounded border border-gray-200 bg-gray-50" />
+                        ) : (
+                          <div className="h-12 w-16 rounded border border-dashed border-gray-200 bg-gray-50 flex items-center justify-center text-gray-300 text-xs">—</div>
+                        )}
+                        <label className="text-xs text-blue-600 cursor-pointer hover:underline">
+                          {uploadingTypeImage[uploadKey] ? t('database.drawings.uploading') : t('database.uploadImage')}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={e => {
+                              const file = e.target.files?.[0]
+                              if (file) uploadCabinTypeImage(ct.id, side, file)
+                            }}
+                          />
+                        </label>
+                      </div>
+                    </td>
+                  )
+                })}
+                <td className="px-4 py-3">
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    className="w-24 border border-gray-200 rounded px-2 py-1 text-sm"
+                    defaultValue={ct.price}
+                    onBlur={e => updateCabinType(ct.id, 'price', parseFloat(e.target.value) || 0)}
+                  />
+                </td>
+                <td className="px-4 py-3 text-center">
+                  <button onClick={() => updateCabinType(ct.id, 'is_active', !ct.is_active)}>
+                    {ct.is_active
+                      ? <ToggleRight className="h-5 w-5 text-green-500" />
+                      : <ToggleLeft className="h-5 w-5 text-gray-400" />}
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       )}
     </Card>
   )
@@ -1550,7 +1698,7 @@ const EMPTY_ELEVATOR = {
   equipment: '',
 }
 
-type DatabaseTab = 'elevators' | 'lift-types' | 'cabin-models' | 'accessories' | 'extras' | 'cabin-colors' | 'general'
+type DatabaseTab = 'elevators' | 'lift-types' | 'cabin-models' | 'accessories' | 'extras' | 'cabin-colors' | 'cabin-types' | 'general'
 
 
 const Database = () => {
@@ -1563,6 +1711,7 @@ const Database = () => {
     { id: 'accessories' as DatabaseTab,   label: t('database.tabs.accessories') },
     { id: 'extras' as DatabaseTab,        label: t('database.tabs.extras') },
     { id: 'cabin-colors' as DatabaseTab,  label: t('database.tabs.cabinColors') },
+    { id: 'cabin-types' as DatabaseTab,   label: t('database.tabs.cabinTypes') },
     { id: 'general' as DatabaseTab,       label: t('database.tabs.general') },
   ]
 
@@ -1575,6 +1724,7 @@ const Database = () => {
       'accessories':   'database.subtitles.accessories',
       'extras':        'database.subtitles.extras',
       'cabin-colors':  'database.subtitles.cabinColors',
+      'cabin-types':   'database.subtitles.cabinTypes',
     }[tab]
     return t(key as any, { count: n })
   }
@@ -1854,6 +2004,7 @@ const Database = () => {
       {tab === 'accessories' && <AccessoriesTab onCountChange={n => setCounts(p => ({ ...p, 'accessories': n }))} />}
       {tab === 'extras' && <ExtrasTab onCountChange={n => setCounts(p => ({ ...p, 'extras': n }))} />}
       {tab === 'cabin-colors' && <CabinColorsTab onCountChange={n => setCounts(p => ({ ...p, 'cabin-colors': n }))} />}
+      {tab === 'cabin-types' && <CabinTypesTab onCountChange={n => setCounts(p => ({ ...p, 'cabin-types': n }))} />}
       {tab === 'general' && <GeneralTab />}
     </MainLayout>
   )

@@ -309,6 +309,7 @@ const en: AdminTranslations = {
       accessories: 'Accessories',
       extras: 'Extras',
       cabinColors: 'Colors',
+      cabinTypes: 'Cabin types',
       general: 'General',
     },
     subtitles: {
@@ -318,6 +319,7 @@ const en: AdminTranslations = {
       accessories: '{{count}} accessories in database',
       extras: '{{count}} extras in database',
       cabinColors: '{{count}} colors in database',
+      cabinTypes: '{{count}} cabin types in database',
       general: 'General settings',
     },
     liftTypes: {
@@ -408,6 +410,16 @@ const en: AdminTranslations = {
       landingDoors: 'Landing doors',
       ei30: 'EI30',
       ei60: 'EI60',
+    },
+    cabinTypes: {
+      title: 'Cabin Types (access diagram)',
+      subtitle: 'Populate the access diagram section in the configurator',
+      key: 'Key',
+      namePl: 'Name (PL)',
+      nameEn: 'Name (EN)',
+      imageRight: 'Right-side image',
+      imageLeft: 'Left-side image',
+      price: 'Price (PLN)',
     },
     uploadImage: 'Click to upload image',
     errorSave: 'Save error',

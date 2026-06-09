@@ -307,6 +307,7 @@ const pl = {
       accessories: 'Akcesoria',
       extras: 'Dodatki',
       cabinColors: 'Kolory',
+      cabinTypes: 'Typy kabin',
       general: 'Ogólne',
     },
     subtitles: {
@@ -316,6 +317,7 @@ const pl = {
       accessories: '{{count}} akcesoriów w bazie',
       extras: '{{count}} dodatków w bazie',
       cabinColors: '{{count}} kolorów w bazie',
+      cabinTypes: '{{count}} typów kabin w bazie',
       general: 'Ustawienia ogólne',
     },
     liftTypes: {
@@ -406,6 +408,16 @@ const pl = {
       landingDoors: 'Drzwi przystankowe',
       ei30: 'EI30',
       ei60: 'EI60',
+    },
+    cabinTypes: {
+      title: 'Typy kabin (schemat dojścia)',
+      subtitle: 'Zasilają sekcję schematu dojścia w konfiguratorze',
+      key: 'Klucz',
+      namePl: 'Nazwa (PL)',
+      nameEn: 'Nazwa (EN)',
+      imageRight: 'Zdj. prawostronne',
+      imageLeft: 'Zdj. lewostronne',
+      price: 'Cena (PLN)',
     },
     uploadImage: 'Kliknij, aby wgrać zdjęcie',
     errorSave: 'Błąd zapisu',
