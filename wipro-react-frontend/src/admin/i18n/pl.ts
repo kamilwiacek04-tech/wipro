@@ -351,6 +351,7 @@ const pl = {
       sortOrder: 'Kol.',
       confirmDelete: 'Usunąć akcesorium?',
       priceAddition: 'Dopłata (PLN)',
+      multiplyByAccessCount: '× dojścia',
     },
     extras: {
       title: 'Dodatki',

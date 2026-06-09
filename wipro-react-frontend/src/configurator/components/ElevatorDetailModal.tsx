@@ -107,14 +107,6 @@ const ElevatorDetailModal = ({ elevatorId, onClose }: Props) => {
               <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: '#999', lineHeight: 1 }}>×</button>
             </div>
 
-            {data.base_price && (
-              <div style={{ background: '#fffbeb', border: '1px solid #ffe08a', borderRadius: 8, padding: '12px 16px', marginBottom: 20 }}>
-                <p style={{ fontSize: 13, color: '#92400e', margin: 0 }}>
-                  {t('elevatorDetail.basePrice')}: <strong>{Number(data.base_price).toLocaleString('pl-PL', { style: 'currency', currency: 'PLN' })}</strong>
-                </p>
-              </div>
-            )}
-
             <h3 style={{ fontSize: 14, fontWeight: 600, color: '#555', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('elevatorDetail.params')}</h3>
             <Row label={t('elevatorDetail.capacity')} value={`${data.capacity} kg`} />
             <Row label={t('elevatorDetail.persons')} value={fmt(data.persons)} />

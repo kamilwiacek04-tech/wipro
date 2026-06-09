@@ -7,7 +7,7 @@ import MainLayout from '@admin/components/layout/MainLayout'
 import api from '@admin/store/axiosInstance'
 import { authStore } from '@admin/store/zustand/authStore'
 import { toast } from '@admin/store/zustand/toastStore'
-import { ChevronDown, ChevronRight, FileDown, Plus, Save, ToggleLeft, ToggleRight, Trash2 } from 'lucide-react'
+import { ChevronDown, ChevronRight, FileDown, Plus, Save, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -42,7 +42,7 @@ interface CabinModel {
   id: number; name_pl: string; name_en: string; image_url: string | null; details: DetailRow[] | null; sort_order: number; is_active: boolean; price_addition: number
 }
 interface CabinAccessory {
-  id: number; category: string; name_pl: string; name_en: string; image_url: string | null; sort_order: number; is_active: boolean; price_addition: number
+  id: number; category: string; name_pl: string; name_en: string; image_url: string | null; sort_order: number; is_active: boolean; price_addition: number; multiply_by_access_count: boolean
 }
 interface CabinColor {
   id: number
@@ -471,7 +471,7 @@ const CabinModelsTab = ({ onCountChange }: { onCountChange?: (n: number) => void
 }
 
 // ─── Accessories tab ──────────────────────────────────────────────────────────
-const EMPTY_ACC = { category: 'PANEL', name_pl: '', name_en: '', sort_order: 0, price_addition: 0 }
+const EMPTY_ACC = { category: 'PANEL', name_pl: '', name_en: '', sort_order: 0, price_addition: 0, multiply_by_access_count: false }
 
 const AccessoriesTab = ({ onCountChange }: { onCountChange?: (n: number) => void }) => {
   const { t, i18n } = useTranslation()
@@ -513,6 +513,7 @@ const AccessoriesTab = ({ onCountChange }: { onCountChange?: (n: number) => void
       fd.append('category', newAcc.category); fd.append('name_pl', newAcc.name_pl)
       fd.append('name_en', newAcc.name_en); fd.append('sort_order', String(newAcc.sort_order))
       fd.append('is_active', '1'); fd.append('price_addition', String(newAcc.price_addition))
+      fd.append('multiply_by_access_count', newAcc.multiply_by_access_count ? '1' : '0')
       if (newAccImageFile) fd.append('image', newAccImageFile)
       const res = await api.post('/admin/cabin-accessories', fd)
       setAccessories(prev => [...prev, res.data])
@@ -566,6 +567,16 @@ const AccessoriesTab = ({ onCountChange }: { onCountChange?: (n: number) => void
                   onChange={e => setNewAcc(prev => ({ ...prev, price_addition: parseFloat(e.target.value) || 0 }))}
                 />
               </div>
+              <div className="flex items-center gap-2 mt-1">
+                <button
+                  type="button"
+                  onClick={() => setNewAcc(prev => ({ ...prev, multiply_by_access_count: !prev.multiply_by_access_count }))}
+                  className={`relative inline-flex h-5 w-9 shrink-0 rounded-full transition-colors cursor-pointer focus:outline-none ${newAcc.multiply_by_access_count ? 'bg-amber-500' : 'bg-gray-200'}`}
+                >
+                  <span className={`absolute top-[3px] h-3.5 w-3.5 rounded-full bg-white shadow transition-all ${newAcc.multiply_by_access_count ? 'left-[19px]' : 'left-[3px]'}`} />
+                </button>
+                <span className="text-xs text-gray-500">{t('database.accessories.multiplyByAccessCount')}</span>
+              </div>
             </div>
           </div>
           <div className="flex gap-2">
@@ -586,6 +597,7 @@ const AccessoriesTab = ({ onCountChange }: { onCountChange?: (n: number) => void
                 <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.accessories.sortOrder')}</th>
                 <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('common.status')}</th>
                 <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.accessories.priceAddition')}</th>
+                <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase text-center">{t('database.accessories.multiplyByAccessCount')}</th>
                 <th className="w-10" />
               </tr>
             </thead>
@@ -593,7 +605,7 @@ const AccessoriesTab = ({ onCountChange }: { onCountChange?: (n: number) => void
               {ACCESSORY_CATEGORIES.filter(cat => grouped[cat].length > 0).map(cat => (
                 <>
                   <tr key={`cat-${cat}`} className="bg-gray-50/60 border-t border-gray-100">
-                    <td colSpan={7} className="px-4 py-2">
+                    <td colSpan={8} className="px-4 py-2">
                       <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{i18n.resolvedLanguage === 'pl' ? CATEGORY_LABELS_PL[cat] : CATEGORY_LABELS_EN[cat]}</span>
                     </td>
                   </tr>
@@ -620,13 +632,26 @@ const AccessoriesTab = ({ onCountChange }: { onCountChange?: (n: number) => void
                           onBlur={e => api.patch(`/admin/cabin-accessories/${a.id}`, { price_addition: parseFloat(e.target.value) || 0 })}
                         />
                       </td>
+                      <td className="px-4 py-3 text-center">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newVal = !a.multiply_by_access_count;
+                            setAccessories(prev => prev.map(x => x.id === a.id ? { ...x, multiply_by_access_count: newVal } : x));
+                            api.patch(`/admin/cabin-accessories/${a.id}`, { multiply_by_access_count: newVal });
+                          }}
+                          className={`relative inline-flex h-5 w-9 shrink-0 rounded-full transition-colors cursor-pointer focus:outline-none ${a.multiply_by_access_count ? 'bg-amber-500' : 'bg-gray-200'}`}
+                        >
+                          <span className={`absolute top-0.75 h-3.5 w-3.5 rounded-full bg-white shadow transition-all ${a.multiply_by_access_count ? 'left-4.75' : 'left-0.75'}`} />
+                        </button>
+                      </td>
                       <td className="px-2 py-3"><Button variant="ghost" size="icon" onClick={() => deleteAcc(a.id)} className="h-8 w-8 text-red-400 hover:text-red-600"><Trash2 className="h-4 w-4" /></Button></td>
                     </tr>
                   ))}
                 </>
               ))}
               {ACCESSORY_CATEGORIES.every(cat => grouped[cat].length === 0) && (
-                <tr><td colSpan={7} className="px-4 py-8 text-center text-sm text-gray-400">{t('database.accessories.noAccessories')}</td></tr>
+                <tr><td colSpan={8} className="px-4 py-8 text-center text-sm text-gray-400">{t('database.accessories.noAccessories')}</td></tr>
               )}
             </tbody>
           </table>
@@ -831,10 +856,16 @@ const CabinTypesTab = ({ onCountChange }: { onCountChange?: (n: number) => void 
                   />
                 </td>
                 <td className="px-4 py-3 text-center">
-                  <button onClick={() => updateCabinType(ct.id, 'is_active', !ct.is_active)}>
-                    {ct.is_active
-                      ? <ToggleRight className="h-5 w-5 text-green-500" />
-                      : <ToggleLeft className="h-5 w-5 text-gray-400" />}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newVal = !ct.is_active;
+                      setCabinTypes(prev => prev.map(x => x.id === ct.id ? { ...x, is_active: newVal } : x));
+                      api.patch(`/admin/cabin-types/${ct.id}`, { is_active: newVal });
+                    }}
+                    className={`relative inline-flex h-5 w-9 shrink-0 rounded-full transition-colors cursor-pointer focus:outline-none ${ct.is_active ? 'bg-amber-500' : 'bg-gray-200'}`}
+                  >
+                    <span className={`absolute top-0.75 h-3.5 w-3.5 rounded-full bg-white shadow transition-all ${ct.is_active ? 'left-4.75' : 'left-0.75'}`} />
                   </button>
                 </td>
               </tr>
@@ -934,14 +965,26 @@ const CabinColorsTab = ({ onCountChange }: { onCountChange?: (n: number) => void
               <input type="number" min="0" step="0.01" className={INPUT_CLASS} placeholder="0.00" value={newColor.price_addition_door} onChange={e => setNewColor(p => ({ ...p, price_addition_door: parseFloat(e.target.value) || 0 }))} />
             </div>
             <div className="flex flex-col gap-2 justify-end">
-              <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
-                <input type="checkbox" checked={newColor.visible_for_cabin} onChange={e => setNewColor(p => ({ ...p, visible_for_cabin: e.target.checked }))} className="rounded" />
-                {t('database.colors.visibleForCabin')}
-              </label>
-              <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
-                <input type="checkbox" checked={newColor.visible_for_door} onChange={e => setNewColor(p => ({ ...p, visible_for_door: e.target.checked }))} className="rounded" />
-                {t('database.colors.visibleForDoor')}
-              </label>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setNewColor(p => ({ ...p, visible_for_cabin: !p.visible_for_cabin }))}
+                  className={`relative inline-flex h-5 w-9 shrink-0 rounded-full transition-colors cursor-pointer focus:outline-none ${newColor.visible_for_cabin ? 'bg-amber-500' : 'bg-gray-200'}`}
+                >
+                  <span className={`absolute top-0.75 h-3.5 w-3.5 rounded-full bg-white shadow transition-all ${newColor.visible_for_cabin ? 'left-4.75' : 'left-0.75'}`} />
+                </button>
+                <span className="text-xs text-gray-600">{t('database.colors.visibleForCabin')}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setNewColor(p => ({ ...p, visible_for_door: !p.visible_for_door }))}
+                  className={`relative inline-flex h-5 w-9 shrink-0 rounded-full transition-colors cursor-pointer focus:outline-none ${newColor.visible_for_door ? 'bg-amber-500' : 'bg-gray-200'}`}
+                >
+                  <span className={`absolute top-0.75 h-3.5 w-3.5 rounded-full bg-white shadow transition-all ${newColor.visible_for_door ? 'left-4.75' : 'left-0.75'}`} />
+                </button>
+                <span className="text-xs text-gray-600">{t('database.colors.visibleForDoor')}</span>
+              </div>
             </div>
           </div>
           <div className="flex gap-2">
@@ -982,10 +1025,30 @@ const CabinColorsTab = ({ onCountChange }: { onCountChange?: (n: number) => void
                   <td className="px-4 py-3"><InlineEdit value={c.name_pl} onSave={v => handleColorField(c.id, 'name_pl', v)} /></td>
                   <td className="px-4 py-3"><InlineEdit value={c.name_en} onSave={v => handleColorField(c.id, 'name_en', v)} /></td>
                   <td className="px-4 py-3 text-center">
-                    <input type="checkbox" checked={c.visible_for_cabin} onChange={e => handleColorField(c.id, 'visible_for_cabin', e.target.checked)} className="rounded cursor-pointer" />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newVal = !c.visible_for_cabin;
+                        setColors(prev => prev.map(x => x.id === c.id ? { ...x, visible_for_cabin: newVal } : x));
+                        api.patch(`/admin/cabin-colors/${c.id}`, { visible_for_cabin: newVal });
+                      }}
+                      className={`relative inline-flex h-5 w-9 shrink-0 rounded-full transition-colors cursor-pointer focus:outline-none ${c.visible_for_cabin ? 'bg-amber-500' : 'bg-gray-200'}`}
+                    >
+                      <span className={`absolute top-0.75 h-3.5 w-3.5 rounded-full bg-white shadow transition-all ${c.visible_for_cabin ? 'left-4.75' : 'left-0.75'}`} />
+                    </button>
                   </td>
                   <td className="px-4 py-3 text-center">
-                    <input type="checkbox" checked={c.visible_for_door} onChange={e => handleColorField(c.id, 'visible_for_door', e.target.checked)} className="rounded cursor-pointer" />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newVal = !c.visible_for_door;
+                        setColors(prev => prev.map(x => x.id === c.id ? { ...x, visible_for_door: newVal } : x));
+                        api.patch(`/admin/cabin-colors/${c.id}`, { visible_for_door: newVal });
+                      }}
+                      className={`relative inline-flex h-5 w-9 shrink-0 rounded-full transition-colors cursor-pointer focus:outline-none ${c.visible_for_door ? 'bg-amber-500' : 'bg-gray-200'}`}
+                    >
+                      <span className={`absolute top-0.75 h-3.5 w-3.5 rounded-full bg-white shadow transition-all ${c.visible_for_door ? 'left-4.75' : 'left-0.75'}`} />
+                    </button>
                   </td>
                   <td className="px-4 py-3 text-center">
                     <input type="number" min="0" step="0.01" className="w-24 border border-gray-200 rounded px-2 py-1 text-sm" defaultValue={c.price_addition_cabin} onBlur={e => handleColorField(c.id, 'price_addition_cabin', parseFloat(e.target.value) || 0)} />

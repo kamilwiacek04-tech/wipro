@@ -353,6 +353,7 @@ const en: AdminTranslations = {
       sortOrder: 'Ord.',
       confirmDelete: 'Delete accessory?',
       priceAddition: 'Price addition (PLN)',
+      multiplyByAccessCount: '× accesses',
     },
     extras: {
       title: 'Extras',

@@ -1,12 +1,12 @@
-import { useEffect, useState } from 'react'
-import { Card } from '@admin/components/Cards'
 import { Button } from '@admin/components/Button'
+import { Card } from '@admin/components/Cards'
 import SkeletonLoader from '@admin/components/SkeletonLoader'
-import MainLayout from '@admin/components/layout/MainLayout'
 import MainHeader from '@admin/components/layout/MainHeader'
+import MainLayout from '@admin/components/layout/MainLayout'
 import api from '@admin/store/axiosInstance'
 import { adminViewStore } from '@admin/store/zustand/adminViewStore'
-import { Plus, RefreshCw, Shield, Mail, ToggleLeft, ToggleRight, Trash2, X, Check } from 'lucide-react'
+import { Check, Mail, Plus, RefreshCw, Shield, ToggleLeft, ToggleRight, Trash2, X } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 interface Admin {
@@ -319,15 +319,17 @@ const AdminsPage = () => {
                         className="cursor-pointer"
                       />
                       <button
-                        className="flex-1 text-left text-sm font-medium text-gray-800 hover:text-blue-600"
+                        className="flex flex-1 text-sm font-medium text-gray-800 hover:text-blue-600 justify-between cursor-pointer"
                         onClick={() => expandAdmin(sourceAdmin.id)}
                       >
-                        {sourceAdmin.name}
-                        {offers && (
-                          <span className="ml-2 text-xs text-gray-400">({offers.length} zapytań)</span>
-                        )}
-                      </button>
+                        <span>
+                          {sourceAdmin.name}
+                          {offers && (
+                            <span className="ml-2 text-xs text-gray-400">({offers.length} zapytań)</span>
+                          )}
+                        </span>
                       <span className="text-xs text-gray-400">{isExpanded ? '▲' : '▼'}</span>
+                      </button>
                     </div>
 
                     {isExpanded && !offers && (

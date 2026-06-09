@@ -5,6 +5,8 @@ namespace App\Services;
 use App\Models\CabinAccessory;
 use App\Models\CabinColor;
 use App\Models\CabinModel;
+use App\Models\CabinType;
+use App\Models\LiftType;
 use App\Models\Offer;
 use App\Models\OfferItem;
 use App\Models\QuoteRequest;
@@ -494,96 +496,186 @@ class OfferService
     }
 
     /**
-     * Creates OfferItem records for the given offer applying margin and EI pricing from settings.
-     * Loads elevator.elements relationship if not already loaded.
+     * Creates OfferItem records for the given offer using the WRU pricing formula.
+     * Each pricing component becomes a separate line item.
      * Returns total net amount.
      */
     public function buildPricedItems(QuoteRequest $quoteRequest, Offer $offer): float
     {
-        $quoteRequest->loadMissing(['elevator.elements']);
+        $quoteRequest->loadMissing(['elevator']);
 
-        $margin   = 1 + ((float) Setting::get('profit_margin_percent', '0')) / 100;
+        $margin      = 1 + ((float) Setting::get('profit_margin_percent', '0')) / 100;
+        $config      = $this->parseConfiguratorNotes($quoteRequest->additional_notes);
+        $stops       = (int) ($quoteRequest->stops ?? 0);
+        $accessCount = (int) ($config['accessCount'] ?? 0);
+        $ei30Count   = (int) ($config['ei30DoorsCount'] ?? 0);
+        $ei60Count   = (int) ($config['ei60DoorsCount'] ?? 0);
+
         $ei30Unit = (float) Setting::get('door_ei30_price', '0');
         $ei60Unit = (float) Setting::get('door_ei60_price', '0');
 
-        $config   = $this->parseConfiguratorNotes($quoteRequest->additional_notes);
-        $ei30Count = (int) ($config['ei30DoorsCount'] ?? 0);
-        $ei60Count = (int) ($config['ei60DoorsCount'] ?? 0);
+        $totalNet  = 0.0;
+        $sortOrder = 1;
 
-        $totalNet   = 0.0;
-        $sortOrder  = 1;
+        $elevator = $quoteRequest->elevator;
 
-        if ($quoteRequest->elevator) {
-            $elevator  = $quoteRequest->elevator;
+        // ── 1. Cena bazowa windy ──────────────────────────────────────────────
+        if ($elevator) {
             $basePrice = round((float) $elevator->base_price * $margin, 2);
-
-            OfferItem::create([
-                'offer_id'        => $offer->id,
-                'description'     => "Dźwig osobowy {$elevator->manufacturer} {$elevator->model} (udźwig {$elevator->capacity} kg, {$elevator->persons} os.)",
-                'quantity'        => 1,
-                'unit'            => 'szt.',
-                'unit_price_net'  => $basePrice,
-                'total_price_net' => $basePrice,
-                'sort_order'      => $sortOrder++,
-            ]);
+            $this->addItem($offer->id, "Dźwig osobowy {$elevator->manufacturer} {$elevator->model} (udźwig {$elevator->capacity} kg, {$elevator->persons} os.)", 1, 'szt.', $basePrice, $sortOrder++);
             $totalNet += $basePrice;
-
-            foreach ($elevator->elements as $element) {
-                $elemPrice = round((float) $element->price * $margin, 2);
-                OfferItem::create([
-                    'offer_id'        => $offer->id,
-                    'description'     => $element->name,
-                    'quantity'        => 1,
-                    'unit'            => 'szt.',
-                    'unit_price_net'  => $elemPrice,
-                    'total_price_net' => $elemPrice,
-                    'sort_order'      => $sortOrder++,
-                ]);
-                $totalNet += $elemPrice;
-            }
         } else {
-            OfferItem::create([
-                'offer_id'        => $offer->id,
-                'description'     => 'Dźwig osobowy - wycena indywidualna',
-                'quantity'        => 1,
-                'unit'            => 'szt.',
-                'unit_price_net'  => 0,
-                'total_price_net' => 0,
-                'sort_order'      => $sortOrder++,
-            ]);
+            $this->addItem($offer->id, 'Dźwig osobowy — wycena indywidualna', 1, 'szt.', 0, $sortOrder++);
         }
 
-        if ($ei30Count > 0 && $ei30Unit > 0) {
-            $unitPrice  = round($ei30Unit * $margin, 2);
-            $totalItem  = round($unitPrice * $ei30Count, 2);
-            OfferItem::create([
-                'offer_id'        => $offer->id,
-                'description'     => 'Drzwi przeciwpożarowe EI30',
-                'quantity'        => $ei30Count,
-                'unit'            => 'szt.',
-                'unit_price_net'  => $unitPrice,
-                'total_price_net' => $totalItem,
-                'sort_order'      => $sortOrder++,
-            ]);
-            $totalNet += $totalItem;
+        // ── 2. Dopłata za ilość przystanków ───────────────────────────────────
+        if ($elevator && $stops > 0 && $accessCount > 2 && (float) $elevator->coeff_stops > 0) {
+            $unitPrice = round(700 * $stops * (float) $elevator->coeff_stops * $margin, 2);
+            $amount    = round($unitPrice * ($accessCount - 2), 2);
+            if ($amount != 0) {
+                $this->addItem($offer->id, "Dopłata za liczbę przystanków ({$stops} przyst. × " . ($accessCount - 2) . " dojść ponad 2)", $accessCount - 2, 'kpl.', $unitPrice, $sortOrder++);
+                $totalNet += $amount;
+            }
         }
 
-        if ($ei60Count > 0 && $ei60Unit > 0) {
-            $unitPrice  = round($ei60Unit * $margin, 2);
-            $totalItem  = round($unitPrice * $ei60Count, 2);
-            OfferItem::create([
-                'offer_id'        => $offer->id,
-                'description'     => 'Drzwi przeciwpożarowe EI60',
-                'quantity'        => $ei60Count,
-                'unit'            => 'szt.',
-                'unit_price_net'  => $unitPrice,
-                'total_price_net' => $totalItem,
-                'sort_order'      => $sortOrder++,
-            ]);
-            $totalNet += $totalItem;
+        // ── 3. Model kabiny ───────────────────────────────────────────────────
+        $cabinModelId = (int) ($config['cabinModelId'] ?? 0);
+        if ($cabinModelId > 0 && $elevator && (float) $elevator->coeff_cabin_model > 0) {
+            $cabinModel = CabinModel::find($cabinModelId);
+            if ($cabinModel && (float) $cabinModel->price_addition > 0) {
+                $amount = round((float) $cabinModel->price_addition * (float) $elevator->coeff_cabin_model * $margin, 2);
+                $this->addItem($offer->id, "Model kabiny: {$cabinModel->name_pl}", 1, 'szt.', $amount, $sortOrder++);
+                $totalNet += $amount;
+            }
         }
 
-        return $totalNet;
+        // ── 4. Typ kabiny ─────────────────────────────────────────────────────
+        $doorType = $quoteRequest->door_type;
+        if ($doorType && $elevator && (float) $elevator->coeff_cabin_throughway > 0) {
+            $cabinType = CabinType::where('key', $doorType)->first();
+            if ($cabinType && (float) $cabinType->price > 0) {
+                $amount = round((float) $cabinType->price * (float) $elevator->coeff_cabin_throughway * $margin, 2);
+                $this->addItem($offer->id, "Typ kabiny: {$cabinType->name_pl}", 1, 'szt.', $amount, $sortOrder++);
+                $totalNet += $amount;
+            }
+        }
+
+        // ── 5. Kolor drzwi kabinowych ─────────────────────────────────────────
+        $sameAsDoor       = (bool) ($config['cabinDoorSameAsLanding'] ?? true);
+        $cabinDoorColorId = $sameAsDoor
+            ? (int) ($config['doorColorId'] ?? 0)
+            : (int) ($config['cabinDoorColorId'] ?? 0);
+        if ($cabinDoorColorId > 0 && $accessCount > 0 && $elevator && (float) $elevator->coeff_cabin_doors > 0) {
+            $color = CabinColor::find($cabinDoorColorId);
+            if ($color && (float) $color->price_addition_cabin > 0) {
+                $unitPrice = round((float) $color->price_addition_cabin * (float) $elevator->coeff_cabin_doors * $margin, 2);
+                $amount    = round($unitPrice * $accessCount, 2);
+                $this->addItem($offer->id, "Kolor drzwi kabinowych: {$color->name_pl}", $accessCount, 'szt.', $unitPrice, $sortOrder++);
+                $totalNet += $amount;
+            }
+        }
+
+        // ── 6. Kolor drzwi przystankowych ─────────────────────────────────────
+        $landingDoorColorId = (int) ($config['doorColorId'] ?? 0);
+        if ($landingDoorColorId > 0 && $accessCount > 0 && $elevator && (float) $elevator->coeff_landing_doors > 0) {
+            $color = CabinColor::find($landingDoorColorId);
+            if ($color && (float) $color->price_addition_door > 0) {
+                $unitPrice = round((float) $color->price_addition_door * (float) $elevator->coeff_landing_doors * $margin, 2);
+                $amount    = round($unitPrice * $accessCount, 2);
+                $this->addItem($offer->id, "Kolor drzwi przystankowych: {$color->name_pl}", $accessCount, 'szt.', $unitPrice, $sortOrder++);
+                $totalNet += $amount;
+            }
+        }
+
+        // ── 7. Drzwi EI30 ─────────────────────────────────────────────────────
+        if ($ei30Count > 0 && $ei30Unit > 0 && $elevator) {
+            $coeff     = (float) ($elevator->coeff_ei30 ?? 1.0);
+            $unitPrice = round($ei30Unit * $coeff * $margin, 2);
+            $amount    = round($unitPrice * $ei30Count, 2);
+            $this->addItem($offer->id, 'Drzwi przeciwpożarowe EI30', $ei30Count, 'szt.', $unitPrice, $sortOrder++);
+            $totalNet += $amount;
+        }
+
+        // ── 8. Drzwi EI60 ─────────────────────────────────────────────────────
+        if ($ei60Count > 0 && $ei60Unit > 0 && $elevator) {
+            $coeff     = (float) ($elevator->coeff_ei60 ?? 1.0);
+            $unitPrice = round($ei60Unit * $coeff * $margin, 2);
+            $amount    = round($unitPrice * $ei60Count, 2);
+            $this->addItem($offer->id, 'Drzwi przeciwpożarowe EI60', $ei60Count, 'szt.', $unitPrice, $sortOrder++);
+            $totalNet += $amount;
+        }
+
+        // ── 9. Akcesoria ──────────────────────────────────────────────────────
+        $categoryLabels = [
+            'PANEL'    => 'Panel dyspozycji',
+            'SIGNAL'   => 'Sygnalizacja',
+            'CEILING'  => 'Podsufitka',
+            'MIRROR'   => 'Lustro',
+            'HANDRAIL' => 'Poręcze',
+            'FLOORING' => 'Podłoga',
+            'EXTRA'    => 'Dodatek',
+        ];
+
+        $accFields = ['panelId', 'signalId', 'ceilingId', 'mirrorId', 'handrailId', 'flooringId'];
+        $allAccIds = [];
+        foreach ($accFields as $field) {
+            $id = (int) ($config[$field] ?? 0);
+            if ($id > 0) $allAccIds[] = $id;
+        }
+        foreach ((array) ($config['extraIds'] ?? []) as $id) {
+            $id = (int) $id;
+            if ($id > 0) $allAccIds[] = $id;
+        }
+
+        if (!empty($allAccIds)) {
+            $accessories = CabinAccessory::whereIn('id', array_unique($allAccIds))->get()->keyBy('id');
+            foreach ($allAccIds as $accId) {
+                $acc = $accessories[$accId] ?? null;
+                if (!$acc || (float) $acc->price_addition <= 0) continue;
+
+                $prefix      = $categoryLabels[$acc->category] ?? $acc->category;
+                $description = "{$prefix}: {$acc->name_pl}";
+                $qty         = ($acc->multiply_by_access_count && $accessCount > 0) ? $accessCount : 1;
+                $unitPrice   = round((float) $acc->price_addition * $margin, 2);
+                $amount      = round($unitPrice * $qty, 2);
+                $this->addItem($offer->id, $description, $qty, 'szt.', $unitPrice, $sortOrder++);
+                $totalNet += $amount;
+            }
+        }
+
+        // ── 10. Typ windy — opłata bazowa ─────────────────────────────────────
+        $driveType = $quoteRequest->drive_type;
+        $liftType  = $driveType ? LiftType::where('key', $driveType)->first() : null;
+        if ($liftType && (float) $liftType->base_price > 0) {
+            $amount = round((float) $liftType->base_price * $margin, 2);
+            $this->addItem($offer->id, "Typ windy: {$liftType->name_pl} — opłata bazowa", 1, 'szt.', $amount, $sortOrder++);
+            $totalNet += $amount;
+        }
+
+        // ── 11. Typ windy — dopłata za przystanki ─────────────────────────────
+        if ($liftType && $stops > 2 && (float) $liftType->price_per_stop > 0) {
+            $extra     = $stops - 2;
+            $unitPrice = round((float) $liftType->price_per_stop * $margin, 2);
+            $amount    = round($unitPrice * $extra, 2);
+            $this->addItem($offer->id, "Typ windy: {$liftType->name_pl} — dopłata za przystanki ({$extra} ponad 2)", $extra, 'szt.', $unitPrice, $sortOrder++);
+            $totalNet += $amount;
+        }
+
+        return round($totalNet, 2);
+    }
+
+    private function addItem(int $offerId, string $description, int|float $quantity, string $unit, float $unitPrice, int $sortOrder): void
+    {
+        $total = round($unitPrice * $quantity, 2);
+        OfferItem::create([
+            'offer_id'        => $offerId,
+            'description'     => $description,
+            'quantity'        => $quantity,
+            'unit'            => $unit,
+            'unit_price_net'  => $unitPrice,
+            'total_price_net' => $total,
+            'sort_order'      => $sortOrder,
+        ]);
     }
 
     /**
