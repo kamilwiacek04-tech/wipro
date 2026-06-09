@@ -17,16 +17,15 @@ class AdminQuoteRequestController extends Controller
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
-        $query = QuoteRequest::with(['user', 'elevator', 'assignedAdmin'])
+        $query = QuoteRequest::with(['user', 'elevator', 'sharedAdmins'])
             ->orderByDesc('created_at');
 
-        // Superadmin can filter by admin_id; regular admin sees only their own
         if ($user->isSuperAdmin()) {
             if ($request->filled('admin_id')) {
-                $query->where('assigned_admin_id', $request->admin_id);
+                $query->whereHas('sharedAdmins', fn($q) => $q->where('users.id', $request->admin_id));
             }
         } else {
-            $query->where('assigned_admin_id', $user->id);
+            $query->whereHas('sharedAdmins', fn($q) => $q->where('users.id', $user->id));
         }
 
         if ($request->filled('status')) {
@@ -57,19 +56,20 @@ class AdminQuoteRequestController extends Controller
         ]);
 
         $quoteRequest = QuoteRequest::create([
-            'request_number'    => QuoteRequest::generateRequestNumber(),
-            'status'            => 'new',
-            'investor_name'     => $data['investor_name'],
-            'investor_email'    => $data['investor_email'] ?? '',
-            'assigned_admin_id' => $request->user()->id,
+            'request_number' => QuoteRequest::generateRequestNumber(),
+            'status'         => 'new',
+            'investor_name'  => $data['investor_name'],
+            'investor_email' => $data['investor_email'] ?? '',
         ]);
 
-        return response()->json($quoteRequest->fresh(['user', 'elevator.elements', 'offers.items', 'assignedAdmin']), 201);
+        $quoteRequest->sharedAdmins()->sync([$request->user()->id]);
+
+        return response()->json($quoteRequest->fresh(['user', 'elevator.elements', 'offers.items', 'sharedAdmins']), 201);
     }
 
     public function show(int $id): JsonResponse
     {
-        $quoteRequest = QuoteRequest::with(['user', 'elevator.elements', 'offers.items', 'assignedAdmin'])
+        $quoteRequest = QuoteRequest::with(['user', 'elevator.elements', 'offers.items', 'sharedAdmins'])
             ->findOrFail($id);
 
         return response()->json($quoteRequest);
@@ -80,12 +80,13 @@ class AdminQuoteRequestController extends Controller
         $quoteRequest = QuoteRequest::findOrFail($id);
 
         $data = $request->validate([
-            'assigned_admin_id' => 'nullable|integer|exists:users,id',
+            'admin_ids'   => 'required|array',
+            'admin_ids.*' => 'integer|exists:users,id',
         ]);
 
-        $quoteRequest->update(['assigned_admin_id' => $data['assigned_admin_id']]);
+        $quoteRequest->sharedAdmins()->sync($data['admin_ids']);
 
-        return response()->json($quoteRequest->fresh(['user', 'elevator.elements', 'offers.items', 'assignedAdmin']));
+        return response()->json($quoteRequest->fresh(['user', 'elevator.elements', 'offers.items', 'sharedAdmins']));
     }
 
     public function update(Request $request, int $id): JsonResponse

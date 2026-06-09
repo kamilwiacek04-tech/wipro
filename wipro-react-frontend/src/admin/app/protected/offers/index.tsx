@@ -7,6 +7,7 @@ import MainLayout from '@admin/components/layout/MainLayout'
 import MainHeader from '@admin/components/layout/MainHeader'
 import api from '@admin/store/axiosInstance'
 import { adminViewStore } from '@admin/store/zustand/adminViewStore'
+import { authStore } from '@admin/store/zustand/authStore'
 import formatDate from '@admin/functions/formatDate'
 import { Plus, RefreshCw, X, Check, Trash2, Link } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -53,6 +54,7 @@ const OffersPage = () => {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const { selectedAdminId } = adminViewStore()
+  const { user } = authStore()
 
   const [data, setData] = useState<Paginated | null>(null)
   const [loading, setLoading] = useState(true)
@@ -454,6 +456,7 @@ const OffersPage = () => {
           )}
         </Card>
       </div>
+
     </MainLayout>
   )
 }

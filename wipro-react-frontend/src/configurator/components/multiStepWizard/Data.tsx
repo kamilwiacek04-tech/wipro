@@ -1,3 +1,4 @@
+import TermsBar from '@/components/TermsBar'
 import AnimatedPage from '@/components/AnimatedPage'
 import AnimatedPageSide from '@/components/AnimatedPageSide'
 import FormContent from '@/components/FormContent'
@@ -149,6 +150,7 @@ const Data = () => {
       <AnimatedPageSide>
         <DataSummary />
       </AnimatedPageSide>
+      <TermsBar />
     </div>
   )
 }

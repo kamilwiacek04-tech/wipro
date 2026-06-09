@@ -92,4 +92,5 @@ class AdminOfferController extends Controller
 
         return response()->json($offer->load(['items', 'createdBy']), 201);
     }
+
 }

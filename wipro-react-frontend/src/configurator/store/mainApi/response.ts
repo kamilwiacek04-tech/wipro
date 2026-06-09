@@ -41,6 +41,31 @@ export interface CabinAccessory {
 
 export type GroupedAccessories = Partial<Record<AccessoryCategory, CabinAccessory[]>>;
 
+export interface CabinColor {
+    id: number;
+    name_pl: string;
+    name_en: string;
+    image_url: string | null;
+    visible_for_cabin: boolean;
+    visible_for_door: boolean;
+    price_addition_cabin: string;
+    price_addition_door: string;
+    sort_order: number;
+    is_active: boolean;
+}
+
+export interface CabinType {
+    id: number;
+    key: string;
+    name_pl: string;
+    name_en: string;
+    image_right_url: string | null;
+    image_left_url: string | null;
+    price: string;
+    sort_order: number;
+    is_active: boolean;
+}
+
 interface FindElevatorBody {
     liftCapacity?: float;
     shaftLen?: float;
@@ -108,6 +133,12 @@ const responseEndpoints = mainApi.injectEndpoints({
                 method: 'GET',
             })
         }),
+        getCabinColors: build.query<CabinColor[], void>({
+            query: () => ({url: '/cabin-colors', method: 'GET'})
+        }),
+        getCabinTypes: build.query<CabinType[], void>({
+            query: () => ({url: '/cabin-types', method: 'GET'})
+        }),
     })
 })
 
@@ -118,4 +149,6 @@ export const {
     useGetSettingsQuery,
     useGetCabinModelsQuery,
     useGetCabinAccessoriesQuery,
+    useGetCabinColorsQuery,
+    useGetCabinTypesQuery,
 } = responseEndpoints;

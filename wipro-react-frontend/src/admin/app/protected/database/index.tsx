@@ -1,15 +1,15 @@
-import { useEffect, useState } from 'react'
-import { Plus, ChevronDown, ChevronRight, Trash2, Save, FileDown } from 'lucide-react'
-import { Card } from '@admin/components/Cards'
 import { Button } from '@admin/components/Button'
-import SkeletonLoader from '@admin/components/SkeletonLoader'
-import MainLayout from '@admin/components/layout/MainLayout'
-import MainHeader from '@admin/components/layout/MainHeader'
+import { Card } from '@admin/components/Cards'
 import InlineEdit from '@admin/components/InlineEdit'
+import SkeletonLoader from '@admin/components/SkeletonLoader'
+import MainHeader from '@admin/components/layout/MainHeader'
+import MainLayout from '@admin/components/layout/MainLayout'
 import api from '@admin/store/axiosInstance'
-import { useTranslation } from 'react-i18next'
 import { authStore } from '@admin/store/zustand/authStore'
 import { toast } from '@admin/store/zustand/toastStore'
+import { ChevronDown, ChevronRight, FileDown, Plus, Save, Trash2 } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 // ─── Settings helpers ─────────────────────────────────────────────────────────
 
@@ -36,13 +36,36 @@ async function uploadImage(path: string, file: File): Promise<string> {
 }
 
 interface LiftType {
-  id: number; key: string; name_pl: string; name_en: string; sort_order: number; is_active: boolean
+  id: number; key: string; name_pl: string; name_en: string; sort_order: number; is_active: boolean; base_price: number | null; price_per_stop: number | null
 }
 interface CabinModel {
-  id: number; name_pl: string; name_en: string; image_url: string | null; details: DetailRow[] | null; sort_order: number; is_active: boolean
+  id: number; name_pl: string; name_en: string; image_url: string | null; details: DetailRow[] | null; sort_order: number; is_active: boolean; price_addition: number
 }
 interface CabinAccessory {
-  id: number; category: string; name_pl: string; name_en: string; image_url: string | null; sort_order: number; is_active: boolean
+  id: number; category: string; name_pl: string; name_en: string; image_url: string | null; sort_order: number; is_active: boolean; price_addition: number; multiply_by_access_count: boolean
+}
+interface CabinColor {
+  id: number
+  name_pl: string
+  name_en: string
+  image_url: string | null
+  visible_for_cabin: boolean
+  visible_for_door: boolean
+  price_addition_cabin: number
+  price_addition_door: number
+  sort_order: number
+  is_active: boolean
+}
+interface CabinType {
+  id: number
+  key: string
+  name_pl: string
+  name_en: string
+  image_right_url: string | null
+  image_left_url: string | null
+  price: string
+  sort_order: number
+  is_active: boolean
 }
 type DetailRow = { label: string; value: string }
 
@@ -134,7 +157,7 @@ const LiftTypesTab = ({ onCountChange }: { onCountChange?: (n: number) => void }
   const [liftTypes, setLiftTypes] = useState<LiftType[]>([])
   const [loading, setLoading] = useState(true)
   const [showAdd, setShowAdd] = useState(false)
-  const [newType, setNewType] = useState({ key: '', name_pl: '', name_en: '', sort_order: 0 })
+  const [newType, setNewType] = useState({ key: '', name_pl: '', name_en: '', sort_order: 0, base_price: null as number | null, price_per_stop: null as number | null })
   const [saving, setSaving] = useState(false)
 
   useEffect(() => { onCountChange?.(liftTypes.length) }, [liftTypes.length])
@@ -143,7 +166,7 @@ const LiftTypesTab = ({ onCountChange }: { onCountChange?: (n: number) => void }
     api.get('/admin/lift-types').then(r => setLiftTypes(r.data)).finally(() => setLoading(false))
   }, [])
 
-  const updateType = async (id: number, field: string, value: string | boolean | number) => {
+  const updateType = async (id: number, field: string, value: string | boolean | number | null) => {
     await api.patch(`/admin/lift-types/${id}`, { [field]: value })
     setLiftTypes(prev => prev.map(lt => lt.id === id ? { ...lt, [field]: value } : lt))
   }
@@ -158,7 +181,7 @@ const LiftTypesTab = ({ onCountChange }: { onCountChange?: (n: number) => void }
     try {
       const res = await api.post('/admin/lift-types', { ...newType, is_active: true })
       setLiftTypes(prev => [...prev, res.data])
-      setNewType({ key: '', name_pl: '', name_en: '', sort_order: 0 }); setShowAdd(false)
+      setNewType({ key: '', name_pl: '', name_en: '', sort_order: 0, base_price: null, price_per_stop: null }); setShowAdd(false)
     } finally { setSaving(false) }
   }
   const inp = (key: keyof typeof newType) => ({
@@ -176,11 +199,35 @@ const LiftTypesTab = ({ onCountChange }: { onCountChange?: (n: number) => void }
       </div>
       {showAdd && (
         <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/40">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-3">
             <div><label className="text-xs text-gray-500 mb-1 block">{t('settings.key')}</label><input {...inp('key')} placeholder="PASSENGER" /></div>
             <div><label className="text-xs text-gray-500 mb-1 block">{t('settings.namePl')}</label><input {...inp('name_pl')} /></div>
             <div><label className="text-xs text-gray-500 mb-1 block">{t('settings.nameEn')}</label><input {...inp('name_en')} /></div>
             <div><label className="text-xs text-gray-500 mb-1 block">{t('settings.sortOrder')}</label><input {...inp('sort_order')} type="number" min="0" /></div>
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">{t('database.liftTypes.basePrice')}</label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-300"
+                placeholder="0.00"
+                value={newType.base_price ?? ''}
+                onChange={e => setNewType(prev => ({ ...prev, base_price: e.target.value === '' ? null : parseFloat(e.target.value) }))}
+              />
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">{t('database.liftTypes.pricePerStop')}</label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-300"
+                placeholder="0.00"
+                value={newType.price_per_stop ?? ''}
+                onChange={e => setNewType(prev => ({ ...prev, price_per_stop: e.target.value === '' ? null : parseFloat(e.target.value) }))}
+              />
+            </div>
           </div>
           <div className="flex gap-2">
             <Button size="sm" onClick={addType} disabled={saving}><Save className="h-3 w-3" />{saving ? t('common.saving') : t('common.save')}</Button>
@@ -197,6 +244,8 @@ const LiftTypesTab = ({ onCountChange }: { onCountChange?: (n: number) => void }
               <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('settings.nameEn')}</th>
               <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('settings.sortOrder')}</th>
               <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('common.status')}</th>
+              <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.liftTypes.basePrice')}</th>
+              <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.liftTypes.pricePerStop')}</th>
               <th className="w-10" />
             </tr></thead>
             <tbody className="divide-y divide-gray-50">
@@ -211,6 +260,26 @@ const LiftTypesTab = ({ onCountChange }: { onCountChange?: (n: number) => void }
                       {lt.is_active ? t('settings.active') : t('settings.inactive')}
                     </button>
                   </td>
+                  <td className="px-4 py-3 text-sm text-gray-600 text-center">
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      className="w-24 border border-gray-200 rounded px-2 py-1 text-sm"
+                      defaultValue={lt.base_price ?? ''}
+                      onBlur={e => updateType(lt.id, 'base_price', e.target.value === '' ? null : parseFloat(e.target.value))}
+                    />
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-600 text-center">
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      className="w-24 border border-gray-200 rounded px-2 py-1 text-sm"
+                      defaultValue={lt.price_per_stop ?? ''}
+                      onBlur={e => updateType(lt.id, 'price_per_stop', e.target.value === '' ? null : parseFloat(e.target.value))}
+                    />
+                  </td>
                   <td className="px-2 py-3"><Button variant="ghost" size="icon" onClick={() => deleteType(lt.id)} className="h-8 w-8 text-red-400 hover:text-red-600"><Trash2 className="h-4 w-4" /></Button></td>
                 </tr>
               ))}
@@ -223,7 +292,7 @@ const LiftTypesTab = ({ onCountChange }: { onCountChange?: (n: number) => void }
 }
 
 // ─── Cabin models tab ─────────────────────────────────────────────────────────
-const EMPTY_CABIN = { name_pl: '', name_en: '', sort_order: 0 }
+const EMPTY_CABIN = { name_pl: '', name_en: '', sort_order: 0, price_addition: 0 }
 
 const CabinModelsTab = ({ onCountChange }: { onCountChange?: (n: number) => void }) => {
   const { t } = useTranslation()
@@ -276,6 +345,7 @@ const CabinModelsTab = ({ onCountChange }: { onCountChange?: (n: number) => void
       const fd = new FormData()
       fd.append('name_pl', newModel.name_pl); fd.append('name_en', newModel.name_en)
       fd.append('sort_order', String(newModel.sort_order)); fd.append('is_active', '1')
+      fd.append('price_addition', String(newModel.price_addition))
       if (newImageFile) fd.append('image', newImageFile)
       if (newDetails.length > 0) fd.append('details', JSON.stringify(newDetails))
       const res = await api.post('/admin/cabin-models', fd)
@@ -307,6 +377,18 @@ const CabinModelsTab = ({ onCountChange }: { onCountChange?: (n: number) => void
               <div><label className="text-xs text-gray-500 mb-1 block">{t('settings.namePl')}</label><input {...inp('name_pl')} /></div>
               <div><label className="text-xs text-gray-500 mb-1 block">{t('settings.nameEn')}</label><input {...inp('name_en')} /></div>
               <div><label className="text-xs text-gray-500 mb-1 block">{t('database.cabinModels.sortOrder')}</label><input {...inp('sort_order')} type="number" min="0" /></div>
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">{t('database.cabinModels.priceAddition')}</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-300"
+                  placeholder="0.00"
+                  value={newModel.price_addition ?? 0}
+                  onChange={e => setNewModel(prev => ({ ...prev, price_addition: parseFloat(e.target.value) || 0 }))}
+                />
+              </div>
             </div>
           </div>
           <div className="mb-4">
@@ -331,6 +413,7 @@ const CabinModelsTab = ({ onCountChange }: { onCountChange?: (n: number) => void
               <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.cabinModels.sortOrder')}</th>
               <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('common.status')}</th>
               <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.cabinModels.detailsCol')}</th>
+              <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.cabinModels.priceAddition')}</th>
               <th className="w-10" />
             </tr></thead>
             <tbody className="divide-y divide-gray-50">
@@ -353,11 +436,21 @@ const CabinModelsTab = ({ onCountChange }: { onCountChange?: (n: number) => void
                         {m.details?.length ?? 0} poz.
                       </button>
                     </td>
+                    <td className="px-4 py-3 text-sm text-center">
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        className="w-24 border border-gray-200 rounded px-2 py-1 text-sm"
+                        defaultValue={m.price_addition ?? 0}
+                        onBlur={e => updateModel(m.id, 'price_addition', parseFloat(e.target.value) || 0)}
+                      />
+                    </td>
                     <td className="px-2 py-3"><Button variant="ghost" size="icon" onClick={() => deleteModel(m.id)} className="h-8 w-8 text-red-400 hover:text-red-600"><Trash2 className="h-4 w-4" /></Button></td>
                   </tr>
                   {expandedId === m.id && (
                     <tr>
-                      <td colSpan={7} className="px-6 py-4 bg-amber-50/40 border-b border-amber-100">
+                      <td colSpan={8} className="px-6 py-4 bg-amber-50/40 border-b border-amber-100">
                         <p className="text-xs font-medium text-gray-600 mb-2">{t('database.cabinModels.detailsSectionTitle')}</p>
                         <DetailsEditor value={editingDetails} onChange={setEditingDetails} />
                         <div className="flex gap-2 mt-3">
@@ -378,7 +471,7 @@ const CabinModelsTab = ({ onCountChange }: { onCountChange?: (n: number) => void
 }
 
 // ─── Accessories tab ──────────────────────────────────────────────────────────
-const EMPTY_ACC = { category: 'PANEL', name_pl: '', name_en: '', sort_order: 0 }
+const EMPTY_ACC = { category: 'PANEL', name_pl: '', name_en: '', sort_order: 0, price_addition: 0, multiply_by_access_count: false }
 
 const AccessoriesTab = ({ onCountChange }: { onCountChange?: (n: number) => void }) => {
   const { t, i18n } = useTranslation()
@@ -419,7 +512,8 @@ const AccessoriesTab = ({ onCountChange }: { onCountChange?: (n: number) => void
       const fd = new FormData()
       fd.append('category', newAcc.category); fd.append('name_pl', newAcc.name_pl)
       fd.append('name_en', newAcc.name_en); fd.append('sort_order', String(newAcc.sort_order))
-      fd.append('is_active', '1')
+      fd.append('is_active', '1'); fd.append('price_addition', String(newAcc.price_addition))
+      fd.append('multiply_by_access_count', newAcc.multiply_by_access_count ? '1' : '0')
       if (newAccImageFile) fd.append('image', newAccImageFile)
       const res = await api.post('/admin/cabin-accessories', fd)
       setAccessories(prev => [...prev, res.data])
@@ -461,6 +555,28 @@ const AccessoriesTab = ({ onCountChange }: { onCountChange?: (n: number) => void
               <div><label className="text-xs text-gray-500 mb-1 block">{t('settings.namePl')}</label><input {...inp('name_pl')} /></div>
               <div><label className="text-xs text-gray-500 mb-1 block">{t('settings.nameEn')}</label><input {...inp('name_en')} /></div>
               <div><label className="text-xs text-gray-500 mb-1 block">{t('database.accessories.sortOrder')}</label><input {...inp('sort_order')} type="number" min="0" /></div>
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">{t('database.accessories.priceAddition')}</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-300"
+                  placeholder="0.00"
+                  value={newAcc.price_addition}
+                  onChange={e => setNewAcc(prev => ({ ...prev, price_addition: parseFloat(e.target.value) || 0 }))}
+                />
+              </div>
+              <div className="flex items-center gap-2 mt-1">
+                <button
+                  type="button"
+                  onClick={() => setNewAcc(prev => ({ ...prev, multiply_by_access_count: !prev.multiply_by_access_count }))}
+                  className={`relative inline-flex h-5 w-9 shrink-0 rounded-full transition-colors cursor-pointer focus:outline-none ${newAcc.multiply_by_access_count ? 'bg-amber-500' : 'bg-gray-200'}`}
+                >
+                  <span className={`absolute top-[3px] h-3.5 w-3.5 rounded-full bg-white shadow transition-all ${newAcc.multiply_by_access_count ? 'left-[19px]' : 'left-[3px]'}`} />
+                </button>
+                <span className="text-xs text-gray-500">{t('database.accessories.multiplyByAccessCount')}</span>
+              </div>
             </div>
           </div>
           <div className="flex gap-2">
@@ -480,6 +596,8 @@ const AccessoriesTab = ({ onCountChange }: { onCountChange?: (n: number) => void
                 <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('settings.nameEn')}</th>
                 <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.accessories.sortOrder')}</th>
                 <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('common.status')}</th>
+                <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.accessories.priceAddition')}</th>
+                <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase text-center">{t('database.accessories.multiplyByAccessCount')}</th>
                 <th className="w-10" />
               </tr>
             </thead>
@@ -487,7 +605,7 @@ const AccessoriesTab = ({ onCountChange }: { onCountChange?: (n: number) => void
               {ACCESSORY_CATEGORIES.filter(cat => grouped[cat].length > 0).map(cat => (
                 <>
                   <tr key={`cat-${cat}`} className="bg-gray-50/60 border-t border-gray-100">
-                    <td colSpan={6} className="px-4 py-2">
+                    <td colSpan={8} className="px-4 py-2">
                       <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{i18n.resolvedLanguage === 'pl' ? CATEGORY_LABELS_PL[cat] : CATEGORY_LABELS_EN[cat]}</span>
                     </td>
                   </tr>
@@ -504,13 +622,36 @@ const AccessoriesTab = ({ onCountChange }: { onCountChange?: (n: number) => void
                           {a.is_active ? t('settings.active') : t('settings.inactive')}
                         </button>
                       </td>
+                      <td className="px-4 py-3 text-sm text-center">
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          className="w-24 border border-gray-200 rounded px-2 py-1 text-sm"
+                          defaultValue={a.price_addition ?? 0}
+                          onBlur={e => api.patch(`/admin/cabin-accessories/${a.id}`, { price_addition: parseFloat(e.target.value) || 0 })}
+                        />
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newVal = !a.multiply_by_access_count;
+                            setAccessories(prev => prev.map(x => x.id === a.id ? { ...x, multiply_by_access_count: newVal } : x));
+                            api.patch(`/admin/cabin-accessories/${a.id}`, { multiply_by_access_count: newVal });
+                          }}
+                          className={`relative inline-flex h-5 w-9 shrink-0 rounded-full transition-colors cursor-pointer focus:outline-none ${a.multiply_by_access_count ? 'bg-amber-500' : 'bg-gray-200'}`}
+                        >
+                          <span className={`absolute top-0.75 h-3.5 w-3.5 rounded-full bg-white shadow transition-all ${a.multiply_by_access_count ? 'left-4.75' : 'left-0.75'}`} />
+                        </button>
+                      </td>
                       <td className="px-2 py-3"><Button variant="ghost" size="icon" onClick={() => deleteAcc(a.id)} className="h-8 w-8 text-red-400 hover:text-red-600"><Trash2 className="h-4 w-4" /></Button></td>
                     </tr>
                   ))}
                 </>
               ))}
               {ACCESSORY_CATEGORIES.every(cat => grouped[cat].length === 0) && (
-                <tr><td colSpan={6} className="px-4 py-8 text-center text-sm text-gray-400">{t('database.accessories.noAccessories')}</td></tr>
+                <tr><td colSpan={8} className="px-4 py-8 text-center text-sm text-gray-400">{t('database.accessories.noAccessories')}</td></tr>
               )}
             </tbody>
           </table>
@@ -521,7 +662,7 @@ const AccessoriesTab = ({ onCountChange }: { onCountChange?: (n: number) => void
 }
 
 // ─── Extras tab ───────────────────────────────────────────────────────────────
-const EMPTY_EXTRA = { name_pl: '', name_en: '', sort_order: 0 }
+const EMPTY_EXTRA = { name_pl: '', name_en: '', sort_order: 0, price_addition: 0 }
 
 const ExtrasTab = ({ onCountChange }: { onCountChange?: (n: number) => void }) => {
   const { t } = useTranslation()
@@ -558,7 +699,7 @@ const ExtrasTab = ({ onCountChange }: { onCountChange?: (n: number) => void }) =
     try {
       const res = await api.post('/admin/cabin-accessories', {
         category: 'EXTRA', name_pl: newExtra.name_pl, name_en: newExtra.name_en,
-        sort_order: newExtra.sort_order, is_active: true,
+        sort_order: newExtra.sort_order, price_addition: newExtra.price_addition, is_active: true,
       })
       setExtras(prev => [...prev, res.data])
       setNewExtra(EMPTY_EXTRA); setShowAdd(false)
@@ -579,9 +720,10 @@ const ExtrasTab = ({ onCountChange }: { onCountChange?: (n: number) => void }) =
       </div>
       {showAdd && (
         <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/40">
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
             <div><label className="text-xs text-gray-500 mb-1 block">{t('settings.namePl')}</label><input {...inp('name_pl')} /></div>
             <div><label className="text-xs text-gray-500 mb-1 block">{t('settings.nameEn')}</label><input {...inp('name_en')} /></div>
+            <div><label className="text-xs text-gray-500 mb-1 block">{t('database.accessories.priceAddition')}</label><input {...inp('price_addition')} type="number" min="0" step="0.01" /></div>
             <div><label className="text-xs text-gray-500 mb-1 block">{t('database.accessories.sortOrder')}</label><input {...inp('sort_order')} type="number" min="0" /></div>
           </div>
           <div className="flex gap-2">
@@ -596,18 +738,22 @@ const ExtrasTab = ({ onCountChange }: { onCountChange?: (n: number) => void }) =
             <thead><tr className="border-b border-gray-100 bg-gray-50/50">
               <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('settings.namePl')}</th>
               <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('settings.nameEn')}</th>
+              <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.accessories.priceAddition')}</th>
               <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.accessories.sortOrder')}</th>
               <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('common.status')}</th>
               <th className="w-10" />
             </tr></thead>
             <tbody className="divide-y divide-gray-50">
               {extras.length === 0 && (
-                <tr><td colSpan={5} className="px-4 py-6 text-center text-sm text-gray-400">{t('database.extras.noExtras')}</td></tr>
+                <tr><td colSpan={6} className="px-4 py-6 text-center text-sm text-gray-400">{t('database.extras.noExtras')}</td></tr>
               )}
               {extras.map(a => (
                 <tr key={a.id} className="hover:bg-gray-50/50">
                   <td className="px-4 py-3"><InlineEdit value={a.name_pl} onSave={v => updateExtra(a.id, 'name_pl', v)} /></td>
                   <td className="px-4 py-3"><InlineEdit value={a.name_en} onSave={v => updateExtra(a.id, 'name_en', v)} /></td>
+                  <td className="px-4 py-3 text-center">
+                    <input type="number" min="0" step="0.01" className="w-24 border border-gray-200 rounded px-2 py-1 text-sm" defaultValue={a.price_addition ?? 0} onBlur={e => api.patch(`/admin/cabin-accessories/${a.id}`, { price_addition: parseFloat(e.target.value) || 0 })} />
+                  </td>
                   <td className="px-4 py-3 text-center"><InlineEdit value={a.sort_order} type="number" onSave={v => updateExtra(a.id, 'sort_order', parseInt(v))} /></td>
                   <td className="px-4 py-3 text-center">
                     <button onClick={() => toggleActive(a)} className={`text-xs px-2 py-0.5 rounded-full cursor-pointer ${a.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
@@ -615,6 +761,310 @@ const ExtrasTab = ({ onCountChange }: { onCountChange?: (n: number) => void }) =
                     </button>
                   </td>
                   <td className="px-2 py-3"><Button variant="ghost" size="icon" onClick={() => deleteExtra(a.id)} className="h-8 w-8 text-red-400 hover:text-red-600"><Trash2 className="h-4 w-4" /></Button></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </Card>
+  )
+}
+
+// ─── Cabin types tab ──────────────────────────────────────────────────────────
+const CabinTypesTab = ({ onCountChange }: { onCountChange?: (n: number) => void }) => {
+  const { t } = useTranslation()
+  const [cabinTypes, setCabinTypes] = useState<CabinType[]>([])
+  const [loadingCabinTypes, setLoadingCabinTypes] = useState(true)
+
+  useEffect(() => { onCountChange?.(cabinTypes.length) }, [cabinTypes.length])
+
+  const loadCabinTypes = () => {
+    setLoadingCabinTypes(true)
+    api.get('/admin/cabin-types').then(r => setCabinTypes(r.data)).finally(() => setLoadingCabinTypes(false))
+  }
+
+  useEffect(() => { loadCabinTypes() }, [])
+
+  const updateCabinType = async (id: number, field: string, value: unknown) => {
+    await api.patch(`/admin/cabin-types/${id}`, { [field]: value })
+    loadCabinTypes()
+  }
+
+  return (
+    <Card className="p-6">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h2 className="font-semibold text-gray-900">{t('database.cabinTypes.title')}</h2>
+          <p className="text-xs text-gray-400 mt-0.5">{t('database.cabinTypes.subtitle')}</p>
+        </div>
+      </div>
+
+      {loadingCabinTypes ? (
+        <div className="flex justify-center py-8"><SkeletonLoader count={4} /></div>
+      ) : (
+        <table className="w-full text-left">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.cabinTypes.key')}</th>
+              <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.cabinTypes.namePl')}</th>
+              <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.cabinTypes.nameEn')}</th>
+              <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.cabinTypes.imageRight')}</th>
+              <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.cabinTypes.imageLeft')}</th>
+              <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.cabinTypes.price')}</th>
+              <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('settings.active')}</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-50">
+            {cabinTypes.map(ct => (
+              <tr key={ct.id} className="hover:bg-gray-50">
+                <td className="px-4 py-3 text-sm font-mono text-gray-500">{ct.key}</td>
+                <td className="px-4 py-3">
+                  <input
+                    className="border border-gray-200 rounded px-2 py-1 text-sm w-32"
+                    defaultValue={ct.name_pl}
+                    onBlur={e => updateCabinType(ct.id, 'name_pl', e.target.value)}
+                  />
+                </td>
+                <td className="px-4 py-3">
+                  <input
+                    className="border border-gray-200 rounded px-2 py-1 text-sm w-32"
+                    defaultValue={ct.name_en}
+                    onBlur={e => updateCabinType(ct.id, 'name_en', e.target.value)}
+                  />
+                </td>
+                {(['right', 'left'] as const).map(side => {
+                  const urlField = side === 'right' ? 'image_right_url' : 'image_left_url'
+                  return (
+                    <td key={side} className="px-4 py-3">
+                      <ImagePicker
+                        previewUrl={ct[urlField]}
+                        uploadUrl={`/admin/cabin-types/${ct.id}/image/${side}`}
+                        onUploaded={() => loadCabinTypes()}
+                      />
+                    </td>
+                  )
+                })}
+                <td className="px-4 py-3">
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    className="w-24 border border-gray-200 rounded px-2 py-1 text-sm"
+                    defaultValue={ct.price}
+                    onBlur={e => updateCabinType(ct.id, 'price', parseFloat(e.target.value) || 0)}
+                  />
+                </td>
+                <td className="px-4 py-3 text-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newVal = !ct.is_active;
+                      setCabinTypes(prev => prev.map(x => x.id === ct.id ? { ...x, is_active: newVal } : x));
+                      api.patch(`/admin/cabin-types/${ct.id}`, { is_active: newVal });
+                    }}
+                    className={`relative inline-flex h-5 w-9 shrink-0 rounded-full transition-colors cursor-pointer focus:outline-none ${ct.is_active ? 'bg-amber-500' : 'bg-gray-200'}`}
+                  >
+                    <span className={`absolute top-0.75 h-3.5 w-3.5 rounded-full bg-white shadow transition-all ${ct.is_active ? 'left-4.75' : 'left-0.75'}`} />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </Card>
+  )
+}
+
+// ─── Cabin colors tab ─────────────────────────────────────────────────────────
+const EMPTY_COLOR = {
+  name_pl: '', name_en: '',
+  visible_for_cabin: true, visible_for_door: true,
+  price_addition_cabin: 0, price_addition_door: 0,
+  sort_order: 0,
+}
+
+const CabinColorsTab = ({ onCountChange }: { onCountChange?: (n: number) => void }) => {
+  const { t } = useTranslation()
+  const [colors, setColors] = useState<CabinColor[]>([])
+  const [loadingColors, setLoadingColors] = useState(true)
+  const [showAddColor, setShowAddColor] = useState(false)
+  const [newColor, setNewColor] = useState(EMPTY_COLOR)
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => { onCountChange?.(colors.length) }, [colors.length])
+
+  const loadColors = () => {
+    setLoadingColors(true)
+    api.get('/admin/cabin-colors').then(r => setColors(r.data)).finally(() => setLoadingColors(false))
+  }
+
+  useEffect(() => { loadColors() }, [])
+
+  const handleImageUploaded = (id: number, url: string) => {
+    setColors(prev => prev.map(c => c.id === id ? { ...c, image_url: url } : c))
+  }
+
+  const deleteColor = async (id: number) => {
+    if (!confirm(t('database.colors.confirmDelete'))) return
+    await api.delete(`/admin/cabin-colors/${id}`)
+    loadColors()
+  }
+
+  const handleColorField = async (id: number, field: string, value: unknown) => {
+    await api.patch(`/admin/cabin-colors/${id}`, { [field]: value })
+    loadColors()
+  }
+
+  const createColor = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSaving(true)
+    try {
+      await api.post('/admin/cabin-colors', newColor)
+      setNewColor(EMPTY_COLOR)
+      setShowAddColor(false)
+      loadColors()
+    } finally { setSaving(false) }
+  }
+
+  const INPUT_CLASS = 'w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-300'
+
+  return (
+    <Card className="gap-0 overflow-hidden">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <h2 className="font-semibold text-gray-900">{t('database.colors.title')}</h2>
+        <Button size="sm" onClick={() => setShowAddColor(!showAddColor)}><Plus className="h-4 w-4" />{t('database.colors.add')}</Button>
+      </div>
+
+      {showAddColor && (
+        <form onSubmit={createColor} className="px-6 py-4 border-b border-gray-100 bg-gray-50/40">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-3">
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">{t('database.colors.namePl')}</label>
+              <input required className={INPUT_CLASS} value={newColor.name_pl} onChange={e => setNewColor(p => ({ ...p, name_pl: e.target.value }))} />
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">{t('database.colors.nameEn')}</label>
+              <input required className={INPUT_CLASS} value={newColor.name_en} onChange={e => setNewColor(p => ({ ...p, name_en: e.target.value }))} />
+            </div>
+            <div className="sm:col-span-1">
+              <label className="text-xs text-gray-500 mb-1 block">{t('database.colors.image')}</label>
+              <p className="text-xs text-gray-400 italic">{t('database.colors.imageAfterCreate')}</p>
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">{t('database.colors.sortOrder')}</label>
+              <input type="number" min="0" className={INPUT_CLASS} value={newColor.sort_order} onChange={e => setNewColor(p => ({ ...p, sort_order: parseInt(e.target.value) || 0 }))} />
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">{t('database.colors.priceAdditionCabin')}</label>
+              <input type="number" min="0" step="0.01" className={INPUT_CLASS} placeholder="0.00" value={newColor.price_addition_cabin} onChange={e => setNewColor(p => ({ ...p, price_addition_cabin: parseFloat(e.target.value) || 0 }))} />
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">{t('database.colors.priceAdditionDoor')}</label>
+              <input type="number" min="0" step="0.01" className={INPUT_CLASS} placeholder="0.00" value={newColor.price_addition_door} onChange={e => setNewColor(p => ({ ...p, price_addition_door: parseFloat(e.target.value) || 0 }))} />
+            </div>
+            <div className="flex flex-col gap-2 justify-end">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setNewColor(p => ({ ...p, visible_for_cabin: !p.visible_for_cabin }))}
+                  className={`relative inline-flex h-5 w-9 shrink-0 rounded-full transition-colors cursor-pointer focus:outline-none ${newColor.visible_for_cabin ? 'bg-amber-500' : 'bg-gray-200'}`}
+                >
+                  <span className={`absolute top-0.75 h-3.5 w-3.5 rounded-full bg-white shadow transition-all ${newColor.visible_for_cabin ? 'left-4.75' : 'left-0.75'}`} />
+                </button>
+                <span className="text-xs text-gray-600">{t('database.colors.visibleForCabin')}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setNewColor(p => ({ ...p, visible_for_door: !p.visible_for_door }))}
+                  className={`relative inline-flex h-5 w-9 shrink-0 rounded-full transition-colors cursor-pointer focus:outline-none ${newColor.visible_for_door ? 'bg-amber-500' : 'bg-gray-200'}`}
+                >
+                  <span className={`absolute top-0.75 h-3.5 w-3.5 rounded-full bg-white shadow transition-all ${newColor.visible_for_door ? 'left-4.75' : 'left-0.75'}`} />
+                </button>
+                <span className="text-xs text-gray-600">{t('database.colors.visibleForDoor')}</span>
+              </div>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button type="submit" size="sm" disabled={saving}><Save className="h-3 w-3" />{saving ? t('common.saving') : t('common.save')}</Button>
+            <Button type="button" variant="ghost" size="sm" onClick={() => { setShowAddColor(false); setNewColor(EMPTY_COLOR) }}>{t('common.cancel')}</Button>
+          </div>
+        </form>
+      )}
+
+      {loadingColors ? <div className="p-6"><SkeletonLoader count={4} /></div> : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead><tr className="border-b border-gray-100 bg-gray-50/50">
+              <th className="px-4 py-3 w-20 text-left text-xs font-medium text-gray-500 uppercase">{t('database.colors.image')}</th>
+              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.colors.namePl')}</th>
+              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.colors.nameEn')}</th>
+              <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.colors.visibleForCabin')}</th>
+              <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.colors.visibleForDoor')}</th>
+              <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.colors.priceAdditionCabin')}</th>
+              <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.colors.priceAdditionDoor')}</th>
+              <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.colors.sortOrder')}</th>
+              <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('common.status')}</th>
+              <th className="w-10" />
+            </tr></thead>
+            <tbody className="divide-y divide-gray-50">
+              {colors.length === 0 && (
+                <tr><td colSpan={10} className="px-4 py-8 text-center text-sm text-gray-400">{t('database.colors.noColors')}</td></tr>
+              )}
+              {colors.map(c => (
+                <tr key={c.id} className="hover:bg-gray-50/50">
+                  <td className="px-4 py-3">
+                    <ImagePicker
+                      previewUrl={c.image_url}
+                      uploadUrl={`/admin/cabin-colors/${c.id}/image`}
+                      onUploaded={(url) => handleImageUploaded(c.id, url)}
+                    />
+                  </td>
+                  <td className="px-4 py-3"><InlineEdit value={c.name_pl} onSave={v => handleColorField(c.id, 'name_pl', v)} /></td>
+                  <td className="px-4 py-3"><InlineEdit value={c.name_en} onSave={v => handleColorField(c.id, 'name_en', v)} /></td>
+                  <td className="px-4 py-3 text-center">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newVal = !c.visible_for_cabin;
+                        setColors(prev => prev.map(x => x.id === c.id ? { ...x, visible_for_cabin: newVal } : x));
+                        api.patch(`/admin/cabin-colors/${c.id}`, { visible_for_cabin: newVal });
+                      }}
+                      className={`relative inline-flex h-5 w-9 shrink-0 rounded-full transition-colors cursor-pointer focus:outline-none ${c.visible_for_cabin ? 'bg-amber-500' : 'bg-gray-200'}`}
+                    >
+                      <span className={`absolute top-0.75 h-3.5 w-3.5 rounded-full bg-white shadow transition-all ${c.visible_for_cabin ? 'left-4.75' : 'left-0.75'}`} />
+                    </button>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newVal = !c.visible_for_door;
+                        setColors(prev => prev.map(x => x.id === c.id ? { ...x, visible_for_door: newVal } : x));
+                        api.patch(`/admin/cabin-colors/${c.id}`, { visible_for_door: newVal });
+                      }}
+                      className={`relative inline-flex h-5 w-9 shrink-0 rounded-full transition-colors cursor-pointer focus:outline-none ${c.visible_for_door ? 'bg-amber-500' : 'bg-gray-200'}`}
+                    >
+                      <span className={`absolute top-0.75 h-3.5 w-3.5 rounded-full bg-white shadow transition-all ${c.visible_for_door ? 'left-4.75' : 'left-0.75'}`} />
+                    </button>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <input type="number" min="0" step="0.01" className="w-24 border border-gray-200 rounded px-2 py-1 text-sm" defaultValue={c.price_addition_cabin} onBlur={e => handleColorField(c.id, 'price_addition_cabin', parseFloat(e.target.value) || 0)} />
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <input type="number" min="0" step="0.01" className="w-24 border border-gray-200 rounded px-2 py-1 text-sm" defaultValue={c.price_addition_door} onBlur={e => handleColorField(c.id, 'price_addition_door', parseFloat(e.target.value) || 0)} />
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <input type="number" min="0" className="w-16 border border-gray-200 rounded px-2 py-1 text-sm text-center" defaultValue={c.sort_order} onBlur={e => handleColorField(c.id, 'sort_order', parseInt(e.target.value) || 0)} />
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <button onClick={() => handleColorField(c.id, 'is_active', !c.is_active)} className={`text-xs px-2 py-0.5 rounded-full cursor-pointer ${c.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                      {c.is_active ? t('settings.active') : t('settings.inactive')}
+                    </button>
+                  </td>
+                  <td className="px-2 py-3"><Button variant="ghost" size="icon" onClick={() => deleteColor(c.id)} className="h-8 w-8 text-red-400 hover:text-red-600"><Trash2 className="h-4 w-4" /></Button></td>
                 </tr>
               ))}
             </tbody>
@@ -881,6 +1331,13 @@ interface Elevator {
   drawing_throughway_dwg?: string | null
   drawing_throughway_bim?: string | null
   drawing_throughway_doc?: string | null
+  coeff_stops?: number | null
+  coeff_cabin_model?: number | null
+  coeff_cabin_throughway?: number | null
+  coeff_cabin_doors?: number | null
+  coeff_landing_doors?: number | null
+  coeff_ei30?: number | null
+  coeff_ei60?: number | null
 }
 
 const TechField = ({ label, value, elevatorId, field, onSaved, type = 'text' }: {
@@ -1212,6 +1669,22 @@ const ElevatorRow = ({ elevator, onUpdate, onDelete }: {
                 </div>
               ))}
             </div>
+
+            {/* Współczynniki rekompensujące udźwig */}
+            <div className="mt-5 pt-4 border-t border-gray-200">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
+                {t('database.coefficients.sectionTitle')}
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                <TechField label={t('database.coefficients.stops')} value={localElevator.coeff_stops} elevatorId={localElevator.id} field="coeff_stops" onSaved={(id, f, v) => { onUpdate(id, f, v); setLocalElevator(prev => ({ ...prev, coeff_stops: v ? parseFloat(v) : null })) }} type="number" />
+                <TechField label={t('database.coefficients.cabinModel')} value={localElevator.coeff_cabin_model} elevatorId={localElevator.id} field="coeff_cabin_model" onSaved={(id, f, v) => { onUpdate(id, f, v); setLocalElevator(prev => ({ ...prev, coeff_cabin_model: v ? parseFloat(v) : null })) }} type="number" />
+                <TechField label={t('database.coefficients.cabinThroughway')} value={localElevator.coeff_cabin_throughway} elevatorId={localElevator.id} field="coeff_cabin_throughway" onSaved={(id, f, v) => { onUpdate(id, f, v); setLocalElevator(prev => ({ ...prev, coeff_cabin_throughway: v ? parseFloat(v) : null })) }} type="number" />
+                <TechField label={t('database.coefficients.cabinDoors')} value={localElevator.coeff_cabin_doors} elevatorId={localElevator.id} field="coeff_cabin_doors" onSaved={(id, f, v) => { onUpdate(id, f, v); setLocalElevator(prev => ({ ...prev, coeff_cabin_doors: v ? parseFloat(v) : null })) }} type="number" />
+                <TechField label={t('database.coefficients.landingDoors')} value={localElevator.coeff_landing_doors} elevatorId={localElevator.id} field="coeff_landing_doors" onSaved={(id, f, v) => { onUpdate(id, f, v); setLocalElevator(prev => ({ ...prev, coeff_landing_doors: v ? parseFloat(v) : null })) }} type="number" />
+                <TechField label={t('database.coefficients.ei30')} value={localElevator.coeff_ei30} elevatorId={localElevator.id} field="coeff_ei30" onSaved={(id, f, v) => { onUpdate(id, f, v); setLocalElevator(prev => ({ ...prev, coeff_ei30: v ? parseFloat(v) : null })) }} type="number" />
+                <TechField label={t('database.coefficients.ei60')} value={localElevator.coeff_ei60} elevatorId={localElevator.id} field="coeff_ei60" onSaved={(id, f, v) => { onUpdate(id, f, v); setLocalElevator(prev => ({ ...prev, coeff_ei60: v ? parseFloat(v) : null })) }} type="number" />
+              </div>
+            </div>
           </td>
         </tr>
       )}
@@ -1251,7 +1724,7 @@ const EMPTY_ELEVATOR = {
   equipment: '',
 }
 
-type DatabaseTab = 'elevators' | 'lift-types' | 'cabin-models' | 'accessories' | 'extras' | 'general'
+type DatabaseTab = 'elevators' | 'lift-types' | 'cabin-models' | 'accessories' | 'extras' | 'cabin-colors' | 'cabin-types' | 'general'
 
 
 const Database = () => {
@@ -1261,19 +1734,23 @@ const Database = () => {
     { id: 'elevators' as DatabaseTab,    label: t('database.tabs.elevators') },
     { id: 'lift-types' as DatabaseTab,   label: t('database.tabs.liftTypes') },
     { id: 'cabin-models' as DatabaseTab, label: t('database.tabs.cabinModels') },
-    { id: 'accessories' as DatabaseTab,  label: t('database.tabs.accessories') },
-    { id: 'extras' as DatabaseTab,       label: t('database.tabs.extras') },
-    { id: 'general' as DatabaseTab,      label: t('database.tabs.general') },
+    { id: 'accessories' as DatabaseTab,   label: t('database.tabs.accessories') },
+    { id: 'extras' as DatabaseTab,        label: t('database.tabs.extras') },
+    { id: 'cabin-colors' as DatabaseTab,  label: t('database.tabs.cabinColors') },
+    { id: 'cabin-types' as DatabaseTab,   label: t('database.tabs.cabinTypes') },
+    { id: 'general' as DatabaseTab,       label: t('database.tabs.general') },
   ]
 
   const getTabSubtitle = (tab: DatabaseTab, n: number): string => {
     if (tab === 'general') return t('database.subtitles.general')
     const key = {
-      'elevators':    'database.subtitles.elevators',
-      'lift-types':   'database.subtitles.liftTypes',
-      'cabin-models': 'database.subtitles.cabinModels',
-      'accessories':  'database.subtitles.accessories',
-      'extras':       'database.subtitles.extras',
+      'elevators':     'database.subtitles.elevators',
+      'lift-types':    'database.subtitles.liftTypes',
+      'cabin-models':  'database.subtitles.cabinModels',
+      'accessories':   'database.subtitles.accessories',
+      'extras':        'database.subtitles.extras',
+      'cabin-colors':  'database.subtitles.cabinColors',
+      'cabin-types':   'database.subtitles.cabinTypes',
     }[tab]
     return t(key as any, { count: n })
   }
@@ -1298,7 +1775,11 @@ const Database = () => {
   const updateElevator = async (id: number, field: string, value: string) => {
     const payload: Record<string, string | boolean | number | null> = {}
     const nullableInts = ['shaft_width', 'shaft_depth', 'pit_depth', 'overhead', 'door_width', 'door_height']
-    const nullableFloats = ['base_price', 'lifting_height']
+    const nullableFloats = [
+      'base_price', 'lifting_height',
+      'coeff_stops', 'coeff_cabin_model', 'coeff_cabin_throughway',
+      'coeff_cabin_doors', 'coeff_landing_doors', 'coeff_ei30', 'coeff_ei60',
+    ]
     if (field === 'is_active') payload[field] = value === '1'
     else if (['capacity', 'persons', 'cabin_width', 'cabin_depth', 'cabin_height', 'max_stops'].includes(field)) payload[field] = parseInt(value)
     else if (nullableInts.includes(field)) payload[field] = value.trim() !== '' ? parseInt(value) : null
@@ -1548,6 +2029,8 @@ const Database = () => {
       {tab === 'cabin-models' && <CabinModelsTab onCountChange={n => setCounts(p => ({ ...p, 'cabin-models': n }))} />}
       {tab === 'accessories' && <AccessoriesTab onCountChange={n => setCounts(p => ({ ...p, 'accessories': n }))} />}
       {tab === 'extras' && <ExtrasTab onCountChange={n => setCounts(p => ({ ...p, 'extras': n }))} />}
+      {tab === 'cabin-colors' && <CabinColorsTab onCountChange={n => setCounts(p => ({ ...p, 'cabin-colors': n }))} />}
+      {tab === 'cabin-types' && <CabinTypesTab onCountChange={n => setCounts(p => ({ ...p, 'cabin-types': n }))} />}
       {tab === 'general' && <GeneralTab />}
     </MainLayout>
   )

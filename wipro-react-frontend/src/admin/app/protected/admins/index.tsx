@@ -1,12 +1,12 @@
-import { useEffect, useState } from 'react'
-import { Card } from '@admin/components/Cards'
 import { Button } from '@admin/components/Button'
+import { Card } from '@admin/components/Cards'
 import SkeletonLoader from '@admin/components/SkeletonLoader'
-import MainLayout from '@admin/components/layout/MainLayout'
 import MainHeader from '@admin/components/layout/MainHeader'
+import MainLayout from '@admin/components/layout/MainLayout'
 import api from '@admin/store/axiosInstance'
 import { adminViewStore } from '@admin/store/zustand/adminViewStore'
-import { Plus, RefreshCw, Shield, Mail, ToggleLeft, ToggleRight, Trash2, X, Check } from 'lucide-react'
+import { Check, Mail, Plus, RefreshCw, Shield, ToggleLeft, ToggleRight, Trash2, X } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 interface Admin {
@@ -18,6 +18,14 @@ interface Admin {
   created_at: string
 }
 
+interface SharedQuoteRequest {
+  id: number
+  request_number: string
+  status: string
+  investor_name: string | null
+  is_shared_with_me: boolean
+}
+
 const AdminsPage = () => {
   const { t } = useTranslation()
   const [admins, setAdmins] = useState<Admin[]>([])
@@ -26,6 +34,13 @@ const AdminsPage = () => {
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState({ name: '', email: '', password: '' })
   const [formError, setFormError] = useState('')
+
+  const [shareTargetAdmin, setShareTargetAdmin] = useState<Admin | null>(null)
+  const [shareSourceAdmins, setShareSourceAdmins] = useState<Admin[]>([])
+  const [expandedAdminId, setExpandedAdminId] = useState<number | null>(null)
+  const [adminOffersMap, setAdminOffersMap] = useState<Record<number, SharedQuoteRequest[]>>({})
+  const [selectedOfferIds, setSelectedOfferIds] = useState<number[]>([])
+  const [savingShare, setSavingShare] = useState(false)
 
   const load = () => {
     setLoading(true)
@@ -74,6 +89,55 @@ const AdminsPage = () => {
       load()
     } finally {
       setSaving(false)
+    }
+  }
+
+  const openShareModal = async (admin: Admin) => {
+    setShareTargetAdmin(admin)
+    setSelectedOfferIds([])
+    setExpandedAdminId(null)
+    setAdminOffersMap({})
+    const res = await api.get('/admin/admins')
+    setShareSourceAdmins(res.data.filter((a: Admin) => a.id !== admin.id && a.role === 'admin'))
+  }
+
+  const expandAdmin = async (sourceAdminId: number) => {
+    if (expandedAdminId === sourceAdminId) {
+      setExpandedAdminId(null)
+      return
+    }
+    setExpandedAdminId(sourceAdminId)
+    if (!adminOffersMap[sourceAdminId]) {
+      const res = await api.get(`/admin/admins/${sourceAdminId}/quote-requests?target_admin_id=${shareTargetAdmin!.id}`)
+      const offers = res.data as SharedQuoteRequest[]
+      setAdminOffersMap(prev => ({ ...prev, [sourceAdminId]: offers }))
+      const alreadyShared = offers.filter(o => o.is_shared_with_me).map(o => o.id)
+      setSelectedOfferIds(prev => [...new Set([...prev, ...alreadyShared])])
+    }
+  }
+
+  const toggleOffer = (offerId: number) => {
+    setSelectedOfferIds(prev =>
+      prev.includes(offerId) ? prev.filter(id => id !== offerId) : [...prev, offerId]
+    )
+  }
+
+  const toggleAdminOffers = (sourceAdminId: number, checked: boolean) => {
+    const offers = adminOffersMap[sourceAdminId] ?? []
+    const ids = offers.map(o => o.id)
+    setSelectedOfferIds(prev =>
+      checked ? [...new Set([...prev, ...ids])] : prev.filter(id => !ids.includes(id))
+    )
+  }
+
+  const saveShares = async () => {
+    if (!shareTargetAdmin) return
+    setSavingShare(true)
+    try {
+      await api.post(`/admin/admins/${shareTargetAdmin.id}/share-quote-requests`, { quote_request_ids: selectedOfferIds })
+      setShareTargetAdmin(null)
+    } finally {
+      setSavingShare(false)
     }
   }
 
@@ -192,6 +256,13 @@ const AdminsPage = () => {
 
                   {admin.role !== 'superadmin' && (
                     <div className="flex items-center gap-2 shrink-0">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => openShareModal(admin)}
+                      >
+                        Udostępnij oferty
+                      </Button>
                       <button
                         onClick={() => toggleActive(admin)}
                         disabled={saving}
@@ -218,6 +289,88 @@ const AdminsPage = () => {
           )}
         </Card>
       </div>
+
+      {shareTargetAdmin && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-lg flex flex-col" style={{ maxHeight: '80vh' }}>
+            <h3 className="font-semibold text-gray-900 mb-1">
+              Udostępnij zapytania dla: {shareTargetAdmin.name}
+            </h3>
+            <p className="text-sm text-gray-500 mb-4">Wybierz zapytania ofertowe innych adminów do udostępnienia</p>
+
+            <div className="flex-1 overflow-y-auto divide-y divide-gray-100 min-h-0">
+              {shareSourceAdmins.length === 0 && (
+                <p className="text-sm text-gray-400 italic py-4 text-center">Brak innych adminów</p>
+              )}
+              {shareSourceAdmins.map(sourceAdmin => {
+                const offers = adminOffersMap[sourceAdmin.id]
+                const isExpanded = expandedAdminId === sourceAdmin.id
+                const allChecked = !!offers && offers.length > 0 && offers.every(o => selectedOfferIds.includes(o.id))
+                const someChecked = !!offers && offers.some(o => selectedOfferIds.includes(o.id))
+                return (
+                  <div key={sourceAdmin.id}>
+                    <div className="flex items-center gap-3 py-3 px-1">
+                      <input
+                        type="checkbox"
+                        checked={allChecked}
+                        ref={(el) => { if (el) el.indeterminate = someChecked && !allChecked }}
+                        onChange={e => toggleAdminOffers(sourceAdmin.id, e.target.checked)}
+                        disabled={!offers}
+                        className="cursor-pointer"
+                      />
+                      <button
+                        className="flex flex-1 text-sm font-medium text-gray-800 hover:text-blue-600 justify-between cursor-pointer"
+                        onClick={() => expandAdmin(sourceAdmin.id)}
+                      >
+                        <span>
+                          {sourceAdmin.name}
+                          {offers && (
+                            <span className="ml-2 text-xs text-gray-400">({offers.length} zapytań)</span>
+                          )}
+                        </span>
+                      <span className="text-xs text-gray-400">{isExpanded ? '▲' : '▼'}</span>
+                      </button>
+                    </div>
+
+                    {isExpanded && !offers && (
+                      <div className="pl-8 pb-2 text-xs text-gray-400">Ładowanie...</div>
+                    )}
+                    {isExpanded && offers && (
+                      <div className="pl-8 pb-2 flex flex-col gap-1">
+                        {offers.length === 0 && (
+                          <p className="text-xs text-gray-400 italic">Brak zapytań</p>
+                        )}
+                        {offers.map(offer => (
+                          <label key={offer.id} className="flex items-center gap-2 cursor-pointer py-0.5">
+                            <input
+                              type="checkbox"
+                              checked={selectedOfferIds.includes(offer.id)}
+                              onChange={() => toggleOffer(offer.id)}
+                            />
+                            <span className="text-sm text-gray-700">{offer.request_number}</span>
+                            {offer.investor_name && (
+                              <span className="text-xs text-gray-400">— {offer.investor_name}</span>
+                            )}
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+
+            <div className="flex gap-2 justify-end mt-4 pt-4 border-t border-gray-100 shrink-0">
+              <Button variant="outline" size="sm" onClick={() => setShareTargetAdmin(null)}>
+                Anuluj
+              </Button>
+              <Button size="sm" onClick={saveShares} disabled={savingShare}>
+                {savingShare ? 'Zapisuję...' : 'Zapisz dostęp'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </MainLayout>
   )
 }

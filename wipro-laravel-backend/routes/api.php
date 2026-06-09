@@ -9,6 +9,8 @@ use App\Http\Controllers\Api\AdminQuoteRequestController;
 use App\Http\Controllers\Api\AdminUserController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CabinAccessoryController;
+use App\Http\Controllers\Api\CabinColorController;
+use App\Http\Controllers\Api\CabinTypeController;
 use App\Http\Controllers\Api\CabinModelController;
 use App\Http\Controllers\Api\ElevatorController;
 use App\Http\Controllers\Api\LiftTypeController;
@@ -23,6 +25,8 @@ Route::get('/lift-types', [LiftTypeController::class, 'index']);
 Route::get('/settings', [SettingController::class, 'index']);
 Route::get('/cabin-models', [CabinModelController::class, 'index']);
 Route::get('/cabin-accessories', [CabinAccessoryController::class, 'index']);
+Route::get('/cabin-colors', [CabinColorController::class, 'index']);
+Route::get('/cabin-types', [CabinTypeController::class, 'index']);
 Route::post('/quote-requests', [QuoteRequestController::class, 'store']);
 Route::post('/auth/login', [AuthController::class, 'login']);
 
@@ -84,6 +88,8 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/admins', [AdminManagementController::class, 'store']);
             Route::patch('/admins/{id}', [AdminManagementController::class, 'update']);
             Route::delete('/admins/{id}', [AdminManagementController::class, 'destroy']);
+            Route::get('/admins/{id}/quote-requests', [AdminManagementController::class, 'adminQuoteRequests']);
+            Route::post('/admins/{id}/share-quote-requests', [AdminManagementController::class, 'shareQuoteRequests']);
         });
 
         // Lift types
@@ -109,5 +115,17 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::patch('/cabin-accessories/{id}', [CabinAccessoryController::class, 'update']);
         Route::post('/cabin-accessories/{id}/image', [CabinAccessoryController::class, 'uploadImage']);
         Route::delete('/cabin-accessories/{id}', [CabinAccessoryController::class, 'destroy']);
+
+        // Cabin colors
+        Route::get('/cabin-colors', [CabinColorController::class, 'adminIndex']);
+        Route::post('/cabin-colors', [CabinColorController::class, 'store']);
+        Route::patch('/cabin-colors/{id}', [CabinColorController::class, 'update']);
+        Route::post('/cabin-colors/{id}/image', [CabinColorController::class, 'uploadImage']);
+        Route::delete('/cabin-colors/{id}', [CabinColorController::class, 'destroy']);
+
+        // Cabin types
+        Route::get('/cabin-types', [CabinTypeController::class, 'adminIndex']);
+        Route::patch('/cabin-types/{id}', [CabinTypeController::class, 'update']);
+        Route::post('/cabin-types/{id}/image/{side}', [CabinTypeController::class, 'uploadImage']);
     });
 });

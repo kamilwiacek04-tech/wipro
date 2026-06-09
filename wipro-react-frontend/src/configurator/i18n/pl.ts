@@ -136,6 +136,11 @@ const pl = {
             field: {
                 extras: 'Dodatki',
                 cabinModel: 'Model kabiny',
+                cabinColor: 'Kolor kabiny',
+                doorColor: 'Kolor drzwi',
+                landingDoorColor: 'Kolor drzwi przystankowych',
+                cabinDoorSameAsLanding: 'Drzwi kabinowe takie same jak przystankowe',
+                cabinDoorColor: 'Kolor drzwi kabinowych',
                 panel: 'Panel dyspozycji w kabinie',
                 signal: 'Sygnalizacja przystanków',
                 ceiling: 'Sufity',
@@ -157,6 +162,18 @@ const pl = {
                 STAINLESS_STEEL: 'Stal nierdzewna',
             }
         }
+    },
+    terms: {
+        bar: {
+            text: 'Przechodząc do kolejnego kroku, akceptujesz nasz',
+            link: 'regulamin',
+        },
+        link: 'Regulamin',
+        page: {
+            title: 'Regulamin',
+            placeholder: 'Treść regulaminu zostanie tutaj opublikowana.',
+            backToForm: '← Wróć do formularza',
+        },
     },
     elevatorDetail: {
         details: 'Szczegóły',

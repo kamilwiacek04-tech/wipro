@@ -138,6 +138,11 @@ const en: Translations = {
             field: {
                 extras: 'Extras',
                 cabinModel: 'Cabin model',
+                cabinColor: 'Cabin color',
+                doorColor: 'Door color',
+                landingDoorColor: 'Landing door color',
+                cabinDoorSameAsLanding: 'Cabin doors same as landing doors',
+                cabinDoorColor: 'Cabin door color',
                 panel: 'Cabin control panel',
                 signal: 'Floor indicator',
                 ceiling: 'Ceilings',
@@ -159,6 +164,18 @@ const en: Translations = {
                 STAINLESS_STEEL: 'Stainless steel',
             }
         }
+    },
+    terms: {
+        bar: {
+            text: 'By continuing to the next step, you accept our',
+            link: 'terms of service',
+        },
+        link: 'Terms of Service',
+        page: {
+            title: 'Terms of Service',
+            placeholder: 'The terms of service will be published here.',
+            backToForm: '← Back to form',
+        },
     },
     elevatorDetail: {
         details: 'Details',

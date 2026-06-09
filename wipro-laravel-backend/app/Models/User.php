@@ -6,6 +6,7 @@ use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -66,5 +67,10 @@ class User extends Authenticatable implements FilamentUser
     public function quoteRequests(): HasMany
     {
         return $this->hasMany(QuoteRequest::class);
+    }
+
+    public function sharedQuoteRequests(): BelongsToMany
+    {
+        return $this->belongsToMany(QuoteRequest::class, 'quote_request_admin_shares', 'admin_id', 'quote_request_id');
     }
 }

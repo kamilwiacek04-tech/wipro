@@ -27,8 +27,10 @@ class LiftTypeController extends Controller
             'key'       => 'required|string|max:50|unique:lift_types,key',
             'name_pl'   => 'required|string|max:100',
             'name_en'   => 'required|string|max:100',
-            'sort_order'=> 'integer|min:0',
-            'is_active' => 'boolean',
+            'sort_order'     => 'integer|min:0',
+            'is_active'      => 'boolean',
+            'base_price'     => 'nullable|numeric|min:0',
+            'price_per_stop' => 'nullable|numeric|min:0',
         ]);
 
         $type = LiftType::create($data);
@@ -44,8 +46,10 @@ class LiftTypeController extends Controller
             'key'       => "sometimes|string|max:50|unique:lift_types,key,{$id}",
             'name_pl'   => 'sometimes|string|max:100',
             'name_en'   => 'sometimes|string|max:100',
-            'sort_order'=> 'sometimes|integer|min:0',
-            'is_active' => 'sometimes|boolean',
+            'sort_order'     => 'sometimes|integer|min:0',
+            'is_active'      => 'sometimes|boolean',
+            'base_price'     => 'sometimes|nullable|numeric|min:0',
+            'price_per_stop' => 'sometimes|nullable|numeric|min:0',
         ]);
 
         $type->update($data);

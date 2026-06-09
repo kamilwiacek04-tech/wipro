@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\QuoteRequest;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -70,5 +71,39 @@ class AdminManagementController extends Controller
         $admin->delete();
 
         return response()->json(['message' => 'Admin usunięty.']);
+    }
+
+    public function adminQuoteRequests(Request $request, int $id): JsonResponse
+    {
+        User::whereIn('role', ['admin', 'superadmin'])->findOrFail($id);
+        $targetAdminId = (int) $request->input('target_admin_id', $request->user()->id);
+
+        $requests = QuoteRequest::where(function ($q) use ($id) {
+                $q->whereHas('sharedAdmins', fn($sq) => $sq->where('users.id', $id));
+            })
+            ->with(['sharedAdmins' => fn($q) => $q->where('users.id', $targetAdminId)])
+            ->orderByDesc('created_at')
+            ->get(['id', 'request_number', 'status', 'investor_name', 'created_at']);
+
+        $requests->each(function ($qr) {
+            $qr->is_shared_with_me = $qr->sharedAdmins->isNotEmpty();
+            unset($qr->sharedAdmins);
+        });
+
+        return response()->json($requests);
+    }
+
+    public function shareQuoteRequests(Request $request, int $id): JsonResponse
+    {
+        $admin = User::where('role', 'admin')->findOrFail($id);
+
+        $data = $request->validate([
+            'quote_request_ids'   => 'required|array',
+            'quote_request_ids.*' => 'integer|exists:quote_requests,id',
+        ]);
+
+        $admin->sharedQuoteRequests()->sync($data['quote_request_ids']);
+
+        return response()->json(['message' => 'Zaktualizowano dostęp.']);
     }
 }

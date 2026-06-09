@@ -67,4 +67,5 @@ class Offer extends Model
     {
         return $this->hasMany(OfferItem::class)->orderBy('sort_order');
     }
+
 }

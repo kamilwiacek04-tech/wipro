@@ -12,6 +12,7 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             LiftTypeSeeder::class,
             CabinAccessorySeeder::class,
+            CabinTypeSeeder::class,
         ]);
     }
 }

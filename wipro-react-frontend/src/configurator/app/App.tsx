@@ -6,6 +6,7 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router'
 import Data from '@/components/multiStepWizard/Data'
 import ShaftParameters from '@/components/multiStepWizard/ShaftParameters'
 import FinishesAndAccessories from '@/components/multiStepWizard/FinishesAndAccessories'
+import TermsPage from '@/components/TermsPage'
 import { AnimatePresence } from 'framer-motion'
 
 const App = () => {
@@ -13,6 +14,7 @@ const App = () => {
     <Router>
       <Routes>
         <Route path='/' element={<Navigate to="/data" replace />} />
+        <Route path='regulamin' element={<TermsPage />} />
         <Route element={
           <BasicLayout>
             <BasicLayoutContainer>

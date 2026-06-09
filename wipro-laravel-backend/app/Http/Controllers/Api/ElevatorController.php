@@ -51,6 +51,13 @@ class ElevatorController extends Controller
             'cabin_door_finish'  => 'nullable|string|max:255',
             'landing_door_finish'=> 'nullable|string|max:255',
             'equipment'          => 'nullable|string',
+            'coeff_stops'            => 'nullable|numeric|min:0',
+            'coeff_cabin_model'      => 'nullable|numeric|min:0',
+            'coeff_cabin_throughway' => 'nullable|numeric|min:0',
+            'coeff_cabin_doors'      => 'nullable|numeric|min:0',
+            'coeff_landing_doors'    => 'nullable|numeric|min:0',
+            'coeff_ei30'             => 'nullable|numeric|min:0',
+            'coeff_ei60'             => 'nullable|numeric|min:0',
         ]);
 
         $elevator = Elevator::create($data);
@@ -100,6 +107,13 @@ class ElevatorController extends Controller
             'cabin_door_finish'  => 'sometimes|nullable|string|max:255',
             'landing_door_finish'=> 'sometimes|nullable|string|max:255',
             'equipment'          => 'sometimes|nullable|string',
+            'coeff_stops'            => 'sometimes|nullable|numeric|min:0',
+            'coeff_cabin_model'      => 'sometimes|nullable|numeric|min:0',
+            'coeff_cabin_throughway' => 'sometimes|nullable|numeric|min:0',
+            'coeff_cabin_doors'      => 'sometimes|nullable|numeric|min:0',
+            'coeff_landing_doors'    => 'sometimes|nullable|numeric|min:0',
+            'coeff_ei30'             => 'sometimes|nullable|numeric|min:0',
+            'coeff_ei60'             => 'sometimes|nullable|numeric|min:0',
         ]);
 
         $elevator->update($data);

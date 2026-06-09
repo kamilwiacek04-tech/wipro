@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Models\CabinAccessory;
+use App\Models\CabinColor;
 use App\Models\CabinModel;
 use App\Models\Offer;
 use App\Models\QuoteRequest;
@@ -28,18 +30,38 @@ class OfferPdfService
         $logoBase64  = $this->storageImageToBase64($settings['company_logo_path'] ?? null);
         $pasekBase64 = $this->publicImageToBase64('images/PL-Pasek_FE-RGB-poziom.png');
 
-        $cabinModel     = null;
+        $cabinModel       = null;
         $cabinImageBase64 = null;
-        $cabinModelId   = (int) ($parsedNotes['cabinModelId'] ?? 0);
+        $cabinModelId     = (int) ($parsedNotes['cabinModelId'] ?? 0);
         if ($cabinModelId > 0) {
             $cabinModel = CabinModel::find($cabinModelId);
             if ($cabinModel?->image_url) {
                 $cabinImageBase64 = $this->urlImageToBase64($cabinModel->image_url);
             }
         }
+        $cabinModelName = $cabinModel?->name_pl;
+
+        $accIds      = array_values(array_filter([(int)($parsedNotes['signalId'] ?? 0), (int)($parsedNotes['mirrorId'] ?? 0)]));
+        $accLookup   = !empty($accIds) ? CabinAccessory::whereIn('id', $accIds)->pluck('name_pl', 'id') : collect();
+        $signalName  = ($id = (int)($parsedNotes['signalId'] ?? 0)) ? ($accLookup[$id] ?? null) : null;
+        $mirrorName  = ($id = (int)($parsedNotes['mirrorId'] ?? 0)) ? ($accLookup[$id] ?? null) : null;
+
+        $colorIds       = array_values(array_filter(array_unique([(int)($parsedNotes['cabinColorId'] ?? 0), (int)($parsedNotes['doorColorId'] ?? 0), (int)($parsedNotes['cabinDoorColorId'] ?? 0)])));
+        $colorLookup    = !empty($colorIds) ? CabinColor::whereIn('id', $colorIds)->pluck('name_pl', 'id') : collect();
+        $cabinColorName = ($id = (int)($parsedNotes['cabinColorId'] ?? 0)) ? ($colorLookup[$id] ?? null) : null;
+        $doorColorName  = ($id = (int)($parsedNotes['doorColorId']  ?? 0)) ? ($colorLookup[$id] ?? null) : null;
+        $sameAsDoor     = $parsedNotes['cabinDoorSameAsLanding'] ?? true;
+        $cabinDoorColorName = (!$sameAsDoor && ($id = (int)($parsedNotes['cabinDoorColorId'] ?? 0)))
+            ? ($colorLookup[$id] ?? null)
+            : ($doorColorName ? $doorColorName . ' (jak przystankowe)' : null);
+
+        $extraIdsList = array_values(array_filter((array)($parsedNotes['extraIds'] ?? [])));
+        $extraNames   = !empty($extraIdsList) ? CabinAccessory::whereIn('id', $extraIdsList)->pluck('name_pl')->toArray() : [];
 
         $pdf = Pdf::loadView('offers.offer-pdf', compact(
-            'offer', 'settings', 'logoBase64', 'pasekBase64', 'cabinImageBase64', 'parsedNotes'
+            'offer', 'settings', 'logoBase64', 'pasekBase64', 'cabinImageBase64', 'parsedNotes',
+            'cabinModelName', 'signalName', 'mirrorName',
+            'cabinColorName', 'doorColorName', 'cabinDoorColorName', 'extraNames'
         ) + ['qr' => $quoteRequest])->setPaper('a4');
 
         $filename = str_replace('/', '_', $offer->offer_number) . '.pdf';
@@ -66,9 +88,43 @@ class OfferPdfService
         $offerService = new OfferService();
         $parsedNotes  = $offerService->parseConfiguratorNotes($quoteRequest->additional_notes);
 
+        $settings = Setting::all()->pluck('value', 'key')->toArray();
+
+        $cabinModelId   = (int)($parsedNotes['cabinModelId'] ?? 0);
+        $cabinModelName = $cabinModelId > 0 ? CabinModel::find($cabinModelId)?->name_pl : null;
+
+        $accIds      = array_values(array_filter([(int)($parsedNotes['signalId'] ?? 0), (int)($parsedNotes['mirrorId'] ?? 0)]));
+        $accLookup   = !empty($accIds) ? CabinAccessory::whereIn('id', $accIds)->pluck('name_pl', 'id') : collect();
+        $signalName  = ($id = (int)($parsedNotes['signalId'] ?? 0)) ? ($accLookup[$id] ?? null) : null;
+        $mirrorName  = ($id = (int)($parsedNotes['mirrorId'] ?? 0)) ? ($accLookup[$id] ?? null) : null;
+
+        $colorIds = array_values(array_filter(array_unique([
+            (int)($parsedNotes['cabinColorId']     ?? 0),
+            (int)($parsedNotes['doorColorId']      ?? 0),
+            (int)($parsedNotes['cabinDoorColorId'] ?? 0),
+        ])));
+        $colorLookup    = !empty($colorIds) ? CabinColor::whereIn('id', $colorIds)->pluck('name_pl', 'id') : collect();
+        $cabinColorName = ($id = (int)($parsedNotes['cabinColorId']  ?? 0)) ? ($colorLookup[$id] ?? null) : null;
+        $doorColorName  = ($id = (int)($parsedNotes['doorColorId']   ?? 0)) ? ($colorLookup[$id] ?? null) : null;
+        $sameAsDoor     = $parsedNotes['cabinDoorSameAsLanding'] ?? true;
+        $cabinDoorColorName = (!$sameAsDoor && ($id = (int)($parsedNotes['cabinDoorColorId'] ?? 0)))
+            ? ($colorLookup[$id] ?? null)
+            : ($doorColorName ? $doorColorName . ' (jak przystankowe)' : null);
+
+        $extraIdsList = array_values(array_filter((array)($parsedNotes['extraIds'] ?? [])));
+        $extraNames   = !empty($extraIdsList) ? CabinAccessory::whereIn('id', $extraIdsList)->pluck('name_pl')->toArray() : [];
+
         return Pdf::loadView('offers.tech-spec-pdf', [
-            'qr'          => $quoteRequest,
-            'parsedNotes' => $parsedNotes,
+            'qr'                 => $quoteRequest,
+            'parsedNotes'        => $parsedNotes,
+            'settings'           => $settings,
+            'cabinModelName'     => $cabinModelName,
+            'signalName'         => $signalName,
+            'mirrorName'         => $mirrorName,
+            'cabinColorName'     => $cabinColorName,
+            'doorColorName'      => $doorColorName,
+            'cabinDoorColorName' => $cabinDoorColorName,
+            'extraNames'         => $extraNames,
         ])->setPaper('a4')->output();
     }
 

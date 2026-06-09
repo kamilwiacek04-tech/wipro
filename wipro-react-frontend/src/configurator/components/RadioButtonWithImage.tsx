@@ -1,38 +1,47 @@
 import RadioButtonContainer from '@/components/RadioButtonContainer'
-import { accessDiagram } from '@/constants/formShaftParameters';
-import { useTranslation } from 'react-i18next';
+import {useTranslation} from 'react-i18next'
 import ImagePreview from '@/components/ImagePreview'
-import { AccessDiagramType } from '@/types/multiStepWizard/shaftParameters';
+import {CabinType} from '@/store/mainApi/response'
 
 interface Props {
-    currentValue: AccessDiagramType;
+    items: CabinType[];
+    currentValue: string;
     onChange: (e: string) => void;
     checkboxElement?: React.ReactNode;
     leftMechanic?: boolean;
 }
 
-const RadioButtonWithImage = ({currentValue, onChange, checkboxElement, leftMechanic}: Props) => {
-    const {t} = useTranslation();
+const RadioButtonWithImage = ({items, currentValue, onChange, checkboxElement, leftMechanic}: Props) => {
+    const {i18n, t} = useTranslation()
 
-  return (
-    <div>
-        <RadioButtonContainer
-            items={Object.entries(accessDiagram).map(([key, item]) => ({
-                id: key,
-                title: item.title
-            }))}
-            selectedId={currentValue}
-            onPress={(e) => onChange(e)}
-            title={t('form.shaftParameters.fields.accessDiagram')}
-            columnDirection
-        >
-            <ImagePreview
-                image={leftMechanic ? accessDiagram[currentValue].imageLeft : accessDiagram[currentValue].image}
-                checkboxElement={checkboxElement}
-            />
-        </RadioButtonContainer>
-    </div>
-  )
+    const current = items.find(item => item.key === currentValue)
+    const imageUrl = current
+        ? (leftMechanic
+            ? (current.image_left_url ?? current.image_right_url ?? '')
+            : (current.image_right_url ?? ''))
+        : ''
+
+    const radioItems = items.map(item => ({
+        id: item.key,
+        title: i18n.language === 'pl' ? item.name_pl : item.name_en,
+    }))
+
+    return (
+        <div>
+            <RadioButtonContainer
+                items={radioItems}
+                selectedId={currentValue}
+                onPress={(e) => onChange(e)}
+                title={t('form.shaftParameters.fields.accessDiagram')}
+                columnDirection
+            >
+                <ImagePreview
+                    image={imageUrl}
+                    checkboxElement={checkboxElement}
+                />
+            </RadioButtonContainer>
+        </div>
+    )
 }
 
 export default RadioButtonWithImage

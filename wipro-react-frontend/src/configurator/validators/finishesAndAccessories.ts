@@ -3,6 +3,10 @@ import * as yup from 'yup';
 
 export const dataSchema = new yup.ObjectSchema<FormFinishesAndAccessories>({
     cabinModelId: yup.number().required('form.errors.require').min(1, 'form.errors.require'),
+    cabinColorId: yup.number().default(0),
+    doorColorId: yup.number().default(0),
+    cabinDoorSameAsLanding: yup.boolean().default(true),
+    cabinDoorColorId: yup.number().default(0),
     panelId: yup.number().default(0),
     signalId: yup.number().default(0),
     ceilingId: yup.number().default(0),
