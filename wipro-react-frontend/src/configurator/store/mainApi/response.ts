@@ -54,6 +54,18 @@ export interface CabinColor {
     is_active: boolean;
 }
 
+export interface CabinType {
+    id: number;
+    key: string;
+    name_pl: string;
+    name_en: string;
+    image_right_url: string | null;
+    image_left_url: string | null;
+    price: string;
+    sort_order: number;
+    is_active: boolean;
+}
+
 interface FindElevatorBody {
     liftCapacity?: float;
     shaftLen?: float;
@@ -124,6 +136,9 @@ const responseEndpoints = mainApi.injectEndpoints({
         getCabinColors: build.query<CabinColor[], void>({
             query: () => ({url: '/cabin-colors', method: 'GET'})
         }),
+        getCabinTypes: build.query<CabinType[], void>({
+            query: () => ({url: '/cabin-types', method: 'GET'})
+        }),
     })
 })
 
@@ -135,4 +150,5 @@ export const {
     useGetCabinModelsQuery,
     useGetCabinAccessoriesQuery,
     useGetCabinColorsQuery,
+    useGetCabinTypesQuery,
 } = responseEndpoints;

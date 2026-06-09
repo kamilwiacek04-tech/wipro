@@ -13,7 +13,7 @@ import TitleParagraph from '@/components/TitleParagraph'
 import { liftSpecificationShaftParameters, rangeValue } from '@/constants/formShaftParameters'
 import { replaceDots } from '@/functions/replaceDots'
 import { RootState, useAppDispatch } from '@/store'
-import { useGetLiftTypesQuery, useGetSettingsQuery, useLazyFindElevatorQuery } from '@/store/mainApi/response'
+import {useGetCabinTypesQuery, useGetLiftTypesQuery, useGetSettingsQuery, useLazyFindElevatorQuery} from '@/store/mainApi/response'
 import { fillField } from '@/store/slices/formSlice'
 import { useFormStore } from '@/store/zustand/formStore'
 import { FormShaftParameters, FormShaftTempParameters } from '@/types/multiStepWizard/shaftParameters'
@@ -36,6 +36,7 @@ const ShaftParameters = () => {
   const navigate = useNavigate();
   const [findElevator, {data, isFetching}] = useLazyFindElevatorQuery();
   const { data: liftTypes } = useGetLiftTypesQuery();
+  const {data: cabinTypes} = useGetCabinTypesQuery();
   const { data: appSettings } = useGetSettingsQuery();
   const maxStops = parseInt(appSettings?.max_stops ?? '16');
   const schema = useMemo(() => createDataSchema(maxStops), [maxStops]);
@@ -150,6 +151,7 @@ const ShaftParameters = () => {
                   name='accessDiagram'
                   render={({ field }) => (
                     <RadioButtonWithImage
+                        items={cabinTypes ?? []}
                         currentValue={field.value}
                         onChange={(e) => {
                           updateField('shaftParameters', 'accessDiagram', e)

@@ -2,7 +2,7 @@ export type LiftSpecificationType = 'CAPACITY' | 'SHAFT_DIMENSIONS';
 
 export type LiftPurposeType = 'PASSENGER' | 'FREIGHT_PASSENGER' | 'HOSPITAL' | 'FIRE';
 
-export type AccessDiagramType = 'FRONT' | 'THROUGHT' | 'CORNER' | 'TRIPARTITE';
+export type AccessDiagramType = string;
 
 export type float = string;
 
