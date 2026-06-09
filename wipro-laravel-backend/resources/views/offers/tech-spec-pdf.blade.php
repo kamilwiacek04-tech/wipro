@@ -34,6 +34,18 @@ table.sec tr.sep td { border-top:1px solid #efefef; }
     'FREIGHT'     => 'Towarowy',
   ];
   $statusLabel = $statusMap[$parsedNotes['status'] ?? ''] ?? ($parsedNotes['status'] ?? null);
+  $purposeLabels = [
+    'PASSENGER'         => 'Osobowy',
+    'FREIGHT_PASSENGER' => 'Pasażersko-towarowy',
+    'HOSPITAL'          => 'Szpitalny',
+    'FIRE'              => 'Pożarowy',
+  ];
+  $accessDiagramLabels = [
+    'FRONT'      => 'Frontowe',
+    'THROUGHT'   => 'Przelotowe',
+    'CORNER'     => 'Kątowe',
+    'TRIPARTITE' => 'Trójstronne',
+  ];
   $shaftW = $qr->shaft_width  ?? $el?->shaft_width;
   $shaftD = $qr->shaft_depth  ?? $el?->shaft_depth;
   $pitD   = $qr->pit_depth    ?? $el?->pit_depth;
@@ -115,7 +127,8 @@ table.sec tr.sep td { border-top:1px solid #efefef; }
   @if($qr->drive_type || $el?->drive_type)
   <table class="sec">
     <tr><td colspan="2" class="sec-head">Zespół napędowy</td></tr>
-    <tr><td class="lbl">Typ</td><td>{{ $qr->drive_type ?? $el?->drive_type }}</td></tr>
+    @php $driveRaw = $qr->drive_type ?? $el?->drive_type; @endphp
+    <tr><td class="lbl">Typ</td><td>{{ $purposeLabels[$driveRaw] ?? $driveRaw }}</td></tr>
   </table>
   @endif
 </div>
@@ -128,7 +141,7 @@ table.sec tr.sep td { border-top:1px solid #efefef; }
   <table class="sec">
     <tr><td colspan="2" class="sec-head">Drzwi</td></tr>
     @if($qr->door_type)
-    <tr><td class="lbl">Typ:</td><td>{{ $qr->door_type }}</td></tr>
+    <tr><td class="lbl">Schemat dojścia:</td><td>{{ $accessDiagramLabels[$qr->door_type] ?? $qr->door_type }}</td></tr>
     @endif
     @if($doorW && $doorH)
     <tr class="sep"><td class="lbl">Wymiary drzwi (szer. x wys.):</td><td>{{ $doorW }} x {{ $doorH }}</td></tr>
@@ -172,17 +185,63 @@ table.sec tr.sep td { border-top:1px solid #efefef; }
     @if($qr->control_panel)
     <tr class="sep"><td class="lbl">Panel sterowania:</td><td>{{ $qr->control_panel }}</td></tr>
     @endif
+    @if($qr->handrail)
+    <tr class="sep"><td class="lbl">Poręcze:</td><td>{{ $qr->handrail }}</td></tr>
+    @endif
+    @if($qr->ceiling)
+    <tr class="sep"><td class="lbl">Podsufitka:</td><td>{{ $qr->ceiling }}</td></tr>
+    @endif
+    @if($cabinModelName ?? null)
+    <tr class="sep"><td class="lbl">Model kabiny:</td><td>{{ $cabinModelName }}</td></tr>
+    @endif
+    @if($signalName ?? null)
+    <tr class="sep"><td class="lbl">Sygnalizacja:</td><td>{{ $signalName }}</td></tr>
+    @endif
+    @if($mirrorName ?? null)
+    <tr class="sep"><td class="lbl">Lustro:</td><td>{{ $mirrorName }}</td></tr>
+    @endif
+    @if($cabinColorName ?? null)
+    <tr class="sep"><td class="lbl">Kolor kabiny:</td><td>{{ $cabinColorName }}</td></tr>
+    @endif
   </table>
 </div>
 
 </div>{{-- /sec-row 2 --}}
+
+@if(!empty($extraNames) || ($doorColorName ?? null) || ($cabinDoorColorName ?? null))
+<div class="sec-row">
+<div class="sec-l">
+  @if(!empty($extraNames))
+  <table class="sec">
+    <tr><td colspan="2" class="sec-head">Dodatki</td></tr>
+    @foreach($extraNames as $extraName)
+    <tr><td colspan="2">{{ $extraName }}</td></tr>
+    @endforeach
+  </table>
+  @endif
+</div>
+<div class="sec-r">
+  @if(($doorColorName ?? null) || ($cabinDoorColorName ?? null))
+  <table class="sec">
+    <tr><td colspan="2" class="sec-head">Kolory drzwi</td></tr>
+    @if($doorColorName ?? null)
+    <tr><td class="lbl">Kolor drzwi przyst.:</td><td>{{ $doorColorName }}</td></tr>
+    @endif
+    @if($cabinDoorColorName ?? null)
+    <tr class="sep"><td class="lbl">Kolor drzwi kabin.:</td><td>{{ $cabinDoorColorName }}</td></tr>
+    @endif
+  </table>
+  @endif
+</div>
+</div>
+@endif
 
 </div>{{-- /sections --}}
 </div>{{-- /spec-wrap --}}
 
 <div class="spec-footer">
   W celu sfinalizowania lub korekty umowy prosimy o przesłanie numeru umowy drogą mailową na adres
-  <strong>{{ config('mail.from.address', 'biuro@windywipro.pl') }}</strong>.
+  <strong>{{ $settings['company_email'] ?? 'biuro@windywipro.pl' }}</strong>.
   Pozwoli nam to na sprawne przeprowadzenie dalszych etapów realizacji.
 </div>
 

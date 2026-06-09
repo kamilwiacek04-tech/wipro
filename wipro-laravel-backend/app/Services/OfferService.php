@@ -2,14 +2,20 @@
 
 namespace App\Services;
 
+use App\Models\CabinAccessory;
+use App\Models\CabinColor;
+use App\Models\CabinModel;
 use App\Models\Offer;
 use App\Models\OfferItem;
 use App\Models\QuoteRequest;
 use App\Models\Setting;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Storage;
-use PhpOffice\PhpWord\PhpWord;
+use PhpOffice\PhpWord\Element\Section as WordSection;
+use PhpOffice\PhpWord\Element\Table as WordTable;
 use PhpOffice\PhpWord\IOFactory;
+use PhpOffice\PhpWord\PhpWord;
+use PhpOffice\PhpWord\SimpleType\Jc;
 
 class OfferService
 {
@@ -142,360 +148,313 @@ class OfferService
     {
         $offer->load(['quoteRequest.elevator', 'items']);
         $qr = $offer->quoteRequest;
+        $el = $qr->elevator;
 
-        $phpWord = new PhpWord();
-        $phpWord->setDefaultFontName('Calibri');
-        $phpWord->setDefaultFontSize(11);
+        $settings = Setting::all()->pluck('value', 'key')->toArray();
+        $config   = $this->parseConfiguratorNotes($qr->additional_notes);
 
-        $sectionStyle = [
-            'marginTop'    => 800,
-            'marginBottom' => 800,
-            'marginLeft'   => 1000,
-            'marginRight'  => 1000,
-        ];
-        $section = $phpWord->addSection($sectionStyle);
-
-        // ── Styles ──────────────────────────────────────────
-        $h1Font    = ['bold' => true, 'size' => 22, 'color' => '1a1a2e'];
-        $h2Font    = ['bold' => true, 'size' => 12, 'color' => '1a1a2e', 'allCaps' => true];
-        $labelFont = ['size' => 10, 'color' => '888888'];
-        $valueFont = ['bold' => true, 'size' => 11, 'color' => '1a1a2e'];
-        $bodyFont  = ['size' => 11, 'color' => '333333'];
-        $smallFont = ['size' => 9, 'color' => '999999'];
-        $goldFont  = ['bold' => true, 'size' => 11, 'color' => 'ffb400'];
-        $centerPara = ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER];
-        $rightPara  = ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::END];
-
-        // ── Header bar (simulated with table) ───────────────
-        $headerTable = $section->addTable(['borderSize' => 0, 'borderColor' => 'ffffff', 'cellMargin' => 60]);
-        $headerTable->addRow(800);
-        $leftCell = $headerTable->addCell(5000, ['bgColor' => '1a1a2e']);
-        $leftCell->addText('WIPRO', ['bold' => true, 'size' => 28, 'color' => 'ffb400'], $centerPara);
-        $leftCell->addText('Wind i Dźwigi', ['size' => 9, 'color' => 'cccccc'], $centerPara);
-        $rightCell = $headerTable->addCell(5000, ['bgColor' => 'ffb400']);
-        $rightCell->addText('OFERTA HANDLOWA', ['bold' => true, 'size' => 13, 'color' => '1a1a2e', 'allCaps' => true], $centerPara);
-        $rightCell->addText('Nr: ' . $offer->offer_number, ['bold' => true, 'size' => 10, 'color' => '1a1a2e'], $centerPara);
-
-        $section->addTextBreak(1);
-
-        // ── Document title ───────────────────────────────────
-        $section->addText('Oferta na dostawę i montaż dźwigu osobowego', $h1Font, $centerPara);
-        $section->addText(
-            'Przygotowano na podstawie zapytania nr ' . $qr->request_number . ' · Data: ' . $offer->created_at->format('d.m.Y'),
-            $smallFont,
-            $centerPara
-        );
-        $section->addTextBreak(1);
-
-        // ── Addressee + Investment (two columns) ─────────────
-        $infoTable = $section->addTable([
-            'borderSize' => 4,
-            'borderColor' => 'efefef',
-            'cellMargin'  => 120,
-        ]);
-
-        // Section headers row
-        $infoTable->addRow();
-        $infoTable->addCell(4800, ['bgColor' => 'f5f5f5'])->addText('ADRESAT OFERTY', $h2Font);
-        $infoTable->addCell(4800, ['bgColor' => 'f5f5f5'])->addText('DANE INWESTYCJI', $h2Font);
-
-        // Data rows
-        $leftLines = [
-            'Imię i nazwisko' => $qr->investor_name,
-            'Firma / Inwestor' => $qr->investor_company,
-            'NIP'             => $qr->investor_nip,
-            'Email'           => $qr->investor_email,
-            'Telefon'         => $qr->investor_phone,
-            'Adres'           => implode(', ', array_filter([$qr->investor_address, $qr->investor_city])) ?: null,
-        ];
+        // Label maps
         $purposeLabels = [
             'PASSENGER'         => 'Osobowy',
             'FREIGHT_PASSENGER' => 'Pasażersko-towarowy',
             'HOSPITAL'          => 'Szpitalny',
             'FIRE'              => 'Pożarowy',
         ];
-
-        $rightLines = [
-            'Nazwa inwestycji'   => $qr->investment_name,
-            'Adres inwestycji'   => $qr->investment_address,
-            'Liczba kondygnacji' => $qr->floors,
-            'Liczba przystanków' => $qr->stops,
-            'Typ dźwigu'         => $purposeLabels[$qr->drive_type] ?? $qr->drive_type,
-        ];
-
-        $maxRows = max(count(array_filter($leftLines)), count(array_filter($rightLines)));
-        $leftFiltered  = array_filter($leftLines);
-        $rightFiltered = array_filter($rightLines);
-        $leftPairs  = array_map(null, array_keys($leftFiltered), array_values($leftFiltered));
-        $rightPairs = array_map(null, array_keys($rightFiltered), array_values($rightFiltered));
-
-        for ($i = 0; $i < $maxRows; $i++) {
-            $infoTable->addRow();
-            $lCell = $infoTable->addCell(4800);
-            if (isset($leftPairs[$i])) {
-                $lCell->addText(($leftPairs[$i][0] ?? '') . ':', $labelFont);
-                $lCell->addText($leftPairs[$i][1] ?? '', $valueFont);
-            }
-            $rCell = $infoTable->addCell(4800);
-            if (isset($rightPairs[$i])) {
-                $rCell->addText(($rightPairs[$i][0] ?? '') . ':', $labelFont);
-                $rCell->addText($rightPairs[$i][1] ?? '', $valueFont);
-            }
-        }
-
-        $section->addTextBreak(1);
-
-        // ── Technical specification ──────────────────────────
         $accessDiagramLabels = [
             'FRONT'      => 'Frontowe',
             'THROUGHT'   => 'Przelotowe',
             'CORNER'     => 'Kątowe',
             'TRIPARTITE' => 'Trójstronne',
         ];
+        $statusMap = [
+            'PASSENGER'   => 'Pasażerski',
+            'ARCHITECT'   => 'Projektowy',
+            'CONTRACTOR'  => 'Budowlany',
+            'RESIDENTIAL' => 'Mieszkalny',
+            'HOSPITAL'    => 'Szpitalny',
+            'FREIGHT'     => 'Towarowy',
+        ];
+        $statusLabel = $statusMap[$config['status'] ?? ''] ?? ($config['status'] ?? null);
 
-        $specs = array_filter([
-            'Udźwig'          => $qr->lift_capacity ? $qr->lift_capacity . ' kg' : null,
-            'Przystanki'      => $qr->stops,
-            'Szer. szybu'     => $qr->shaft_width  ? $qr->shaft_width  . ' mm' : null,
-            'Głęb. szybu'     => $qr->shaft_depth  ? $qr->shaft_depth  . ' mm' : null,
-            'Szer. kabiny'    => $qr->cabin_width  ? $qr->cabin_width  . ' mm' : null,
-            'Głęb. kabiny'    => $qr->cabin_depth  ? $qr->cabin_depth  . ' mm' : null,
-            'Wys. kabiny'     => $qr->cabin_height ? $qr->cabin_height . ' mm' : null,
-            'Podszybie'       => $qr->pit_depth    ? $qr->pit_depth    . ' mm' : null,
-            'Nadszybie'       => $qr->overhead     ? $qr->overhead     . ' mm' : null,
-            'Schemat dojścia' => $accessDiagramLabels[$qr->door_type] ?? $qr->door_type,
-            'Szer. drzwi'     => $qr->door_width   ? $qr->door_width   . ' mm' : null,
-        ]);
-
-        if (!empty($specs)) {
-            $section->addText('SPECYFIKACJA TECHNICZNA', $h2Font);
-            $specTable = $section->addTable([
-                'borderSize' => 4,
-                'borderColor' => 'dddddd',
-                'cellMargin'  => 100,
-            ]);
-            $specPairs = array_chunk(array_keys($specs), 3, true);
-            foreach (array_chunk($specs, 3, true) as $rowIdx => $row) {
-                $specTable->addRow();
-                foreach ($row as $label => $value) {
-                    $cell = $specTable->addCell(3200, ['bgColor' => 'fafafa']);
-                    $cell->addText($label, $labelFont);
-                    $cell->addText((string)$value, $valueFont);
-                }
-                for ($p = count($row); $p < 3; $p++) {
-                    $specTable->addCell(3200);
-                }
-            }
-            $section->addTextBreak(1);
+        // Cabin model
+        $cabinModelName = null;
+        if ($id = (int)($config['cabinModelId'] ?? 0)) {
+            $cabinModelName = CabinModel::find($id)?->name_pl;
         }
 
-        // ── Finishes ─────────────────────────────────────────
-        $config           = $this->parseConfiguratorNotes($qr->additional_notes);
-        $cabinColorId     = (int) ($config['cabinColorId'] ?? 0);
-        $doorColorId      = (int) ($config['doorColorId'] ?? 0);
-        $sameAsDoor       = $config['cabinDoorSameAsLanding'] ?? true;
-        $cabinDoorColorId = (int) ($config['cabinDoorColorId'] ?? 0);
+        // Accessories (signal, mirror)
+        $accIds    = array_values(array_filter([(int)($config['signalId'] ?? 0), (int)($config['mirrorId'] ?? 0)]));
+        $accLookup = !empty($accIds) ? CabinAccessory::whereIn('id', $accIds)->pluck('name_pl', 'id') : collect();
+        $signalName = ($sid = (int)($config['signalId'] ?? 0)) ? ($accLookup[$sid] ?? null) : null;
+        $mirrorName = ($mid = (int)($config['mirrorId'] ?? 0)) ? ($accLookup[$mid] ?? null) : null;
 
-        $colorNames = [];
-        $colorIdsToLookup = array_filter(array_unique([$cabinColorId, $doorColorId, $cabinDoorColorId]));
-        if (!empty($colorIdsToLookup)) {
-            \App\Models\CabinColor::whereIn('id', $colorIdsToLookup)->get()
-                ->each(fn($c) => $colorNames[$c->id] = $c->name_pl);
-        }
-
-        $cabinColorName = $cabinColorId && isset($colorNames[$cabinColorId]) ? $colorNames[$cabinColorId] : null;
-        $doorColorName  = $doorColorId  && isset($colorNames[$doorColorId])  ? $colorNames[$doorColorId]  : null;
-        $cabinDoorName  = (!$sameAsDoor && $cabinDoorColorId && isset($colorNames[$cabinDoorColorId]))
-            ? $colorNames[$cabinDoorColorId]
+        // Colors
+        $colorIds = array_values(array_filter(array_unique([
+            (int)($config['cabinColorId']     ?? 0),
+            (int)($config['doorColorId']      ?? 0),
+            (int)($config['cabinDoorColorId'] ?? 0),
+        ])));
+        $colorLookup    = !empty($colorIds) ? CabinColor::whereIn('id', $colorIds)->pluck('name_pl', 'id') : collect();
+        $cabinColorName = ($id = (int)($config['cabinColorId']  ?? 0)) ? ($colorLookup[$id] ?? null) : null;
+        $doorColorName  = ($id = (int)($config['doorColorId']   ?? 0)) ? ($colorLookup[$id] ?? null) : null;
+        $sameAsDoor     = $config['cabinDoorSameAsLanding'] ?? true;
+        $cabinDoorColorName = (!$sameAsDoor && ($id = (int)($config['cabinDoorColorId'] ?? 0)))
+            ? ($colorLookup[$id] ?? null)
             : ($doorColorName ? $doorColorName . ' (jak przystankowe)' : null);
 
-        $cabinModelName = null;
-        $signalName     = null;
-        $mirrorName     = null;
-        $cabinModelIdF  = (int) ($config['cabinModelId'] ?? 0);
-        $signalIdF      = (int) ($config['signalId']     ?? 0);
-        $mirrorIdF      = (int) ($config['mirrorId']     ?? 0);
+        // Extras
+        $extraIds   = array_values(array_filter((array)($config['extraIds'] ?? [])));
+        $extraNames = !empty($extraIds) ? CabinAccessory::whereIn('id', $extraIds)->pluck('name_pl')->toArray() : [];
 
-        if ($cabinModelIdF) {
-            $cabinModelName = \App\Models\CabinModel::find($cabinModelIdF)?->name_pl;
-        }
-        $accessoryIds = array_filter([$signalIdF, $mirrorIdF]);
-        if (!empty($accessoryIds)) {
-            $accessories = \App\Models\CabinAccessory::whereIn('id', $accessoryIds)->pluck('name_pl', 'id');
-            $signalName  = $signalIdF ? ($accessories[$signalIdF] ?? null) : null;
-            $mirrorName  = $mirrorIdF ? ($accessories[$mirrorIdF] ?? null) : null;
-        }
+        // Dimension variables
+        $shaftW = $qr->shaft_width  ?? $el?->shaft_width;
+        $shaftD = $qr->shaft_depth  ?? $el?->shaft_depth;
+        $pitD   = $qr->pit_depth    ?? $el?->pit_depth;
+        $oh     = $qr->overhead     ?? $el?->overhead;
+        $doorW  = $qr->door_width   ?? $el?->door_width;
+        $doorH  = $qr->door_height  ?? $el?->door_height;
+        $cabW   = $qr->cabin_width  ?? $el?->cabin_width;
+        $cabD   = $qr->cabin_depth  ?? $el?->cabin_depth;
+        $cabH   = $qr->cabin_height ?? $el?->cabin_height;
+        $ei30   = (int)($config['ei30DoorsCount'] ?? 0);
+        $ei60   = (int)($config['ei60DoorsCount'] ?? 0);
 
-        $finishes = array_filter([
-            'Model kabiny'        => $cabinModelName,
-            'Poręcze'             => $qr->handrail,
-            'Podsufitka'          => $qr->ceiling,
-            'Oświetlenie'         => $qr->lighting,
-            'Podłoga'             => $qr->floor_material,
-            'Panel sterow.'       => $qr->control_panel,
-            'Sygnalizacja'        => $signalName,
-            'Lustro'              => $mirrorName,
-            'Kolor kabiny'        => $cabinColorName,
-            'Kolor drzwi przyst.' => $doorColorName,
-            'Kolor drzwi kabin.'  => $cabinDoorName,
+        $phpWord = new PhpWord();
+        $phpWord->setDefaultFontName('Calibri');
+        $phpWord->setDefaultFontSize(9);
+
+        $section = $phpWord->addSection([
+            'marginTop'    => 800,
+            'marginBottom' => 800,
+            'marginLeft'   => 1000,
+            'marginRight'  => 1000,
         ]);
 
-        if (!empty($finishes)) {
-            $section->addText('WYKOŃCZENIE I AKCESORIA', $h2Font);
-            $finTable = $section->addTable(['borderSize' => 4, 'borderColor' => 'dddddd', 'cellMargin' => 100]);
-            foreach (array_chunk($finishes, 3, true) as $row) {
-                $finTable->addRow();
-                foreach ($row as $label => $value) {
-                    $cell = $finTable->addCell(3200, ['bgColor' => 'fafafa']);
-                    $cell->addText($label, $labelFont);
-                    $cell->addText((string)$value, $valueFont);
-                }
-                for ($p = count($row); $p < 3; $p++) {
-                    $finTable->addCell(3200);
-                }
-            }
-            $section->addTextBreak(1);
-        }
+        // A4 content width: 11906 - 2000 margins = 9906 twips
+        $W    = 9906;
+        $colW = (int)($W / 2);       // 4953 per column
+        $lw   = (int)($colW * 0.52); // label width in spec tables
+        $vw   = $colW - $lw;          // value width in spec tables
 
-        // ── Installation config ───────────────────────────────
-        $installConfig = array_filter([
-            'Wys. podnoszenia' => isset($config['liftingHeight']) && $config['liftingHeight'] ? $config['liftingHeight'] . ' m' : null,
-            'Liczba wejść'     => isset($config['accessCount'])   && $config['accessCount']   ? (string)(int)$config['accessCount'] : null,
-            'Drzwi EI30'       => isset($config['ei30DoorsCount']) && $config['ei30DoorsCount'] > 0 ? $config['ei30DoorsCount'] . ' szt.' : null,
-            'Drzwi EI60'       => isset($config['ei60DoorsCount']) && $config['ei60DoorsCount'] > 0 ? $config['ei60DoorsCount'] . ' szt.' : null,
-            'Mech. po lewej'   => isset($config['leftSideMechanic']) ? ($config['leftSideMechanic'] ? 'Tak' : 'Nie') : null,
-        ]);
+        $centerPara = ['alignment' => Jc::CENTER];
+        $rightPara  = ['alignment' => Jc::END];
 
-        if (!empty($installConfig)) {
-            $section->addText('KONFIGURACJA INSTALACJI', $h2Font);
-            $icTable = $section->addTable(['borderSize' => 4, 'borderColor' => 'dddddd', 'cellMargin' => 100]);
-            foreach (array_chunk($installConfig, 3, true) as $row) {
-                $icTable->addRow();
-                foreach ($row as $label => $value) {
-                    $cell = $icTable->addCell(3200, ['bgColor' => 'fafafa']);
-                    $cell->addText($label, $labelFont);
-                    $cell->addText((string)$value, $valueFont);
-                }
-                for ($p = count($row); $p < 3; $p++) {
-                    $icTable->addCell(3200);
-                }
-            }
-            $section->addTextBreak(1);
-        }
+        $f8       = ['size' => 8,  'color' => '444444'];
+        $f9       = ['size' => 9,  'color' => '1a1a1a'];
+        $bold15   = ['bold' => true, 'size' => 15, 'color' => '1a1a1a'];
+        $bold16   = ['bold' => true, 'size' => 16, 'color' => '1a1a1a'];
+        $headFont = ['bold' => true, 'size' => 9,  'color' => '1a1a1a'];
+        $secStyle = ['borderSize' => 4, 'borderColor' => 'bbbbbb', 'cellMarginTop' => 35, 'cellMarginBottom' => 35, 'cellMarginLeft' => 80, 'cellMarginRight' => 80];
+        $noStyle  = ['borderSize' => 0, 'borderColor' => 'ffffff', 'cellMargin' => 0];
 
-        // ── Extras ───────────────────────────────────────────
-        $extraIds = array_values(array_filter((array)($config['extraIds'] ?? [])));
-        if (!empty($extraIds)) {
-            $extraNames = \App\Models\CabinAccessory::whereIn('id', $extraIds)->pluck('name_pl')->toArray();
-            if (!empty($extraNames)) {
-                $section->addText('DODATKI', $h2Font);
-                foreach ($extraNames as $name) {
-                    $section->addListItem($name, 0, $bodyFont);
-                }
-                $section->addTextBreak(1);
+        // ════════════════════════════════════════════════════
+        // PAGE 1 — mirrors offer-pdf.blade.php page 1
+        // ════════════════════════════════════════════════════
+
+        // ── Header (company info | logo) ─────────────────────
+        $hdrT = $section->addTable(['borderSize' => 0, 'borderColor' => 'ffffff', 'cellMargin' => 80]);
+        $hdrT->addRow(900);
+        $hdrL = $hdrT->addCell(6200);
+        $hdrL->addText($settings['company_name'] ?? 'WIPRO', ['bold' => true, 'size' => 14, 'color' => '1a1a1a']);
+        if (!empty($settings['company_address'])) {
+            foreach (array_filter(array_map('trim', explode("\n", $settings['company_address']))) as $line) {
+                $hdrL->addText($line, ['size' => 8, 'color' => '222222']);
             }
         }
+        foreach (['company_nip' => 'NIP', 'company_regon' => 'REGON', 'company_krs' => 'KRS'] as $key => $lbl) {
+            if (!empty($settings[$key])) {
+                $hdrL->addText($lbl . ': ' . $settings[$key], ['size' => 8, 'color' => '444444']);
+            }
+        }
+        $hdrR = $hdrT->addCell(3706, ['vAlign' => 'top']);
+        $logoPath = $settings['company_logo_path'] ?? null;
+        if ($logoPath && Storage::exists($logoPath)) {
+            try {
+                $hdrR->addImage(storage_path('app/' . $logoPath), ['width' => 150, 'height' => 55, 'alignment' => Jc::END]);
+            } catch (\Throwable) {}
+        }
 
-        // ── Scope of supply ──────────────────────────────────
+        // ── HR ────────────────────────────────────────────────
+        $this->addDocxHr($section, $W);
+
+        // ── Client block (client info | date) ─────────────────
+        $cliT = $section->addTable(['borderSize' => 0, 'borderColor' => 'ffffff', 'cellMargin' => 80]);
+        $cliT->addRow();
+        $cliL = $cliT->addCell(6200);
+        $cliL->addText('Klient:', ['bold' => true, 'size' => 10, 'color' => '1a1a1a']);
+        $clientAddr = $qr->investment_address ?? $qr->investor_address ?? null;
+        if ($clientAddr)         $cliL->addText($clientAddr,         ['size' => 9, 'color' => '222222']);
+        if ($qr->investor_name)  $cliL->addText($qr->investor_name,  ['size' => 9, 'color' => '222222']);
+        if ($qr->investor_phone) $cliL->addText($qr->investor_phone, ['size' => 9, 'color' => '222222']);
+        if ($qr->investor_email) $cliL->addText($qr->investor_email, ['size' => 9, 'color' => '222222']);
+        $cliR = $cliT->addCell(3706);
+        $cliR->addText('Data wystawienia: ' . $offer->created_at->format('d.m.Y H:i:s'), ['size' => 8, 'color' => '333333']);
+
+        // ── HR ────────────────────────────────────────────────
+        $this->addDocxHr($section, $W);
+
+        // ── Title ─────────────────────────────────────────────
+        $section->addText('Oferta handlowa nr ' . $offer->offer_number, $bold15, $centerPara);
+        $section->addTextBreak(0);
+
+        // ── HR before items ───────────────────────────────────
+        $this->addDocxHr($section, $W);
+
+        // ── Items table ───────────────────────────────────────
         if ($offer->items->count() > 0) {
-            $section->addText('ZAKRES OFERTY', $h2Font);
-            $itemsTable = $section->addTable(['borderSize' => 4, 'borderColor' => 'dddddd', 'cellMargin' => 100]);
-            $itemsTable->addRow();
-            $itemsTable->addCell(5600, ['bgColor' => 'f5f5f5'])->addText('Opis', $labelFont);
-            $itemsTable->addCell(700,  ['bgColor' => 'f5f5f5'])->addText('Ilość', $labelFont);
-            $itemsTable->addCell(800,  ['bgColor' => 'f5f5f5'])->addText('Jed.', $labelFont);
-            $itemsTable->addCell(1500, ['bgColor' => 'f5f5f5'])->addText('Cena netto', $labelFont);
-            $itemsTable->addCell(1600, ['bgColor' => 'f5f5f5'])->addText('Wartość netto', $labelFont);
+            $itT = $section->addTable(['borderSize' => 0, 'borderColor' => 'ffffff', 'cellMargin' => 70]);
+            $itT->addRow(350);
+            $itT->addCell(4700)->addText('Nazwa towaru', $f8);
+            $itT->addCell(750)->addText('Ilość', $f8, $centerPara);
+            $itT->addCell(700)->addText('Jed.', $f8, $centerPara);
+            $itT->addCell(1800)->addText('Cena netto', $f8, $rightPara);
+            $itT->addCell(1956)->addText('Wartość netto', $f8, $rightPara);
             foreach ($offer->items as $item) {
-                $itemsTable->addRow();
-                $itemsTable->addCell(5600)->addText($item->description, $bodyFont);
-                $itemsTable->addCell(700)->addText((string)$item->quantity, $bodyFont);
-                $itemsTable->addCell(800)->addText($item->unit ?? 'szt.', $bodyFont);
-                $itemsTable->addCell(1500)->addText(number_format((float)$item->unit_price_net, 2, ',', ' ') . ' PLN', $bodyFont);
-                $itemsTable->addCell(1600)->addText(number_format((float)$item->total_price_net, 2, ',', ' ') . ' PLN', $bodyFont);
+                $sep = ['borderTopSize' => 4, 'borderTopColor' => 'e5e5e5'];
+                $itT->addRow();
+                $itT->addCell(4700, $sep)->addText($item->description, $f9);
+                $itT->addCell(750,  $sep)->addText((string)$item->quantity, ['bold' => true, 'size' => 9], $centerPara);
+                $itT->addCell(700,  $sep)->addText($item->unit ?? 'szt.', $f9, $centerPara);
+                $itT->addCell(1800, $sep)->addText(number_format((float)$item->unit_price_net,  2, ',', ' ') . ' zł', $f9, $rightPara);
+                $itT->addCell(1956, $sep)->addText(number_format((float)$item->total_price_net, 2, ',', ' ') . ' zł', $f9, $rightPara);
             }
-            $section->addTextBreak(1);
         }
 
-        // ── Indicative price ─────────────────────────────────
+        // ── HR after items ────────────────────────────────────
+        $this->addDocxHr($section, $W);
+
+        // ── Price summary ─────────────────────────────────────
         if ($offer->total_price_net > 0) {
-            $section->addText('ORIENTACYJNA WYCENA', $h2Font);
-            $priceTable = $section->addTable(['borderSize' => 6, 'borderColor' => '1a1a2e', 'cellMargin' => 120]);
-            $priceTable->addRow(500);
-            $priceTable->addCell(7200, ['bgColor' => '1a1a2e'])->addText(
-                'Orientacyjna wartość netto',
-                ['bold' => true, 'size' => 12, 'color' => 'ffffff']
-            );
-            $priceTable->addCell(2400, ['bgColor' => '1a1a2e'])->addText(
-                number_format($offer->total_price_net, 2, ',', ' ') . ' PLN',
-                ['bold' => true, 'size' => 13, 'color' => 'ffb400'],
+            $section->addText(
+                'Orientacyjna wartość netto:    ' . number_format((float)$offer->total_price_net, 2, ',', ' ') . ' zł',
+                ['bold' => true, 'size' => 11, 'color' => '1a1a1a'],
                 $rightPara
             );
-            $section->addTextBreak(1);
             $section->addText(
-                'Podana kwota ma charakter orientacyjny i nie stanowi wiążącej oferty handlowej. Ostateczna cena zostanie ustalona po szczegółowej analizie projektu.',
-                ['size' => 9, 'color' => '888888', 'italic' => true]
-            );
-            $section->addTextBreak(1);
-        }
-
-        // ── Commercial terms ──────────────────────────────────
-        $section->addText('WARUNKI HANDLOWE', $h2Font);
-        $termsTable = $section->addTable(['borderSize' => 4, 'borderColor' => 'dddddd', 'cellMargin' => 120]);
-        $termsTable->addRow();
-        $t1 = $termsTable->addCell(3200, ['bgColor' => 'fffbeb']);
-        $t1->addText('Termin płatności', $labelFont);
-        $t1->addText('30 dni od wystawienia faktury', $valueFont);
-        $t2 = $termsTable->addCell(3200, ['bgColor' => 'fffbeb']);
-        $t2->addText('Gwarancja', $labelFont);
-        $t2->addText('24 miesiące', $valueFont);
-        $t3 = $termsTable->addCell(3200, ['bgColor' => 'fffbeb']);
-        $t3->addText('Termin realizacji', $labelFont);
-        $t3->addText('Do uzgodnienia indywidualnie', $valueFont);
-
-        if ($offer->valid_until) {
-            $section->addTextBreak(1);
-            $section->addText(
-                'Oferta ważna do: ' . $offer->valid_until->format('d.m.Y') . '. Po tym terminie prosimy o kontakt w celu potwierdzenia aktualności cen.',
-                ['size' => 10, 'color' => '7c5700', 'italic' => true]
+                'Kwota orientacyjna — nie stanowi wiążącej oferty handlowej.',
+                ['size' => 8, 'color' => '888888', 'italic' => true],
+                $rightPara
             );
         }
 
-        // ── Notes ─────────────────────────────────────────────
-        if ($offer->notes) {
-            $section->addTextBreak(1);
-            $section->addText('UWAGI', $h2Font);
-            $section->addText($offer->notes, $bodyFont);
+        // ════════════════════════════════════════════════════
+        // PAGE 2 — mirrors offer-pdf.blade.php page 2
+        // ════════════════════════════════════════════════════
+
+        $section->addPageBreak();
+
+        // ── Spec title ────────────────────────────────────────
+        $section->addText('Specyfikacja techniczna dźwigu', $bold16, $centerPara);
+        $this->addDocxHr($section, $W);
+        $section->addTextBreak(0);
+
+        // ── Two-column layout: outer table (no borders) ───────
+        $outerT = $section->addTable($noStyle);
+        $outerT->addRow();
+        $outerL = $outerT->addCell($colW, ['vAlign' => 'top']);
+        $outerR = $outerT->addCell($colW, ['vAlign' => 'top']);
+
+        // ── LEFT: Parametry dźwigu ────────────────────────────
+        $pdzT = $outerL->addTable($secStyle);
+        $pdzT->addRow();
+        $pdzT->addCell($colW, ['bgColor' => 'efefef', 'gridSpan' => 2])->addText('Parametry dźwigu', $headFont);
+        if ($el?->standards)                 $this->addSpecRow($pdzT, 'Zgodność',             (string)$el->standards,         $lw, $vw);
+        if ($el?->capacity)                  $this->addSpecRow($pdzT, 'Udźwig [kg]',           (string)$el->capacity,          $lw, $vw);
+        if ($el?->persons)                   $this->addSpecRow($pdzT, 'Liczba pasażerów',      $el->persons . ' osób',         $lw, $vw);
+        if ($el) {
+            $this->addSpecRow($pdzT, 'Typ', trim(($el->manufacturer ?? '') . ' ' . ($el->model ?? '')) . ($el->description ? ' — ' . $el->description : ''), $lw, $vw);
+            $this->addSpecRow($pdzT, 'Model', (string)$el->model, $lw, $vw);
+        }
+        if ($statusLabel)                    $this->addSpecRow($pdzT, 'Przeznaczenie',         $statusLabel,                   $lw, $vw);
+        if ($qr->stops)                      $this->addSpecRow($pdzT, 'Ilość przystanków',     (string)$qr->stops,             $lw, $vw);
+        if (isset($config['accessCount']))   $this->addSpecRow($pdzT, 'Ilość dojść',           (string)(int)$config['accessCount'], $lw, $vw);
+        if ($el?->speed)                     $this->addSpecRow($pdzT, 'Prędkość',              $el->speed . ' m/s',            $lw, $vw);
+        if (!empty($config['liftingHeight'])) $this->addSpecRow($pdzT, 'Wys. podnoszenia [m]', (string)$config['liftingHeight'], $lw, $vw);
+        if ($el?->machine_room)              $this->addSpecRow($pdzT, 'Maszynownia',           (string)$el->machine_room,      $lw, $vw);
+
+        // ── LEFT: Drzwi ───────────────────────────────────────
+        $outerL->addText('');
+        $drzT = $outerL->addTable($secStyle);
+        $drzT->addRow();
+        $drzT->addCell($colW, ['bgColor' => 'efefef', 'gridSpan' => 2])->addText('Drzwi', $headFont);
+        if ($qr->door_type)            $this->addSpecRow($drzT, 'Schemat dojścia',         $accessDiagramLabels[$qr->door_type] ?? $qr->door_type, $lw, $vw);
+        if ($doorW && $doorH)          $this->addSpecRow($drzT, 'Wymiary (szer. x wys.)',  $doorW . ' x ' . $doorH,                                $lw, $vw);
+        if ($el?->cabin_door_finish)   $this->addSpecRow($drzT, 'Drzwi kab. wykończenie', (string)$el->cabin_door_finish,                          $lw, $vw);
+        if ($el?->landing_door_finish) $this->addSpecRow($drzT, 'Drzwi szybowe wykończenie', (string)$el->landing_door_finish,                     $lw, $vw);
+        if ($el?->door_fire_class)     $this->addSpecRow($drzT, 'Klasa ognioodporności',   (string)$el->door_fire_class,                            $lw, $vw);
+        if ($ei30 > 0)                 $this->addSpecRow($drzT, 'Ilość drzwi EI 30',       (string)$ei30,                                           $lw, $vw);
+        if ($ei60 > 0)                 $this->addSpecRow($drzT, 'Ilość drzwi EI 60',       (string)$ei60,                                           $lw, $vw);
+
+        // ── RIGHT: Parametry szybu ────────────────────────────
+        $szybT = $outerR->addTable($secStyle);
+        $szybT->addRow();
+        $szybT->addCell($colW, ['bgColor' => 'efefef', 'gridSpan' => 2])->addText('Parametry szybu', $headFont);
+        if ($shaftW)          $this->addSpecRow($szybT, 'Szerokość szybu',           (string)$shaftW,                $lw, $vw);
+        if ($shaftD)          $this->addSpecRow($szybT, 'Głębokość szybu',           (string)$shaftD,                $lw, $vw);
+        if ($pitD)            $this->addSpecRow($szybT, 'Głębokość podszybia [m]',   (string)$pitD,                  $lw, $vw);
+        if ($oh)              $this->addSpecRow($szybT, 'Wysokość nadszybia [m]',    (string)$oh,                    $lw, $vw);
+        if ($doorW && $doorH) $this->addSpecRow($szybT, 'Otwory drzwiowe (sz. x wys.)', $doorW . ' x ' . $doorH,    $lw, $vw);
+
+        // ── RIGHT: Zespół napędowy ────────────────────────────
+        $driveRaw = $qr->drive_type ?? $el?->drive_type;
+        if ($driveRaw) {
+            $outerR->addText('');
+            $napT = $outerR->addTable($secStyle);
+            $napT->addRow();
+            $napT->addCell($colW, ['bgColor' => 'efefef', 'gridSpan' => 2])->addText('Zespół napędowy', $headFont);
+            $this->addSpecRow($napT, 'Typ', $purposeLabels[$driveRaw] ?? $driveRaw, $lw, $vw);
         }
 
-        // ── Signature area ────────────────────────────────────
-        $section->addTextBreak(2);
-        $sigTable = $section->addTable(['borderSize' => 0, 'borderColor' => 'ffffff', 'cellMargin' => 80]);
-        $sigTable->addRow(200);
-        $sigLeft = $sigTable->addCell(4800);
-        $sigLeft->addText('Ofertę przygotował:', $smallFont);
-        $sigLeft->addText('WIPRO Wind sp. z o.o.', $valueFont);
-        $sigLeft->addText('kontakt@wipro-wind.pl', $smallFont);
-        $sigLeft->addText('', $bodyFont);
-        $sigLeft->addText('_________________________', $smallFont);
-        $sigLeft->addText('Podpis i pieczęć', $smallFont);
+        // ── RIGHT: Kabina ─────────────────────────────────────
+        $outerR->addText('');
+        $kabT = $outerR->addTable($secStyle);
+        $kabT->addRow();
+        $kabT->addCell($colW, ['bgColor' => 'efefef', 'gridSpan' => 2])->addText('Kabina' . ($el?->cabin_finish ? ' — ' . $el->cabin_finish : ''), $headFont);
+        if ($cabW && $cabD && $cabH)           $this->addSpecRow($kabT, 'Wymiary (sz. x gł. x wys.)',   $cabW . ' x ' . $cabD . ' x ' . $cabH, $lw, $vw);
+        if ($el?->cabin_finish)                $this->addSpecRow($kabT, 'Wykończenie ścian',             (string)$el->cabin_finish,              $lw, $vw);
+        if (isset($config['leftSideMechanic'])) $this->addSpecRow($kabT, 'Strona mechanizmu',            $config['leftSideMechanic'] ? 'Lewa' : 'Prawa', $lw, $vw);
+        if ($qr->lighting)                     $this->addSpecRow($kabT, 'Oświetlenie',                   (string)$qr->lighting,                  $lw, $vw);
+        if ($qr->floor_material)               $this->addSpecRow($kabT, 'Podłoga',                       (string)$qr->floor_material,            $lw, $vw);
+        if ($qr->control_panel)                $this->addSpecRow($kabT, 'Panel sterowania',               (string)$qr->control_panel,             $lw, $vw);
+        if ($qr->handrail)                     $this->addSpecRow($kabT, 'Poręcze',                       (string)$qr->handrail,                  $lw, $vw);
+        if ($qr->ceiling)                      $this->addSpecRow($kabT, 'Podsufitka',                    (string)$qr->ceiling,                   $lw, $vw);
+        if ($cabinModelName)                   $this->addSpecRow($kabT, 'Model kabiny',                  $cabinModelName,                        $lw, $vw);
+        if ($signalName)                       $this->addSpecRow($kabT, 'Sygnalizacja',                  $signalName,                            $lw, $vw);
+        if ($mirrorName)                       $this->addSpecRow($kabT, 'Lustro',                        $mirrorName,                            $lw, $vw);
+        if ($cabinColorName)                   $this->addSpecRow($kabT, 'Kolor kabiny',                  $cabinColorName,                        $lw, $vw);
 
-        $sigRight = $sigTable->addCell(4800);
-        $sigRight->addText('Akceptacja klienta:', $smallFont);
-        $sigRight->addText($qr->investor_name, $valueFont);
-        if ($qr->investor_company) {
-            $sigRight->addText($qr->investor_company, $smallFont);
+        // ── Row 2: Extras + Door colors ───────────────────────
+        if (!empty($extraNames) || $doorColorName || $cabinDoorColorName) {
+            $section->addTextBreak(0);
+            $out2T = $section->addTable($noStyle);
+            $out2T->addRow();
+            $out2L = $out2T->addCell($colW, ['vAlign' => 'top']);
+            $out2R = $out2T->addCell($colW, ['vAlign' => 'top']);
+
+            if (!empty($extraNames)) {
+                $extT = $out2L->addTable($secStyle);
+                $extT->addRow();
+                $extT->addCell($colW, ['bgColor' => 'efefef'])->addText('Dodatki', $headFont);
+                foreach ($extraNames as $extraName) {
+                    $extT->addRow();
+                    $extT->addCell($colW)->addText($extraName, ['size' => 8, 'color' => '1a1a1a']);
+                }
+            }
+
+            if ($doorColorName || $cabinDoorColorName) {
+                $clrT = $out2R->addTable($secStyle);
+                $clrT->addRow();
+                $clrT->addCell($colW, ['bgColor' => 'efefef', 'gridSpan' => 2])->addText('Kolory drzwi', $headFont);
+                if ($doorColorName)      $this->addSpecRow($clrT, 'Kolor drzwi przyst.', $doorColorName,       $lw, $vw);
+                if ($cabinDoorColorName) $this->addSpecRow($clrT, 'Kolor drzwi kabin.',  $cabinDoorColorName,  $lw, $vw);
+            }
         }
-        $sigRight->addText('', $bodyFont);
-        $sigRight->addText('_________________________', $smallFont);
-        $sigRight->addText('Podpis i data', $smallFont);
 
-        // ── Footer ────────────────────────────────────────────
-        $footer = $section->addFooter();
-        $footer->addText(
-            'WIPRO Wind sp. z o.o.  ·  Nr oferty: ' . $offer->offer_number . '  ·  Wygenerowano: ' . now()->format('d.m.Y'),
-            ['size' => 8, 'color' => 'aaaaaa'],
-            $centerPara
+        // ── Footer text ───────────────────────────────────────
+        $section->addTextBreak(1);
+        $section->addText(
+            'W celu sfinalizowania lub korekty umowy prosimy o przesłanie numeru umowy drogą mailową na adres ' . ($settings['company_email'] ?? 'biuro@windywipro.pl') . '. Pozwoli nam to na sprawne przeprowadzenie dalszych etapów realizacji.',
+            ['size' => 8, 'color' => '333333']
         );
 
         // ── Save ─────────────────────────────────────────────
@@ -506,13 +465,32 @@ class OfferService
             mkdir(storage_path('app/offers'), 0755, true);
         }
 
-        $objWriter = IOFactory::createWriter($phpWord, 'Word2007');
-        $objWriter->save($tempPath);
+        IOFactory::createWriter($phpWord, 'Word2007')->save($tempPath);
 
         $path = 'offers/' . $filename;
         $offer->update(['docx_path' => $path]);
 
         return $path;
+    }
+
+    private function addDocxHr(WordSection $section, int $width): void
+    {
+        $hr = $section->addTable(['borderSize' => 0, 'borderColor' => 'ffffff', 'cellMargin' => 0]);
+        $hr->addRow(30);
+        $hr->addCell($width, [
+            'borderTopSize' => 6, 'borderTopColor' => 'aaaaaa',
+            'borderBottomSize' => 0, 'borderBottomColor' => 'ffffff',
+            'borderLeftSize' => 0, 'borderLeftColor' => 'ffffff',
+            'borderRightSize' => 0, 'borderRightColor' => 'ffffff',
+        ])->addText('');
+    }
+
+    private function addSpecRow(WordTable $table, string $label, string $value, int $lw, int $vw): void
+    {
+        $sep = ['borderTopSize' => 4, 'borderTopColor' => 'efefef'];
+        $table->addRow();
+        $table->addCell($lw, $sep)->addText($label, ['size' => 8, 'color' => '222222', 'underline' => 'single']);
+        $table->addCell($vw, $sep)->addText($value,  ['size' => 8, 'color' => '1a1a1a']);
     }
 
     /**
