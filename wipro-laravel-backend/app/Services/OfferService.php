@@ -208,12 +208,19 @@ class OfferService
             'Telefon'         => $qr->investor_phone,
             'Adres'           => implode(', ', array_filter([$qr->investor_address, $qr->investor_city])) ?: null,
         ];
+        $purposeLabels = [
+            'PASSENGER'         => 'Osobowy',
+            'FREIGHT_PASSENGER' => 'Pasażersko-towarowy',
+            'HOSPITAL'          => 'Szpitalny',
+            'FIRE'              => 'Pożarowy',
+        ];
+
         $rightLines = [
             'Nazwa inwestycji'   => $qr->investment_name,
             'Adres inwestycji'   => $qr->investment_address,
             'Liczba kondygnacji' => $qr->floors,
             'Liczba przystanków' => $qr->stops,
-            'Rodzaj napędu'      => $qr->drive_type,
+            'Typ dźwigu'         => $purposeLabels[$qr->drive_type] ?? $qr->drive_type,
         ];
 
         $maxRows = max(count(array_filter($leftLines)), count(array_filter($rightLines)));
@@ -239,18 +246,25 @@ class OfferService
         $section->addTextBreak(1);
 
         // ── Technical specification ──────────────────────────
+        $accessDiagramLabels = [
+            'FRONT'      => 'Frontowe',
+            'THROUGHT'   => 'Przelotowe',
+            'CORNER'     => 'Kątowe',
+            'TRIPARTITE' => 'Trójstronne',
+        ];
+
         $specs = array_filter([
-            'Udźwig'       => $qr->lift_capacity ? $qr->lift_capacity . ' kg' : null,
-            'Przystanki'   => $qr->stops,
-            'Szer. szybu'  => $qr->shaft_width  ? $qr->shaft_width  . ' mm' : null,
-            'Głęb. szybu'  => $qr->shaft_depth  ? $qr->shaft_depth  . ' mm' : null,
-            'Szer. kabiny' => $qr->cabin_width  ? $qr->cabin_width  . ' mm' : null,
-            'Głęb. kabiny' => $qr->cabin_depth  ? $qr->cabin_depth  . ' mm' : null,
-            'Wys. kabiny'  => $qr->cabin_height ? $qr->cabin_height . ' mm' : null,
-            'Podszybie'    => $qr->pit_depth    ? $qr->pit_depth    . ' mm' : null,
-            'Nadszybie'    => $qr->overhead     ? $qr->overhead     . ' mm' : null,
-            'Drzwi'        => $qr->door_type,
-            'Szer. drzwi'  => $qr->door_width   ? $qr->door_width   . ' mm' : null,
+            'Udźwig'          => $qr->lift_capacity ? $qr->lift_capacity . ' kg' : null,
+            'Przystanki'      => $qr->stops,
+            'Szer. szybu'     => $qr->shaft_width  ? $qr->shaft_width  . ' mm' : null,
+            'Głęb. szybu'     => $qr->shaft_depth  ? $qr->shaft_depth  . ' mm' : null,
+            'Szer. kabiny'    => $qr->cabin_width  ? $qr->cabin_width  . ' mm' : null,
+            'Głęb. kabiny'    => $qr->cabin_depth  ? $qr->cabin_depth  . ' mm' : null,
+            'Wys. kabiny'     => $qr->cabin_height ? $qr->cabin_height . ' mm' : null,
+            'Podszybie'       => $qr->pit_depth    ? $qr->pit_depth    . ' mm' : null,
+            'Nadszybie'       => $qr->overhead     ? $qr->overhead     . ' mm' : null,
+            'Schemat dojścia' => $accessDiagramLabels[$qr->door_type] ?? $qr->door_type,
+            'Szer. drzwi'     => $qr->door_width   ? $qr->door_width   . ' mm' : null,
         ]);
 
         if (!empty($specs)) {
@@ -295,12 +309,32 @@ class OfferService
             ? $colorNames[$cabinDoorColorId]
             : ($doorColorName ? $doorColorName . ' (jak przystankowe)' : null);
 
+        $cabinModelName = null;
+        $signalName     = null;
+        $mirrorName     = null;
+        $cabinModelIdF  = (int) ($config['cabinModelId'] ?? 0);
+        $signalIdF      = (int) ($config['signalId']     ?? 0);
+        $mirrorIdF      = (int) ($config['mirrorId']     ?? 0);
+
+        if ($cabinModelIdF) {
+            $cabinModelName = \App\Models\CabinModel::find($cabinModelIdF)?->name_pl;
+        }
+        $accessoryIds = array_filter([$signalIdF, $mirrorIdF]);
+        if (!empty($accessoryIds)) {
+            $accessories = \App\Models\CabinAccessory::whereIn('id', $accessoryIds)->pluck('name_pl', 'id');
+            $signalName  = $signalIdF ? ($accessories[$signalIdF] ?? null) : null;
+            $mirrorName  = $mirrorIdF ? ($accessories[$mirrorIdF] ?? null) : null;
+        }
+
         $finishes = array_filter([
+            'Model kabiny'        => $cabinModelName,
             'Poręcze'             => $qr->handrail,
             'Podsufitka'          => $qr->ceiling,
             'Oświetlenie'         => $qr->lighting,
             'Podłoga'             => $qr->floor_material,
             'Panel sterow.'       => $qr->control_panel,
+            'Sygnalizacja'        => $signalName,
+            'Lustro'              => $mirrorName,
             'Kolor kabiny'        => $cabinColorName,
             'Kolor drzwi przyst.' => $doorColorName,
             'Kolor drzwi kabin.'  => $cabinDoorName,
@@ -323,6 +357,45 @@ class OfferService
             $section->addTextBreak(1);
         }
 
+        // ── Installation config ───────────────────────────────
+        $installConfig = array_filter([
+            'Wys. podnoszenia' => isset($config['liftingHeight']) && $config['liftingHeight'] ? $config['liftingHeight'] . ' m' : null,
+            'Liczba wejść'     => isset($config['accessCount'])   && $config['accessCount']   ? (string)(int)$config['accessCount'] : null,
+            'Drzwi EI30'       => isset($config['ei30DoorsCount']) && $config['ei30DoorsCount'] > 0 ? $config['ei30DoorsCount'] . ' szt.' : null,
+            'Drzwi EI60'       => isset($config['ei60DoorsCount']) && $config['ei60DoorsCount'] > 0 ? $config['ei60DoorsCount'] . ' szt.' : null,
+            'Mech. po lewej'   => isset($config['leftSideMechanic']) ? ($config['leftSideMechanic'] ? 'Tak' : 'Nie') : null,
+        ]);
+
+        if (!empty($installConfig)) {
+            $section->addText('KONFIGURACJA INSTALACJI', $h2Font);
+            $icTable = $section->addTable(['borderSize' => 4, 'borderColor' => 'dddddd', 'cellMargin' => 100]);
+            foreach (array_chunk($installConfig, 3, true) as $row) {
+                $icTable->addRow();
+                foreach ($row as $label => $value) {
+                    $cell = $icTable->addCell(3200, ['bgColor' => 'fafafa']);
+                    $cell->addText($label, $labelFont);
+                    $cell->addText((string)$value, $valueFont);
+                }
+                for ($p = count($row); $p < 3; $p++) {
+                    $icTable->addCell(3200);
+                }
+            }
+            $section->addTextBreak(1);
+        }
+
+        // ── Extras ───────────────────────────────────────────
+        $extraIds = array_values(array_filter((array)($config['extraIds'] ?? [])));
+        if (!empty($extraIds)) {
+            $extraNames = \App\Models\CabinAccessory::whereIn('id', $extraIds)->pluck('name_pl')->toArray();
+            if (!empty($extraNames)) {
+                $section->addText('DODATKI', $h2Font);
+                foreach ($extraNames as $name) {
+                    $section->addListItem($name, 0, $bodyFont, ['listType' => \PhpOffice\PhpWord\Style\ListItem::TYPE_BULLET]);
+                }
+                $section->addTextBreak(1);
+            }
+        }
+
         // ── Scope of supply ──────────────────────────────────
         if ($offer->items->count() > 0) {
             $section->addText('ZAKRES OFERTY', $h2Font);
@@ -331,39 +404,6 @@ class OfferService
             }
             $section->addTextBreak(1);
         }
-
-        // ── Price summary ────────────────────────────────────
-        $section->addText('WARTOŚĆ OFERTY', $h2Font);
-        $priceTable = $section->addTable(['borderSize' => 6, 'borderColor' => '1a1a2e', 'cellMargin' => 120]);
-
-        $priceTable->addRow();
-        $priceTable->addCell(7200, ['bgColor' => 'f5f5f5'])->addText('Wartość netto', $bodyFont);
-        $priceTable->addCell(2400, ['bgColor' => 'f5f5f5'])->addText(
-            number_format($offer->total_price_net, 2, ',', ' ') . ' PLN',
-            $valueFont,
-            $rightPara
-        );
-
-        $priceTable->addRow();
-        $priceTable->addCell(7200)->addText('VAT ' . $offer->vat_rate . '%', $bodyFont);
-        $priceTable->addCell(2400)->addText(
-            number_format($offer->total_price_gross - $offer->total_price_net, 2, ',', ' ') . ' PLN',
-            $bodyFont,
-            $rightPara
-        );
-
-        $priceTable->addRow(500);
-        $priceTable->addCell(7200, ['bgColor' => '1a1a2e'])->addText(
-            'ŁĄCZNIE BRUTTO',
-            ['bold' => true, 'size' => 13, 'color' => 'ffffff', 'allCaps' => true]
-        );
-        $priceTable->addCell(2400, ['bgColor' => '1a1a2e'])->addText(
-            number_format($offer->total_price_gross, 2, ',', ' ') . ' PLN',
-            ['bold' => true, 'size' => 14, 'color' => 'ffb400'],
-            $rightPara
-        );
-
-        $section->addTextBreak(1);
 
         // ── Commercial terms ──────────────────────────────────
         $section->addText('WARUNKI HANDLOWE', $h2Font);
