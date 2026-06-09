@@ -52,6 +52,8 @@ export const blankFormState: FormType = {
     cabinModelId: 0,
     cabinColorId: 0,
     doorColorId: 0,
+    cabinDoorSameAsLanding: true,
+    cabinDoorColorId: 0,
     panelId: 0,
     signalId: 0,
     ceilingId: 0,

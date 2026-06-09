@@ -19,7 +19,7 @@ import { FormFinishesAndAccessories } from '@/types/multiStepWizard/finishesAndA
 import { dataSchema } from '@/validators/finishesAndAccessories'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { useEffect } from 'react'
-import { Controller, useForm } from 'react-hook-form'
+import {Controller, useForm, useWatch} from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { useSelector } from 'react-redux'
 
@@ -57,6 +57,8 @@ const FinishesAndAccessories = () => {
         mode: 'onChange',
     })
 
+    const cabinDoorSameAsLanding = useWatch({control, name: 'cabinDoorSameAsLanding'})
+
     const onSubmit = (dataCurr: FormFinishesAndAccessories) => {
         dispatch(fillField({ key: 'finishesAndAccessories', value: dataCurr }))
 
@@ -91,6 +93,8 @@ const FinishesAndAccessories = () => {
                     cabinModelId: dataCurr.cabinModelId,
                     cabinColorId: dataCurr.cabinColorId || undefined,
                     doorColorId: dataCurr.doorColorId || undefined,
+                    cabinDoorSameAsLanding: dataCurr.cabinDoorSameAsLanding,
+                    cabinDoorColorId: dataCurr.cabinDoorSameAsLanding ? undefined : (dataCurr.cabinDoorColorId || undefined),
                     panelId: dataCurr.panelId || undefined,
                     signalId: dataCurr.signalId || undefined,
                     ceilingId: dataCurr.ceilingId || undefined,
@@ -168,9 +172,9 @@ const FinishesAndAccessories = () => {
                                 </BorderInput>
                             )}
 
-                            {/* Kolor drzwi */}
+                            {/* Kolor drzwi przystankowych */}
                             {(cabinColors?.filter(c => c.visible_for_door) ?? []).length > 0 && (
-                                <BorderInput title={t(`${textPath}.field.doorColor`)}>
+                                <BorderInput title={t(`${textPath}.field.landingDoorColor`)}>
                                     <Controller
                                         control={control}
                                         name='doorColorId'
@@ -180,6 +184,44 @@ const FinishesAndAccessories = () => {
                                                 currentValue={field.value}
                                                 onChange={(id) => {
                                                     updateField('finishesAndAccessories', 'doorColorId', id)
+                                                    field.onChange(id)
+                                                }}
+                                            />
+                                        )}
+                                    />
+                                    <Controller
+                                        control={control}
+                                        name='cabinDoorSameAsLanding'
+                                        render={({field}) => (
+                                            <label className='flex items-center gap-2 mt-3 cursor-pointer select-none'>
+                                                <input
+                                                    type='checkbox'
+                                                    checked={field.value}
+                                                    onChange={e => {
+                                                        updateField('finishesAndAccessories', 'cabinDoorSameAsLanding', e.target.checked)
+                                                        field.onChange(e.target.checked)
+                                                    }}
+                                                    className='w-4 h-4 accent-[var(--primary)]'
+                                                />
+                                                <span className='text-[13px] text-gray-600'>{t(`${textPath}.field.cabinDoorSameAsLanding`)}</span>
+                                            </label>
+                                        )}
+                                    />
+                                </BorderInput>
+                            )}
+
+                            {/* Kolor drzwi kabinowych — only when checkbox is false */}
+                            {!cabinDoorSameAsLanding && (cabinColors?.filter(c => c.visible_for_door) ?? []).length > 0 && (
+                                <BorderInput title={t(`${textPath}.field.cabinDoorColor`)}>
+                                    <Controller
+                                        control={control}
+                                        name='cabinDoorColorId'
+                                        render={({field}) => (
+                                            <ColorSelector
+                                                items={cabinColors?.filter(c => c.visible_for_door) ?? []}
+                                                currentValue={field.value}
+                                                onChange={(id) => {
+                                                    updateField('finishesAndAccessories', 'cabinDoorColorId', id)
                                                     field.onChange(id)
                                                 }}
                                             />
