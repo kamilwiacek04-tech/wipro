@@ -171,7 +171,7 @@ class OfferService
         $headerTable->addRow(800);
         $leftCell = $headerTable->addCell(5000, ['bgColor' => '1a1a2e']);
         $leftCell->addText('WIPRO', ['bold' => true, 'size' => 28, 'color' => 'ffb400'], $centerPara);
-        $leftCell->addText('Wind & Dźwigi', ['size' => 9, 'color' => 'cccccc'], $centerPara);
+        $leftCell->addText('Wind i Dźwigi', ['size' => 9, 'color' => 'cccccc'], $centerPara);
         $rightCell = $headerTable->addCell(5000, ['bgColor' => 'ffb400']);
         $rightCell->addText('OFERTA HANDLOWA', ['bold' => true, 'size' => 13, 'color' => '1a1a2e', 'allCaps' => true], $centerPara);
         $rightCell->addText('Nr: ' . $offer->offer_number, ['bold' => true, 'size' => 10, 'color' => '1a1a2e'], $centerPara);
