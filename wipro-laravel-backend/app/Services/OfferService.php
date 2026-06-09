@@ -326,7 +326,7 @@ class OfferService
         // ── Scope of supply ──────────────────────────────────
         if ($offer->items->count() > 0) {
             $section->addText('ZAKRES OFERTY', $h2Font);
-            foreach ($offer->items as $idx => $item) {
+            foreach ($offer->items as $item) {
                 $section->addListItem($item->description, 0, $bodyFont, ['listType' => \PhpOffice\PhpWord\Style\ListItem::TYPE_NUMBER]);
             }
             $section->addTextBreak(1);
