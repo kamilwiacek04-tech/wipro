@@ -201,7 +201,7 @@ const FinishesAndAccessories = () => {
                                                         updateField('finishesAndAccessories', 'cabinDoorSameAsLanding', e.target.checked)
                                                         field.onChange(e.target.checked)
                                                     }}
-                                                    className='w-4 h-4 accent-[var(--primary)]'
+                                                    className='w-4 h-4 accent-(--primary)'
                                                 />
                                                 <span className='text-[13px] text-gray-600'>{t(`${textPath}.field.cabinDoorSameAsLanding`)}</span>
                                             </label>
