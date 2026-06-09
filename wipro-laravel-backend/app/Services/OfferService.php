@@ -399,8 +399,20 @@ class OfferService
         // ── Scope of supply ──────────────────────────────────
         if ($offer->items->count() > 0) {
             $section->addText('ZAKRES OFERTY', $h2Font);
+            $itemsTable = $section->addTable(['borderSize' => 4, 'borderColor' => 'dddddd', 'cellMargin' => 100]);
+            $itemsTable->addRow();
+            $itemsTable->addCell(5600, ['bgColor' => 'f5f5f5'])->addText('Opis', $labelFont);
+            $itemsTable->addCell(700,  ['bgColor' => 'f5f5f5'])->addText('Ilość', $labelFont);
+            $itemsTable->addCell(800,  ['bgColor' => 'f5f5f5'])->addText('Jed.', $labelFont);
+            $itemsTable->addCell(1500, ['bgColor' => 'f5f5f5'])->addText('Cena netto', $labelFont);
+            $itemsTable->addCell(1600, ['bgColor' => 'f5f5f5'])->addText('Wartość netto', $labelFont);
             foreach ($offer->items as $item) {
-                $section->addListItem($item->description, 0, $bodyFont, ['listType' => \PhpOffice\PhpWord\Style\ListItem::TYPE_NUMBER]);
+                $itemsTable->addRow();
+                $itemsTable->addCell(5600)->addText($item->description, $bodyFont);
+                $itemsTable->addCell(700)->addText((string)$item->quantity, $bodyFont);
+                $itemsTable->addCell(800)->addText($item->unit ?? 'szt.', $bodyFont);
+                $itemsTable->addCell(1500)->addText(number_format((float)$item->unit_price_net, 2, ',', ' ') . ' PLN', $bodyFont);
+                $itemsTable->addCell(1600)->addText(number_format((float)$item->total_price_net, 2, ',', ' ') . ' PLN', $bodyFont);
             }
             $section->addTextBreak(1);
         }

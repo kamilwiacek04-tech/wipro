@@ -93,8 +93,11 @@ table.sec tr.sep td { border-top:1px solid #efefef; }
   <table class="items">
     <thead>
       <tr>
-        <th style="width:75%">Nazwa towaru</th>
-        <th style="text-align:center; width:25%">Ilość</th>
+        <th style="width:50%">Nazwa towaru</th>
+        <th style="text-align:center; width:8%">Ilość</th>
+        <th style="text-align:center; width:7%">Jed.</th>
+        <th style="text-align:right; width:17%">Cena netto</th>
+        <th style="text-align:right; width:18%">Wartość netto</th>
       </tr>
     </thead>
     <tbody>
@@ -102,6 +105,9 @@ table.sec tr.sep td { border-top:1px solid #efefef; }
       <tr>
         <td>{{ $item->description }}</td>
         <td class="td-qty">{{ $item->quantity }}</td>
+        <td class="td-qty">{{ $item->unit ?? 'szt.' }}</td>
+        <td class="td-price">{{ number_format((float)$item->unit_price_net, 2, ',', ' ') }} zł</td>
+        <td class="td-price">{{ number_format((float)$item->total_price_net, 2, ',', ' ') }} zł</td>
       </tr>
       @endforeach
     </tbody>
