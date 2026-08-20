@@ -10,6 +10,11 @@ body { font-family: Arial, sans-serif; line-height:1.6; color:#333; max-width:62
 .content { background:#f9f9f9; padding:30px; border-radius:0 0 8px 8px; }
 .info-box { background:white; border:1px solid #e0e0e0; border-radius:6px; padding:20px; margin:20px 0; }
 .number { font-size:18px; font-family:monospace; font-weight:bold; color:#1a1a1a; }
+.links-box { background:white; border:1px solid #e0e0e0; border-radius:6px; padding:10px 20px; margin:20px 0; }
+.link-row { padding:12px 0; border-bottom:1px solid #f0f0f0; }
+.link-row:last-child { border-bottom:none; }
+.link-row a { color:#1a1a1a; font-weight:bold; text-decoration:none; }
+.link-row a:before { content:"↓ "; color:#ffb400; }
 </style>
 </head>
 <body>
@@ -29,9 +34,15 @@ body { font-family: Arial, sans-serif; line-height:1.6; color:#333; max-width:62
     <li>Oferta handlowa (PDF)</li>
     <li>Opis rozwiązań estetycznych (PDF)</li>
     <li>Specyfikacja techniczna (PDF)</li>
-    <li>Rysunki techniczne (jeśli dostępne)</li>
-    <li>Opis podstawowy (jeśli dostępny)</li>
   </ul>
+  @if(count($extraLinks))
+  <p>Dodatkowe pliki do pobrania:</p>
+  <div class="links-box">
+    @foreach($extraLinks as $link)
+    <div class="link-row"><a href="{{ $link['url'] }}">{{ $link['label'] }}</a></div>
+    @endforeach
+  </div>
+  @endif
   <p>W razie pytań prosimy o kontakt pod adresem <a href="mailto:{{ config('mail.from.address') }}">{{ config('mail.from.address') }}</a></p>
 </div>
 </body>

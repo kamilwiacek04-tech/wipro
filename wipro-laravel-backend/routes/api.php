@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Route;
 // Public routes
 Route::post('/elevFinder', [ElevFinderController::class, 'find']);
 Route::get('/elevators/{id}', [ElevatorController::class, 'show']);
+Route::get('/elevators/{id}/drawings/{type}/{ext}', [ElevatorController::class, 'downloadDrawing']);
 Route::get('/lift-types', [LiftTypeController::class, 'index']);
 Route::get('/settings', [SettingController::class, 'index']);
 Route::get('/cabin-models', [CabinModelController::class, 'index']);
@@ -70,9 +71,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::patch('/elevator-elements/{elementId}', [ElevatorController::class, 'updateElement']);
         Route::delete('/elevator-elements/{elementId}', [ElevatorController::class, 'destroyElement']);
 
-        // Elevator drawings
+        // Elevator drawings (pobieranie jest publiczne, patrz sekcja "Public routes" — link do plików wysyłany jest też mailem do klienta)
         Route::post('/elevators/{id}/drawings/{type}', [ElevatorController::class, 'uploadDrawings']);
-        Route::get('/elevators/{id}/drawings/{type}/{ext}', [ElevatorController::class, 'downloadDrawing']);
 
         // Address book (contacts grouped by investor_email)
         Route::get('/contacts', [AdminContactController::class, 'index']);

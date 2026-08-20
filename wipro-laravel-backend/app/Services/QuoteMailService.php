@@ -8,6 +8,7 @@ use App\Models\QuoteRequest;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 
 class QuoteMailService
 {
@@ -27,7 +28,7 @@ class QuoteMailService
         $aestheticPdfContent = $aestheticService->generate($quoteRequest);
         $techSpecPdfContent  = $pdfService->generateTechSpec($quoteRequest);
 
-        $extraAttachments = $this->collectElevatorFiles($quoteRequest);
+        $extraLinks = $this->collectElevatorFileLinks($quoteRequest);
 
         try {
             Mail::to($quoteRequest->investor_email)
@@ -37,7 +38,7 @@ class QuoteMailService
                     offerPdfPath:        $offerPdfPath,
                     aestheticPdfContent: $aestheticPdfContent,
                     techSpecPdfContent:  $techSpecPdfContent,
-                    extraAttachments:    $extraAttachments,
+                    extraLinks:          $extraLinks,
                     locale:              app()->getLocale(),
                 ));
         } catch (\Throwable $e) {
@@ -45,29 +46,37 @@ class QuoteMailService
         }
     }
 
-    private function collectElevatorFiles(QuoteRequest $quoteRequest): array
+    /**
+     * Rysunki i opisy windy są duże (DWG/DOCX) i potrafiły przekraczać limit
+     * rozmiaru skrzynki, gdy szły jako załączniki — zamiast tego wysyłamy linki
+     * do publicznego (bez logowania) endpointu pobierania.
+     */
+    private function collectElevatorFileLinks(QuoteRequest $quoteRequest): array
     {
         $elevator = $quoteRequest->elevator;
         if (!$elevator) return [];
 
-        $attachments = [];
+        $isThroughway = $quoteRequest->door_type === 'THROUGHT';
+        $variant      = $isThroughway ? 'throughway' : 'standard';
+        $variantLabel = $isThroughway ? 'przelotowy' : 'standardowy';
 
-        $drawingMap = [
-            'drawing_standard_pdf'   => ['name' => 'rysunek-standardowy.pdf',         'mime' => 'application/pdf'],
-            'drawing_throughway_pdf' => ['name' => 'rysunek-przelotowy.pdf',           'mime' => 'application/pdf'],
-            'drawing_standard_dwg'   => ['name' => 'rysunek-standardowy.dwg',         'mime' => 'application/octet-stream'],
-            'drawing_throughway_dwg' => ['name' => 'rysunek-przelotowy.dwg',           'mime' => 'application/octet-stream'],
-            'drawing_standard_doc'   => ['name' => 'opis-podstawowy.docx',            'mime' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
-            'drawing_throughway_doc' => ['name' => 'opis-podstawowy-przelotowy.docx', 'mime' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+        $extMap = [
+            'pdf' => "Rysunek techniczny {$variantLabel} (PDF)",
+            'dwg' => "Rysunek techniczny {$variantLabel} (DWG)",
+            'doc' => "Opis podstawowy {$variantLabel} (DOCX)",
         ];
 
-        foreach ($drawingMap as $field => $meta) {
-            $path = $elevator->$field ?? null;
+        $links = [];
+        foreach ($extMap as $ext => $label) {
+            $path = $elevator->{"drawing_{$variant}_{$ext}"} ?? null;
             if ($path && Storage::exists($path)) {
-                $attachments[] = array_merge(['path' => $path], $meta);
+                $links[] = [
+                    'label' => $label,
+                    'url'   => URL::to("/api/elevators/{$elevator->id}/drawings/{$variant}/{$ext}"),
+                ];
             }
         }
 
-        return $attachments;
+        return $links;
     }
 }

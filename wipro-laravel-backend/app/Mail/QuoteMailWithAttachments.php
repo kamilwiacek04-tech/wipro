@@ -22,7 +22,7 @@ class QuoteMailWithAttachments extends Mailable
         public readonly string $offerPdfPath,
         public readonly string $aestheticPdfContent,
         public readonly string $techSpecPdfContent,
-        public readonly array $extraAttachments,
+        public readonly array $extraLinks,
         string $locale = 'pl',
     ) {
         $this->locale($locale);
@@ -62,14 +62,7 @@ class QuoteMailWithAttachments extends Mailable
         $list[] = Attachment::fromData(fn() => $techContent, 'specyfikacja-techniczna.pdf')
             ->withMime('application/pdf');
 
-        // 4+. Drawing files and basic description from elevator
-        foreach ($this->extraAttachments as $att) {
-            if (isset($att['path']) && Storage::exists($att['path'])) {
-                $list[] = Attachment::fromPath(Storage::path($att['path']))
-                    ->as($att['name'])
-                    ->withMime($att['mime']);
-            }
-        }
+        // Rysunki i opisy windy są wysyłane jako linki (patrz $extraLinks), nie załączniki.
 
         return $list;
     }
