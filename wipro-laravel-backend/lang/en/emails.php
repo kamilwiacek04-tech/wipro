@@ -17,6 +17,7 @@ return [
         'net_total'       => 'Net total:',
         'vat'             => 'VAT :rate%:',
         'gross_total'     => 'Gross total:',
+        'vat_disclaimer'  => 'The VAT rate is indicative only; national tax regulations are ultimately decisive.',
         'notes_label'     => 'Notes:',
         'contact'         => 'If you have any questions, please contact us:',
     ],

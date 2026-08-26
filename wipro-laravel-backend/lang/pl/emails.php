@@ -17,6 +17,7 @@ return [
         'net_total'       => 'Suma netto:',
         'vat'             => 'VAT :rate%:',
         'gross_total'     => 'Suma brutto:',
+        'vat_disclaimer'  => 'Stawka VAT ma charakter poglądowy, ostatecznie decydujące są krajowe przepisy podatkowe.',
         'notes_label'     => 'Uwagi:',
         'contact'         => 'W razie pytań skontaktuj się z nami:',
     ],

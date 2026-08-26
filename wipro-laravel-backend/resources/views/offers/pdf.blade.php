@@ -419,6 +419,9 @@ $finishes = array_filter([
             <span class="price-value">{{ number_format($offer->total_price_gross, 2, ',', ' ') }} PLN</span>
         </div>
     </div>
+    <p style="font-size: 10px; color: #888; margin-top: 6px;">
+        Stawka VAT ma charakter poglądowy, ostatecznie decydujące są krajowe przepisy podatkowe.
+    </p>
 </div>
 
 {{-- COMMERCIAL TERMS --}}
