@@ -530,7 +530,8 @@ class OfferService
 
         // ── 2. Dopłata za ilość przystanków ───────────────────────────────────
         if ($elevator && $stops > 0 && $accessCount > 2 && (float) $elevator->coeff_stops > 0) {
-            $unitPrice = round(700 * $stops * (float) $elevator->coeff_stops * $margin, 2);
+            $stopSurchargeRate = (float) ($elevator->stop_surcharge_rate ?? 700);
+            $unitPrice = round($stopSurchargeRate * $stops * (float) $elevator->coeff_stops * $margin, 2);
             $amount    = round($unitPrice * ($accessCount - 2), 2);
             if ($amount != 0) {
                 $this->addItem($offer->id, "Dopłata za liczbę przystanków ({$stops} przyst. × " . ($accessCount - 2) . " dojść ponad 2)", $accessCount - 2, 'kpl.', $unitPrice, $sortOrder++);
