@@ -104,6 +104,7 @@ class AdminQuoteRequestController extends Controller
             'investor_city' => 'sometimes|nullable|string|max:100',
             'investment_name' => 'sometimes|nullable|string|max:255',
             'investment_address' => 'sometimes|nullable|string|max:255',
+            'object_type' => 'sometimes|string|in:residential,care_home,public_commercial',
             'floors' => 'sometimes|nullable|integer',
             'stops' => 'sometimes|nullable|integer',
             'lift_capacity' => 'sometimes|nullable|integer',
@@ -154,13 +155,13 @@ class AdminQuoteRequestController extends Controller
             'status'              => 'draft',
             'total_price_net'     => 0,
             'total_price_gross'   => 0,
-            'vat_rate'            => 23.00,
+            'vat_rate'            => \App\Services\OfferService::resolveVatRate($quoteRequest->object_type),
             'valid_until'         => now()->addDays(30)->toDateString(),
         ]);
 
         $offerService = new \App\Services\OfferService();
         $totalNet     = $offerService->buildPricedItems($quoteRequest, $offer);
-        $totalGross   = round($totalNet * 1.23, 2);
+        $totalGross   = round($totalNet * (1 + $offer->vat_rate / 100), 2);
 
         $offer->update([
             'total_price_net'   => $totalNet,

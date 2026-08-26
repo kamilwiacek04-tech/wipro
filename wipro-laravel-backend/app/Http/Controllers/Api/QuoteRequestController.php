@@ -29,6 +29,7 @@ class QuoteRequestController extends Controller
             'investment_name' => 'nullable|string|max:255',
             'investment_address' => 'nullable|string|max:255',
             'investment_city' => 'nullable|string|max:100',
+            'object_type' => 'nullable|string|in:residential,care_home,public_commercial',
             'floors' => 'nullable|integer',
             'stops' => 'nullable|integer',
             'lift_capacity' => 'nullable|integer',
@@ -101,13 +102,13 @@ class QuoteRequestController extends Controller
                 'sent_at'             => now(),
                 'total_price_net'     => 0,
                 'total_price_gross'   => 0,
-                'vat_rate'            => 23.00,
+                'vat_rate'            => OfferService::resolveVatRate($data['object_type'] ?? null),
                 'valid_until'         => now()->addDays(30)->toDateString(),
             ]);
 
             $offerService = new OfferService();
             $totalNet     = $offerService->buildPricedItems($quoteRequest, $offer);
-            $totalGross   = round($totalNet * 1.23, 2);
+            $totalGross   = round($totalNet * (1 + $offer->vat_rate / 100), 2);
             $offer->update(['total_price_net' => $totalNet, 'total_price_gross' => $totalGross]);
 
             $quoteRequest->update(['status' => 'offer_sent']);
