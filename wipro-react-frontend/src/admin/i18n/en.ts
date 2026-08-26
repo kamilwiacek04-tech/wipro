@@ -407,6 +407,7 @@ const en: AdminTranslations = {
     },
     coefficients: {
       sectionTitle: 'Load Compensation Coefficients',
+      stopSurchargeRate: 'Stop surcharge base rate (PLN) — blank = default 700',
       stops: 'Number of stops',
       cabinModel: 'Cabin model',
       cabinThroughway: 'Throughway cabin',

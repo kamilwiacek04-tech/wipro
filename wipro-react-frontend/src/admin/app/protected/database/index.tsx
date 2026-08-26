@@ -1331,6 +1331,7 @@ interface Elevator {
   drawing_throughway_dwg?: string | null
   drawing_throughway_bim?: string | null
   drawing_throughway_doc?: string | null
+  stop_surcharge_rate?: number | null
   coeff_stops?: number | null
   coeff_cabin_model?: number | null
   coeff_cabin_throughway?: number | null
@@ -1676,6 +1677,7 @@ const ElevatorRow = ({ elevator, onUpdate, onDelete }: {
                 {t('database.coefficients.sectionTitle')}
               </p>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                <TechField label={t('database.coefficients.stopSurchargeRate')} value={localElevator.stop_surcharge_rate} elevatorId={localElevator.id} field="stop_surcharge_rate" onSaved={(id, f, v) => { onUpdate(id, f, v); setLocalElevator(prev => ({ ...prev, stop_surcharge_rate: v ? parseFloat(v) : null })) }} type="number" />
                 <TechField label={t('database.coefficients.stops')} value={localElevator.coeff_stops} elevatorId={localElevator.id} field="coeff_stops" onSaved={(id, f, v) => { onUpdate(id, f, v); setLocalElevator(prev => ({ ...prev, coeff_stops: v ? parseFloat(v) : null })) }} type="number" />
                 <TechField label={t('database.coefficients.cabinModel')} value={localElevator.coeff_cabin_model} elevatorId={localElevator.id} field="coeff_cabin_model" onSaved={(id, f, v) => { onUpdate(id, f, v); setLocalElevator(prev => ({ ...prev, coeff_cabin_model: v ? parseFloat(v) : null })) }} type="number" />
                 <TechField label={t('database.coefficients.cabinThroughway')} value={localElevator.coeff_cabin_throughway} elevatorId={localElevator.id} field="coeff_cabin_throughway" onSaved={(id, f, v) => { onUpdate(id, f, v); setLocalElevator(prev => ({ ...prev, coeff_cabin_throughway: v ? parseFloat(v) : null })) }} type="number" />
@@ -1776,7 +1778,7 @@ const Database = () => {
     const payload: Record<string, string | boolean | number | null> = {}
     const nullableInts = ['shaft_width', 'shaft_depth', 'pit_depth', 'overhead', 'door_width', 'door_height']
     const nullableFloats = [
-      'base_price', 'lifting_height',
+      'base_price', 'lifting_height', 'stop_surcharge_rate',
       'coeff_stops', 'coeff_cabin_model', 'coeff_cabin_throughway',
       'coeff_cabin_doors', 'coeff_landing_doors', 'coeff_ei30', 'coeff_ei60',
     ]

@@ -405,6 +405,7 @@ const pl = {
     },
     coefficients: {
       sectionTitle: 'Współczynniki rekompensujące udźwig',
+      stopSurchargeRate: 'Stawka bazowa dopłaty za przystanek (PLN) — puste = domyślne 700',
       stops: 'Ilość przystanków',
       cabinModel: 'Model kabiny',
       cabinThroughway: 'Kabina przelot',
