@@ -495,6 +495,14 @@ class OfferService
         $table->addCell($vw, $sep)->addText($value,  ['size' => 8, 'color' => '1a1a1a']);
     }
 
+    public static function resolveVatRate(?string $objectType): float
+    {
+        return match ($objectType) {
+            'residential', 'care_home' => 8.00,
+            default => 23.00,
+        };
+    }
+
     /**
      * Creates OfferItem records for the given offer using the WRU pricing formula.
      * Each pricing component becomes a separate line item.
