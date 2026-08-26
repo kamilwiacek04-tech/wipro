@@ -152,6 +152,12 @@ const pl = {
                 cabinMonitoringSystem: 'Instalacja do monitoringu kabiny',
                 shaftLighting: 'Oświetlenie szybu',
                 increaseSpeed: 'Zwiększenie prędkości do 1,6 m/s',
+                objectType: 'Typ obiektu',
+                objectTypePlaceholder: 'Wybierz typ obiektu',
+                objectTypeResidential: 'Mieszkaniowy (mieszkania do 150 m² lub dom jednorodzinny do 300 m²) — VAT 8%',
+                objectTypeCareHome: 'Dom Spokojnej Starości — VAT 8%',
+                objectTypePublicCommercial: 'Pozostałe, w tym budynki publiczne i komercyjne — VAT 23%',
+                objectTypeVatNote: 'Stawka VAT ma charakter poglądowy, ostatecznie decydujące są krajowe przepisy podatkowe.',
             },
             manufactureOfDoors: {
                 RAL_7040: 'RAL 7040',

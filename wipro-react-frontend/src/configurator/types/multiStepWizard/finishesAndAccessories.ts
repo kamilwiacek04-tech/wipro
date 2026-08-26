@@ -11,4 +11,5 @@ export interface FormFinishesAndAccessories {
     handrailId: number;
     flooringId: number;
     extraIds: number[];
+    objectType: 'residential' | 'care_home' | 'public_commercial';
 }

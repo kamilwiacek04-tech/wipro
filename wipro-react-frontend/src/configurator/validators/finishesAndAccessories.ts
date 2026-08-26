@@ -14,4 +14,7 @@ export const dataSchema = new yup.ObjectSchema<FormFinishesAndAccessories>({
     handrailId: yup.number().default(0),
     flooringId: yup.number().default(0),
     extraIds: yup.array().of(yup.number().required()).default([]),
+    objectType: yup.mixed<'residential' | 'care_home' | 'public_commercial'>()
+        .oneOf(['residential', 'care_home', 'public_commercial'])
+        .required('form.errors.require'),
 });

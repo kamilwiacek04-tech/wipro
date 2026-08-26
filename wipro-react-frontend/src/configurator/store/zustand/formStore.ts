@@ -61,6 +61,7 @@ export const blankFormState: FormType = {
     handrailId: 0,
     flooringId: 0,
     extraIds: [] as number[],
+    objectType: 'public_commercial',
   }
 }
 

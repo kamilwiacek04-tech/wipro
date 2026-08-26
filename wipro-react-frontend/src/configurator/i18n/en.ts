@@ -154,6 +154,12 @@ const en: Translations = {
                 cabinMonitoringSystem: 'Cabin monitoring installation',
                 shaftLighting: 'Shaft lighting',
                 increaseSpeed: 'Increase speed to 1.6 m/s',
+                objectType: 'Object type',
+                objectTypePlaceholder: 'Select object type',
+                objectTypeResidential: 'Residential (apartments up to 150 m² or single-family house up to 300 m²) — VAT 8%',
+                objectTypeCareHome: 'Care home — VAT 8%',
+                objectTypePublicCommercial: 'Other, including public and commercial buildings — VAT 23%',
+                objectTypeVatNote: 'The VAT rate shown is for guidance only; national tax regulations are ultimately decisive.',
             },
             manufactureOfDoors: {
                 RAL_7040: 'RAL 7040',
