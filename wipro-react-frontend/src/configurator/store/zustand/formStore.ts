@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { FormType } from '@/types/global';
+import { FormFinishesAndAccessories } from '@/types/multiStepWizard/finishesAndAccessories';
 
 interface FormState {
   store: FormType;
@@ -61,7 +62,7 @@ export const blankFormState: FormType = {
     handrailId: 0,
     flooringId: 0,
     extraIds: [] as number[],
-    objectType: 'public_commercial',
+    objectType: '' as FormFinishesAndAccessories['objectType'],
   }
 }
 
