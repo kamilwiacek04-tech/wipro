@@ -512,6 +512,10 @@ class OfferService
     {
         $quoteRequest->loadMissing(['elevator']);
 
+        if (!$quoteRequest->elevator) {
+            throw new \RuntimeException('Nie można wygenerować wyceny bez dopasowanej windy w bazie.');
+        }
+
         $margin      = 1 + ((float) Setting::get('profit_margin_percent', '0')) / 100;
         $config      = $this->parseConfiguratorNotes($quoteRequest->additional_notes);
         $stops       = (int) ($quoteRequest->stops ?? 0);
@@ -528,13 +532,9 @@ class OfferService
         $elevator = $quoteRequest->elevator;
 
         // ── 1. Cena bazowa windy ──────────────────────────────────────────────
-        if ($elevator) {
-            $basePrice = round((float) $elevator->base_price * $margin, 2);
-            $this->addItem($offer->id, "Dźwig osobowy {$elevator->manufacturer} {$elevator->model} (udźwig {$elevator->capacity} kg, {$elevator->persons} os.)", 1, 'szt.', $basePrice, $sortOrder++);
-            $totalNet += $basePrice;
-        } else {
-            $this->addItem($offer->id, 'Dźwig osobowy — wycena indywidualna', 1, 'szt.', 0, $sortOrder++);
-        }
+        $basePrice = round((float) $elevator->base_price * $margin, 2);
+        $this->addItem($offer->id, "Dźwig osobowy {$elevator->manufacturer} {$elevator->model} (udźwig {$elevator->capacity} kg, {$elevator->persons} os.)", 1, 'szt.', $basePrice, $sortOrder++);
+        $totalNet += $basePrice;
 
         // ── 2. Dopłata za ilość przystanków ───────────────────────────────────
         if ($elevator && $stops > 0 && $accessCount > 2 && (float) $elevator->coeff_stops > 0) {

@@ -86,9 +86,11 @@ class QuoteRequestController extends Controller
             'request_number' => QuoteRequest::generateRequestNumber(),
             'raw_data' => $request->all(),
             'elevator_id' => $elevatorId,
+            'status' => $elevatorId ? 'new' : 'needs_manual_pricing',
         ]));
 
-        // Auto-generate offer v1 and send with 5 attachments
+        // Auto-generate offer v1 and send with 5 attachments — only when an elevator was matched
+        if ($elevatorId) {
         try {
             $version     = 1;
             $offerNumber = sprintf('%s/OF/%d', $quoteRequest->request_number, $version);
@@ -116,6 +118,7 @@ class QuoteRequestController extends Controller
             (new QuoteMailService())->send($quoteRequest, $offer->load('items'));
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::warning('Failed to generate/send auto-offer: ' . $e->getMessage());
+        }
         }
 
         return response()->json([

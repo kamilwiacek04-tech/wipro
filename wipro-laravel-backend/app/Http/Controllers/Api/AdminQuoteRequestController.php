@@ -143,6 +143,12 @@ class AdminQuoteRequestController extends Controller
             __('messages.offer.no_new_accepted')
         );
 
+        abort_if(
+            !$quoteRequest->elevator,
+            422,
+            __('messages.offer.no_elevator_matched')
+        );
+
         $quoteRequest->offers()->where('status', 'draft')->delete();
         $version     = $quoteRequest->offers()->count() + 1;
         $offerNumber = sprintf('%s/OF/%d', $quoteRequest->request_number, $version);
