@@ -110,6 +110,7 @@ const pl = {
       basePriceLabel: 'Cena bazowa:',
       clientData: 'Dane klienta',
       applicantStatus: 'Status zgłaszającego',
+      objectType: 'Typ obiektu (VAT)',
       contactLabel: 'Kontakt',
       technicalSpec: 'Specyfikacja techniczna',
       shaft: 'Szyb',

@@ -95,6 +95,7 @@ interface QuoteRequestDetail {
   investment_name: string | null
   investment_address: string | null
   investment_city: string | null
+  object_type: 'residential' | 'care_home' | 'public_commercial' | null
   floors: number | null
   stops: number | null
   lift_capacity: number | null
@@ -137,6 +138,12 @@ const INVESTOR_STATUS_OPTIONS = [
   { value: 'INVESTOR',       label: 'Inwestor' },
   { value: 'DISTRIBUTOR',    label: 'Dealer / Dystrybutor' },
   { value: 'OTHER',          label: 'Inny' },
+]
+
+const OBJECT_TYPE_OPTIONS = [
+  { value: 'residential',        label: 'Mieszkaniowy (≤150 m² / dom jedn. ≤300 m²) — VAT 8%' },
+  { value: 'care_home',          label: 'Dom Spokojnej Starości — VAT 8%' },
+  { value: 'public_commercial',  label: 'Publiczny / komercyjny — VAT 23%' },
 ]
 
 const labelOf = (opts: { value: string; label: string }[], val: string | null | undefined) =>
@@ -819,6 +826,12 @@ const QuoteRequestDetail = () => {
               <EditableField label={t('quoteRequests.detail.investmentNameLabel')} value={data.investment_name} field="investment_name" onSave={saveTextField} />
               <EditableField label={t('quoteRequests.detail.installationAddress')} value={data.investment_address} field="investment_address" onSave={saveTextField} />
               <EditableField label={t('quoteRequests.detail.fields.city')} value={data.investment_city} field="investment_city" onSave={saveTextField} />
+              <EditableSelect
+                label={t('quoteRequests.detail.objectType')}
+                value={data.object_type}
+                options={OBJECT_TYPE_OPTIONS}
+                onSave={val => saveTextField('object_type', val ?? '')}
+              />
               <EditableField label={t('quoteRequests.detail.fields.floors')} value={data.floors} field="floors" onSave={saveNumberField} type="number" />
               <EditableField label={t('quoteRequests.detail.fields.stops')} value={data.stops} field="stops" onSave={saveNumberField} type="number" />
             </div>

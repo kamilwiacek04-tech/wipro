@@ -112,6 +112,7 @@ const en: AdminTranslations = {
       basePriceLabel: 'Base price:',
       clientData: 'Client data',
       applicantStatus: 'Applicant status',
+      objectType: 'Object type (VAT)',
       contactLabel: 'Contact',
       technicalSpec: 'Technical specification',
       shaft: 'Shaft',
