@@ -30,11 +30,12 @@ interface Paginated {
   total: number
 }
 
-const STATUS_FILTER_VALUES = ['new', 'in_progress', 'offer_sent', 'accepted', 'rejected'] as const
+const STATUS_FILTER_VALUES = ['new', 'in_progress', 'needs_manual_pricing', 'offer_sent', 'accepted', 'rejected'] as const
 
 const STATUS_DOTS: Record<string, string> = {
   new: 'bg-amber-400',
   in_progress: 'bg-blue-400',
+  needs_manual_pricing: 'bg-red-400',
   offer_sent: 'bg-gray-400',
   accepted: 'bg-emerald-400',
   rejected: 'bg-red-400',

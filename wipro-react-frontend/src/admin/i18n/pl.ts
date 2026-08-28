@@ -46,6 +46,7 @@ const pl = {
     offer_sent: 'Oferta wysłana',
     accepted: 'Zaakceptowane',
     rejected: 'Odrzucone',
+    needs_manual_pricing: 'Wymaga ręcznej wyceny',
     draft: 'Szkic',
     sent: 'Wysłana',
     cancelled: 'Anulowana',
@@ -185,6 +186,7 @@ const pl = {
       cabinColor: 'Kolor kabiny',
       landingDoorColor: 'Kolor drzwi przystankowych',
       cabinDoorColor: 'Kolor drzwi kabinowych',
+      needsManualPricingBanner: 'Żadna winda z bazy nie została automatycznie dopasowana do tego zapytania — oferta NIE została wygenerowana ani wysłana. Przypisz windę ręcznie i wygeneruj ofertę z tego panelu.',
     },
   },
   elevators: {

@@ -48,6 +48,7 @@ const en: AdminTranslations = {
     offer_sent: 'Offer sent',
     accepted: 'Accepted',
     rejected: 'Rejected',
+    needs_manual_pricing: 'Requires manual pricing',
     draft: 'Draft',
     sent: 'Sent',
     cancelled: 'Cancelled',
@@ -187,6 +188,7 @@ const en: AdminTranslations = {
       cabinColor: 'Cabin color',
       landingDoorColor: 'Landing door color',
       cabinDoorColor: 'Cabin door color',
+      needsManualPricingBanner: 'No elevator from the database has been automatically matched to this request — the offer has NOT been generated or sent. Assign an elevator manually and generate the offer from this panel.',
     },
   },
   elevators: {

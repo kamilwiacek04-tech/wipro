@@ -486,7 +486,7 @@ const EditableTextarea = ({
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-const STATUS_VALUES = ['new', 'in_progress', 'offer_sent', 'accepted', 'rejected'] as const
+const STATUS_VALUES = ['new', 'in_progress', 'needs_manual_pricing', 'offer_sent', 'accepted', 'rejected'] as const
 
 const QuoteRequestDetail = () => {
   const { id } = useParams<{ id: string }>()
@@ -770,6 +770,11 @@ const QuoteRequestDetail = () => {
 
           {/* Status */}
           <Card className="p-6 gap-0">
+            {data.status === 'needs_manual_pricing' && (
+              <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {t('quoteRequests.detail.needsManualPricingBanner')}
+              </div>
+            )}
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold text-gray-900">{t('quoteRequests.detail.requestStatus')}</h3>
               <Badge variant={statusBadge(data.status)}>{statusLabel(data.status)}</Badge>
