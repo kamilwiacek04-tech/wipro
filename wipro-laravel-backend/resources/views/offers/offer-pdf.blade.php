@@ -119,7 +119,10 @@ table.sec tr.sep td { border-top:1px solid #efefef; }
 @if($offer->total_price_net > 0)
 <div class="summary">
   <span class="s-row s-total">Orientacyjna wartość netto:&nbsp;&nbsp;{{ number_format((float)$offer->total_price_net, 2, ',', ' ') }} zł</span>
+  <span class="s-row">VAT {{ number_format((float)$offer->vat_rate, 0) }}%:&nbsp;&nbsp;{{ number_format((float)$offer->total_price_gross - (float)$offer->total_price_net, 2, ',', ' ') }} zł</span>
+  <span class="s-row s-total">Orientacyjna wartość brutto:&nbsp;&nbsp;{{ number_format((float)$offer->total_price_gross, 2, ',', ' ') }} zł</span>
   <span class="s-row" style="font-size:8px; color:#888; font-style:italic;">Kwota orientacyjna — nie stanowi wiążącej oferty handlowej.</span>
+  <span class="s-row" style="font-size:8px; color:#888; font-style:italic;">Stawka VAT ma charakter poglądowy, ostatecznie decydujące są krajowe przepisy podatkowe.</span>
 </div>
 @endif
 
