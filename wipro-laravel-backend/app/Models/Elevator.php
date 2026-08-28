@@ -23,7 +23,7 @@ class Elevator extends Model
         'drawing_standard_pdf', 'drawing_standard_dwg', 'drawing_standard_bim', 'drawing_standard_doc',
         'drawing_throughway_pdf', 'drawing_throughway_dwg', 'drawing_throughway_bim', 'drawing_throughway_doc',
         // Compensation coefficients
-        'coeff_stops', 'coeff_cabin_model', 'coeff_cabin_throughway',
+        'coeff_stops', 'stop_surcharge_rate', 'coeff_cabin_model', 'coeff_cabin_throughway',
         'coeff_cabin_doors', 'coeff_landing_doors', 'coeff_ei30', 'coeff_ei60',
     ];
 
@@ -44,6 +44,7 @@ class Elevator extends Model
         'door_width' => 'integer',
         'door_height' => 'integer',
         'coeff_stops'            => 'decimal:4',
+        'stop_surcharge_rate'    => 'decimal:2',
         'coeff_cabin_model'      => 'decimal:4',
         'coeff_cabin_throughway' => 'decimal:4',
         'coeff_cabin_doors'      => 'decimal:4',

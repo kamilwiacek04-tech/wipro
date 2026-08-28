@@ -91,6 +91,7 @@ interface StoreQuoteRequestBody {
     door_type?: string;
     elevator_id?: number;
     additional_notes?: string;
+    object_type?: 'residential' | 'care_home' | 'public_commercial';
 }
 
 const responseEndpoints = mainApi.injectEndpoints({

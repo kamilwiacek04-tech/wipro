@@ -38,6 +38,7 @@ export function statusBadge(status: string): BadgeVariant {
     case 'offer_sent': return 'default'
     case 'accepted': return 'success'
     case 'rejected': return 'destructive'
+    case 'needs_manual_pricing': return 'destructive'
     case 'draft': return 'secondary'
     case 'sent': return 'default'
     default: return 'secondary'

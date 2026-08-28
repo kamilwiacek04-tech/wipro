@@ -11,6 +11,7 @@ return [
         'only_sent_cancel'  => 'Only sent offers can be cancelled.',
         'no_new_accepted'   => 'Cannot generate a new offer when one has already been accepted.',
         'no_send_accepted'  => 'Cannot send an offer when one has already been accepted.',
+        'no_elevator_matched' => 'No elevator from the catalog was matched to this request. Assign an elevator manually (the "Matched elevator" field) before generating an offer.',
 
         'accepted_title'    => 'Offer accepted',
         'rejected_title'    => 'Offer rejected',

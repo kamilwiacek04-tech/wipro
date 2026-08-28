@@ -495,6 +495,14 @@ class OfferService
         $table->addCell($vw, $sep)->addText($value,  ['size' => 8, 'color' => '1a1a1a']);
     }
 
+    public static function resolveVatRate(?string $objectType): float
+    {
+        return match ($objectType) {
+            'residential', 'care_home' => 8.00,
+            default => 23.00,
+        };
+    }
+
     /**
      * Creates OfferItem records for the given offer using the WRU pricing formula.
      * Each pricing component becomes a separate line item.
@@ -503,6 +511,10 @@ class OfferService
     public function buildPricedItems(QuoteRequest $quoteRequest, Offer $offer): float
     {
         $quoteRequest->loadMissing(['elevator']);
+
+        if (!$quoteRequest->elevator) {
+            throw new \RuntimeException('Nie można wygenerować wyceny bez dopasowanej windy w bazie.');
+        }
 
         $margin      = 1 + ((float) Setting::get('profit_margin_percent', '0')) / 100;
         $config      = $this->parseConfiguratorNotes($quoteRequest->additional_notes);
@@ -520,17 +532,14 @@ class OfferService
         $elevator = $quoteRequest->elevator;
 
         // ── 1. Cena bazowa windy ──────────────────────────────────────────────
-        if ($elevator) {
-            $basePrice = round((float) $elevator->base_price * $margin, 2);
-            $this->addItem($offer->id, "Dźwig osobowy {$elevator->manufacturer} {$elevator->model} (udźwig {$elevator->capacity} kg, {$elevator->persons} os.)", 1, 'szt.', $basePrice, $sortOrder++);
-            $totalNet += $basePrice;
-        } else {
-            $this->addItem($offer->id, 'Dźwig osobowy — wycena indywidualna', 1, 'szt.', 0, $sortOrder++);
-        }
+        $basePrice = round((float) $elevator->base_price * $margin, 2);
+        $this->addItem($offer->id, "Dźwig osobowy {$elevator->manufacturer} {$elevator->model} (udźwig {$elevator->capacity} kg, {$elevator->persons} os.)", 1, 'szt.', $basePrice, $sortOrder++);
+        $totalNet += $basePrice;
 
         // ── 2. Dopłata za ilość przystanków ───────────────────────────────────
         if ($elevator && $stops > 0 && $accessCount > 2 && (float) $elevator->coeff_stops > 0) {
-            $unitPrice = round(700 * $stops * (float) $elevator->coeff_stops * $margin, 2);
+            $stopSurchargeRate = (float) ($elevator->stop_surcharge_rate ?? 700);
+            $unitPrice = round($stopSurchargeRate * $stops * (float) $elevator->coeff_stops * $margin, 2);
             $amount    = round($unitPrice * ($accessCount - 2), 2);
             if ($amount != 0) {
                 $this->addItem($offer->id, "Dopłata za liczbę przystanków ({$stops} przyst. × " . ($accessCount - 2) . " dojść ponad 2)", $accessCount - 2, 'kpl.', $unitPrice, $sortOrder++);

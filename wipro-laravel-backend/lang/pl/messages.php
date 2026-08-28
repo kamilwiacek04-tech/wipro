@@ -11,6 +11,7 @@ return [
         'only_sent_cancel'  => 'Można anulować tylko wysłane oferty.',
         'no_new_accepted'   => 'Nie można generować nowej oferty, gdy jedna została już zaakceptowana.',
         'no_send_accepted'  => 'Nie można wysłać oferty, gdy jedna została już zaakceptowana.',
+        'no_elevator_matched' => 'Nie dopasowano żadnej windy z bazy do tego zapytania. Przypisz windę ręcznie (pole "Dopasowana winda"), zanim wygenerujesz ofertę.',
 
         'accepted_title'    => 'Oferta zaakceptowana',
         'rejected_title'    => 'Oferta odrzucona',

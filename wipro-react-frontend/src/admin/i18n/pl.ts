@@ -46,6 +46,7 @@ const pl = {
     offer_sent: 'Oferta wysłana',
     accepted: 'Zaakceptowane',
     rejected: 'Odrzucone',
+    needs_manual_pricing: 'Wymaga ręcznej wyceny',
     draft: 'Szkic',
     sent: 'Wysłana',
     cancelled: 'Anulowana',
@@ -110,6 +111,7 @@ const pl = {
       basePriceLabel: 'Cena bazowa:',
       clientData: 'Dane klienta',
       applicantStatus: 'Status zgłaszającego',
+      objectType: 'Typ obiektu (VAT)',
       contactLabel: 'Kontakt',
       technicalSpec: 'Specyfikacja techniczna',
       shaft: 'Szyb',
@@ -184,6 +186,7 @@ const pl = {
       cabinColor: 'Kolor kabiny',
       landingDoorColor: 'Kolor drzwi przystankowych',
       cabinDoorColor: 'Kolor drzwi kabinowych',
+      needsManualPricingBanner: 'Żadna winda z bazy nie została automatycznie dopasowana do tego zapytania — oferta NIE została wygenerowana ani wysłana. Przypisz windę ręcznie i wygeneruj ofertę z tego panelu.',
     },
   },
   elevators: {
@@ -405,6 +408,7 @@ const pl = {
     },
     coefficients: {
       sectionTitle: 'Współczynniki rekompensujące udźwig',
+      stopSurchargeRate: 'Stawka bazowa dopłaty za przystanek (PLN) — puste = domyślne 700',
       stops: 'Ilość przystanków',
       cabinModel: 'Model kabiny',
       cabinThroughway: 'Kabina przelot',

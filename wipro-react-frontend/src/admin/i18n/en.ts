@@ -48,6 +48,7 @@ const en: AdminTranslations = {
     offer_sent: 'Offer sent',
     accepted: 'Accepted',
     rejected: 'Rejected',
+    needs_manual_pricing: 'Requires manual pricing',
     draft: 'Draft',
     sent: 'Sent',
     cancelled: 'Cancelled',
@@ -112,6 +113,7 @@ const en: AdminTranslations = {
       basePriceLabel: 'Base price:',
       clientData: 'Client data',
       applicantStatus: 'Applicant status',
+      objectType: 'Object type (VAT)',
       contactLabel: 'Contact',
       technicalSpec: 'Technical specification',
       shaft: 'Shaft',
@@ -186,6 +188,7 @@ const en: AdminTranslations = {
       cabinColor: 'Cabin color',
       landingDoorColor: 'Landing door color',
       cabinDoorColor: 'Cabin door color',
+      needsManualPricingBanner: 'No elevator from the database has been automatically matched to this request — the offer has NOT been generated or sent. Assign an elevator manually and generate the offer from this panel.',
     },
   },
   elevators: {
@@ -407,6 +410,7 @@ const en: AdminTranslations = {
     },
     coefficients: {
       sectionTitle: 'Load Compensation Coefficients',
+      stopSurchargeRate: 'Stop surcharge base rate (PLN) — blank = default 700',
       stops: 'Number of stops',
       cabinModel: 'Cabin model',
       cabinThroughway: 'Throughway cabin',

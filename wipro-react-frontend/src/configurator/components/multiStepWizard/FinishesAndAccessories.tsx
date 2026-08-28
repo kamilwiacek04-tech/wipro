@@ -81,6 +81,7 @@ const FinishesAndAccessories = () => {
             drive_type: shaftParameters.liftPurpose,
             door_type: shaftParameters.accessDiagram,
             elevator_id: shaftParameters.elevatorId || undefined,
+            object_type: dataCurr.objectType,
             additional_notes: [
                 formData.additionalNotes,
                 JSON.stringify({
@@ -286,6 +287,29 @@ const FinishesAndAccessories = () => {
                                     />
                                 </BorderInput>
                             )}
+
+                            {/* Typ obiektu (stawka VAT) */}
+                            <BorderInput title={t(`${textPath}.field.objectType`)}>
+                                <Controller
+                                    control={control}
+                                    name="objectType"
+                                    render={({ field }) => (
+                                        <select
+                                            {...field}
+                                            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                                        >
+                                            <option value="" disabled>{t(`${textPath}.field.objectTypePlaceholder`)}</option>
+                                            <option value="residential">{t(`${textPath}.field.objectTypeResidential`)}</option>
+                                            <option value="care_home">{t(`${textPath}.field.objectTypeCareHome`)}</option>
+                                            <option value="public_commercial">{t(`${textPath}.field.objectTypePublicCommercial`)}</option>
+                                        </select>
+                                    )}
+                                />
+                                <p className="text-[12px] text-gray-400 mt-1">{t(`${textPath}.field.objectTypeVatNote`)}</p>
+                                {errors.objectType && (
+                                    <p className="text-[14px] text-[var(--red)] mt-1">{t(errors.objectType.message ?? '')}</p>
+                                )}
+                            </BorderInput>
 
                             <SubmitButton title={t('form.submit')} isLoading={isLoading} />
                         </form>

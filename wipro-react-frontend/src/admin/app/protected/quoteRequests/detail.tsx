@@ -95,6 +95,7 @@ interface QuoteRequestDetail {
   investment_name: string | null
   investment_address: string | null
   investment_city: string | null
+  object_type: 'residential' | 'care_home' | 'public_commercial' | null
   floors: number | null
   stops: number | null
   lift_capacity: number | null
@@ -137,6 +138,12 @@ const INVESTOR_STATUS_OPTIONS = [
   { value: 'INVESTOR',       label: 'Inwestor' },
   { value: 'DISTRIBUTOR',    label: 'Dealer / Dystrybutor' },
   { value: 'OTHER',          label: 'Inny' },
+]
+
+const OBJECT_TYPE_OPTIONS = [
+  { value: 'residential',        label: 'Mieszkaniowy (≤150 m² / dom jedn. ≤300 m²) — VAT 8%' },
+  { value: 'care_home',          label: 'Dom Spokojnej Starości — VAT 8%' },
+  { value: 'public_commercial',  label: 'Publiczny / komercyjny — VAT 23%' },
 ]
 
 const labelOf = (opts: { value: string; label: string }[], val: string | null | undefined) =>
@@ -479,7 +486,7 @@ const EditableTextarea = ({
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-const STATUS_VALUES = ['new', 'in_progress', 'offer_sent', 'accepted', 'rejected'] as const
+const STATUS_VALUES = ['new', 'in_progress', 'needs_manual_pricing', 'offer_sent', 'accepted', 'rejected'] as const
 
 const QuoteRequestDetail = () => {
   const { id } = useParams<{ id: string }>()
@@ -763,6 +770,11 @@ const QuoteRequestDetail = () => {
 
           {/* Status */}
           <Card className="p-6 gap-0">
+            {data.status === 'needs_manual_pricing' && (
+              <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {t('quoteRequests.detail.needsManualPricingBanner')}
+              </div>
+            )}
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold text-gray-900">{t('quoteRequests.detail.requestStatus')}</h3>
               <Badge variant={statusBadge(data.status)}>{statusLabel(data.status)}</Badge>
@@ -819,6 +831,12 @@ const QuoteRequestDetail = () => {
               <EditableField label={t('quoteRequests.detail.investmentNameLabel')} value={data.investment_name} field="investment_name" onSave={saveTextField} />
               <EditableField label={t('quoteRequests.detail.installationAddress')} value={data.investment_address} field="investment_address" onSave={saveTextField} />
               <EditableField label={t('quoteRequests.detail.fields.city')} value={data.investment_city} field="investment_city" onSave={saveTextField} />
+              <EditableSelect
+                label={t('quoteRequests.detail.objectType')}
+                value={data.object_type}
+                options={OBJECT_TYPE_OPTIONS}
+                onSave={val => saveTextField('object_type', val ?? '')}
+              />
               <EditableField label={t('quoteRequests.detail.fields.floors')} value={data.floors} field="floors" onSave={saveNumberField} type="number" />
               <EditableField label={t('quoteRequests.detail.fields.stops')} value={data.stops} field="stops" onSave={saveNumberField} type="number" />
             </div>
@@ -1152,12 +1170,12 @@ const QuoteRequestDetail = () => {
                   <span className="font-semibold">{formatPrice(offerTotal)}</span>
                 </div>
                 <div className="flex justify-between text-xs text-gray-400">
-                  <span>{t('quoteRequests.detail.vat')} 23%</span>
-                  <span>{formatPrice(offerTotal * 0.23)}</span>
+                  <span>{t('quoteRequests.detail.vat')} {draftOffer?.vat_rate ?? 23}%</span>
+                  <span>{formatPrice(offerTotal * ((draftOffer?.vat_rate ?? 23) / 100))}</span>
                 </div>
                 <div className="flex justify-between text-sm font-bold">
                   <span>{t('quoteRequests.detail.gross')}</span>
-                  <span>{formatPrice(offerTotal * 1.23)}</span>
+                  <span>{formatPrice(offerTotal * (1 + (draftOffer?.vat_rate ?? 23) / 100))}</span>
                 </div>
               </div>
 

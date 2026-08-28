@@ -94,7 +94,7 @@ class AdminQuoteRequestController extends Controller
         $quoteRequest = QuoteRequest::findOrFail($id);
 
         $data = $request->validate([
-            'status' => 'sometimes|string|in:new,in_progress,offer_sent,accepted,rejected',
+            'status' => 'sometimes|string|in:new,in_progress,needs_manual_pricing,offer_sent,accepted,rejected',
             'investor_name' => 'sometimes|string|max:255',
             'investor_email' => 'sometimes|email|max:255',
             'investor_phone' => 'sometimes|nullable|string|max:50',
@@ -104,6 +104,7 @@ class AdminQuoteRequestController extends Controller
             'investor_city' => 'sometimes|nullable|string|max:100',
             'investment_name' => 'sometimes|nullable|string|max:255',
             'investment_address' => 'sometimes|nullable|string|max:255',
+            'object_type' => 'sometimes|nullable|string|in:residential,care_home,public_commercial',
             'floors' => 'sometimes|nullable|integer',
             'stops' => 'sometimes|nullable|integer',
             'lift_capacity' => 'sometimes|nullable|integer',
@@ -142,6 +143,12 @@ class AdminQuoteRequestController extends Controller
             __('messages.offer.no_new_accepted')
         );
 
+        abort_if(
+            !$quoteRequest->elevator,
+            422,
+            __('messages.offer.no_elevator_matched')
+        );
+
         $quoteRequest->offers()->where('status', 'draft')->delete();
         $version     = $quoteRequest->offers()->count() + 1;
         $offerNumber = sprintf('%s/OF/%d', $quoteRequest->request_number, $version);
@@ -154,13 +161,13 @@ class AdminQuoteRequestController extends Controller
             'status'              => 'draft',
             'total_price_net'     => 0,
             'total_price_gross'   => 0,
-            'vat_rate'            => 23.00,
+            'vat_rate'            => \App\Services\OfferService::resolveVatRate($quoteRequest->object_type),
             'valid_until'         => now()->addDays(30)->toDateString(),
         ]);
 
         $offerService = new \App\Services\OfferService();
         $totalNet     = $offerService->buildPricedItems($quoteRequest, $offer);
-        $totalGross   = round($totalNet * 1.23, 2);
+        $totalGross   = round($totalNet * (1 + $offer->vat_rate / 100), 2);
 
         $offer->update([
             'total_price_net'   => $totalNet,

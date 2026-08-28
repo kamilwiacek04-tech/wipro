@@ -66,6 +66,7 @@
                 </tfoot>
             </table>
         </div>
+        <p style="font-size:11px; color:#aaa; margin-top:4px;">{{ __('emails.offer_sent.vat_disclaimer') }}</p>
 
         @if($offer->notes)
         <div class="info-box">
