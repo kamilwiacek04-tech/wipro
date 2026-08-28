@@ -1170,12 +1170,12 @@ const QuoteRequestDetail = () => {
                   <span className="font-semibold">{formatPrice(offerTotal)}</span>
                 </div>
                 <div className="flex justify-between text-xs text-gray-400">
-                  <span>{t('quoteRequests.detail.vat')} 23%</span>
-                  <span>{formatPrice(offerTotal * 0.23)}</span>
+                  <span>{t('quoteRequests.detail.vat')} {draftOffer?.vat_rate ?? 23}%</span>
+                  <span>{formatPrice(offerTotal * ((draftOffer?.vat_rate ?? 23) / 100))}</span>
                 </div>
                 <div className="flex justify-between text-sm font-bold">
                   <span>{t('quoteRequests.detail.gross')}</span>
-                  <span>{formatPrice(offerTotal * 1.23)}</span>
+                  <span>{formatPrice(offerTotal * (1 + (draftOffer?.vat_rate ?? 23) / 100))}</span>
                 </div>
               </div>
 

@@ -94,7 +94,7 @@ class AdminQuoteRequestController extends Controller
         $quoteRequest = QuoteRequest::findOrFail($id);
 
         $data = $request->validate([
-            'status' => 'sometimes|string|in:new,in_progress,offer_sent,accepted,rejected',
+            'status' => 'sometimes|string|in:new,in_progress,needs_manual_pricing,offer_sent,accepted,rejected',
             'investor_name' => 'sometimes|string|max:255',
             'investor_email' => 'sometimes|email|max:255',
             'investor_phone' => 'sometimes|nullable|string|max:50',
@@ -104,7 +104,7 @@ class AdminQuoteRequestController extends Controller
             'investor_city' => 'sometimes|nullable|string|max:100',
             'investment_name' => 'sometimes|nullable|string|max:255',
             'investment_address' => 'sometimes|nullable|string|max:255',
-            'object_type' => 'sometimes|string|in:residential,care_home,public_commercial',
+            'object_type' => 'sometimes|nullable|string|in:residential,care_home,public_commercial',
             'floors' => 'sometimes|nullable|integer',
             'stops' => 'sometimes|nullable|integer',
             'lift_capacity' => 'sometimes|nullable|integer',
