@@ -990,8 +990,12 @@ const CabinColorsTab = ({ onCountChange }: { onCountChange?: (n: number) => void
   }
 
   const handleColorField = async (id: number, field: string, value: unknown) => {
-    await api.patch(`/admin/cabin-colors/${id}`, { [field]: value })
-    loadColors()
+    try {
+      await api.patch(`/admin/cabin-colors/${id}`, { [field]: value })
+      loadColors()
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? 'Nie udało się zaktualizować koloru.')
+    }
   }
 
   const createColor = async (e: React.FormEvent) => {
