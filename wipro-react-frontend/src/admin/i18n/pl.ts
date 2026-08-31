@@ -345,6 +345,7 @@ const pl = {
       detailValuePlaceholder: 'Wartość (np. ST1)',
       addRow: 'Dodaj wiersz',
       priceAddition: 'Dopłata (PLN)',
+      isDefault: 'Domyślny',
     },
     accessories: {
       title: 'Akcesoria kabin',
@@ -355,6 +356,7 @@ const pl = {
       confirmDelete: 'Usunąć akcesorium?',
       priceAddition: 'Dopłata (PLN)',
       multiplyByAccessCount: '× dojścia',
+      isDefault: 'Domyślny',
     },
     extras: {
       title: 'Dodatki',
@@ -376,6 +378,8 @@ const pl = {
       priceAdditionCabin: 'Dopłata kabina (PLN)',
       priceAdditionDoor: 'Dopłata drzwi (PLN)',
       sortOrder: 'Kolejność',
+      isDefaultCabin: 'Domyślny (kabina)',
+      isDefaultDoor: 'Domyślny (drzwi)',
     },
     technical: {
       sectionTitle: 'Dane techniczne',

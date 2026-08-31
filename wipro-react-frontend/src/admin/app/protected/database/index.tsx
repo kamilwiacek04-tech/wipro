@@ -39,10 +39,10 @@ interface LiftType {
   id: number; key: string; name_pl: string; name_en: string; sort_order: number; is_active: boolean; base_price: number | null; price_per_stop: number | null
 }
 interface CabinModel {
-  id: number; name_pl: string; name_en: string; image_url: string | null; details: DetailRow[] | null; sort_order: number; is_active: boolean; price_addition: number
+  id: number; name_pl: string; name_en: string; image_url: string | null; details: DetailRow[] | null; sort_order: number; is_active: boolean; price_addition: number; is_default: boolean
 }
 interface CabinAccessory {
-  id: number; category: string; name_pl: string; name_en: string; image_url: string | null; sort_order: number; is_active: boolean; price_addition: number; multiply_by_access_count: boolean
+  id: number; category: string; name_pl: string; name_en: string; image_url: string | null; sort_order: number; is_active: boolean; price_addition: number; multiply_by_access_count: boolean; is_default: boolean
 }
 interface CabinColor {
   id: number
@@ -55,6 +55,8 @@ interface CabinColor {
   price_addition_door: number
   sort_order: number
   is_active: boolean
+  is_default_cabin: boolean
+  is_default_door: boolean
 }
 interface CabinType {
   id: number
@@ -309,9 +311,12 @@ const CabinModelsTab = ({ onCountChange }: { onCountChange?: (n: number) => void
 
   useEffect(() => { onCountChange?.(models.length) }, [models.length])
 
-  useEffect(() => {
+  const loadModels = () => {
+    setLoading(true)
     api.get('/admin/cabin-models').then(r => setModels(r.data)).finally(() => setLoading(false))
-  }, [])
+  }
+
+  useEffect(() => { loadModels() }, [])
 
   const deleteModel = async (id: number) => {
     if (!confirm(t('database.cabinModels.confirmDelete'))) return
@@ -321,6 +326,10 @@ const CabinModelsTab = ({ onCountChange }: { onCountChange?: (n: number) => void
   const toggleActive = async (m: CabinModel) => {
     await api.patch(`/admin/cabin-models/${m.id}`, { is_active: !m.is_active })
     setModels(prev => prev.map(x => x.id === m.id ? { ...x, is_active: !x.is_active } : x))
+  }
+  const toggleDefault = async (m: CabinModel) => {
+    await api.patch(`/admin/cabin-models/${m.id}`, { is_default: !m.is_default })
+    loadModels()
   }
   const updateModel = async (id: number, field: string, value: string | number) => {
     await api.patch(`/admin/cabin-models/${id}`, { [field]: value })
@@ -412,6 +421,7 @@ const CabinModelsTab = ({ onCountChange }: { onCountChange?: (n: number) => void
               <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('settings.nameEn')}</th>
               <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.cabinModels.sortOrder')}</th>
               <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('common.status')}</th>
+              <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.cabinModels.isDefault')}</th>
               <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.cabinModels.detailsCol')}</th>
               <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.cabinModels.priceAddition')}</th>
               <th className="w-10" />
@@ -429,6 +439,15 @@ const CabinModelsTab = ({ onCountChange }: { onCountChange?: (n: number) => void
                     <td className="px-4 py-3 text-center">
                       <button onClick={() => toggleActive(m)} className={`text-xs px-2 py-0.5 rounded-full cursor-pointer ${m.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
                         {m.is_active ? t('settings.active') : t('settings.inactive')}
+                      </button>
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <button
+                        type="button"
+                        onClick={() => toggleDefault(m)}
+                        className={`relative inline-flex h-5 w-9 shrink-0 rounded-full transition-colors cursor-pointer focus:outline-none ${m.is_default ? 'bg-amber-500' : 'bg-gray-200'}`}
+                      >
+                        <span className={`absolute top-0.75 h-3.5 w-3.5 rounded-full bg-white shadow transition-all ${m.is_default ? 'left-4.75' : 'left-0.75'}`} />
                       </button>
                     </td>
                     <td className="px-4 py-3 text-center">
@@ -450,7 +469,7 @@ const CabinModelsTab = ({ onCountChange }: { onCountChange?: (n: number) => void
                   </tr>
                   {expandedId === m.id && (
                     <tr>
-                      <td colSpan={8} className="px-6 py-4 bg-amber-50/40 border-b border-amber-100">
+                      <td colSpan={9} className="px-6 py-4 bg-amber-50/40 border-b border-amber-100">
                         <p className="text-xs font-medium text-gray-600 mb-2">{t('database.cabinModels.detailsSectionTitle')}</p>
                         <DetailsEditor value={editingDetails} onChange={setEditingDetails} />
                         <div className="flex gap-2 mt-3">
@@ -485,9 +504,12 @@ const AccessoriesTab = ({ onCountChange }: { onCountChange?: (n: number) => void
 
   useEffect(() => { onCountChange?.(accessories.filter(a => a.category !== 'EXTRA').length) }, [accessories.length])
 
-  useEffect(() => {
+  const loadAccessories = () => {
+    setLoading(true)
     api.get('/admin/cabin-accessories').then(r => setAccessories(r.data)).finally(() => setLoading(false))
-  }, [])
+  }
+
+  useEffect(() => { loadAccessories() }, [])
 
   const deleteAcc = async (id: number) => {
     if (!confirm(t('database.accessories.confirmDelete'))) return
@@ -497,6 +519,10 @@ const AccessoriesTab = ({ onCountChange }: { onCountChange?: (n: number) => void
   const toggleActive = async (a: CabinAccessory) => {
     await api.patch(`/admin/cabin-accessories/${a.id}`, { is_active: !a.is_active })
     setAccessories(prev => prev.map(x => x.id === a.id ? { ...x, is_active: !x.is_active } : x))
+  }
+  const toggleDefault = async (a: CabinAccessory) => {
+    await api.patch(`/admin/cabin-accessories/${a.id}`, { is_default: !a.is_default })
+    loadAccessories()
   }
   const updateAcc = async (id: number, field: string, value: string | number) => {
     await api.patch(`/admin/cabin-accessories/${id}`, { [field]: value })
@@ -596,6 +622,7 @@ const AccessoriesTab = ({ onCountChange }: { onCountChange?: (n: number) => void
                 <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('settings.nameEn')}</th>
                 <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.accessories.sortOrder')}</th>
                 <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('common.status')}</th>
+                <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.accessories.isDefault')}</th>
                 <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.accessories.priceAddition')}</th>
                 <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase text-center">{t('database.accessories.multiplyByAccessCount')}</th>
                 <th className="w-10" />
@@ -605,7 +632,7 @@ const AccessoriesTab = ({ onCountChange }: { onCountChange?: (n: number) => void
               {ACCESSORY_CATEGORIES.filter(cat => grouped[cat].length > 0).map(cat => (
                 <>
                   <tr key={`cat-${cat}`} className="bg-gray-50/60 border-t border-gray-100">
-                    <td colSpan={8} className="px-4 py-2">
+                    <td colSpan={9} className="px-4 py-2">
                       <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{i18n.resolvedLanguage === 'pl' ? CATEGORY_LABELS_PL[cat] : CATEGORY_LABELS_EN[cat]}</span>
                     </td>
                   </tr>
@@ -620,6 +647,15 @@ const AccessoriesTab = ({ onCountChange }: { onCountChange?: (n: number) => void
                       <td className="px-4 py-3 text-center">
                         <button onClick={() => toggleActive(a)} className={`text-xs px-2 py-0.5 rounded-full cursor-pointer ${a.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
                           {a.is_active ? t('settings.active') : t('settings.inactive')}
+                        </button>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <button
+                          type="button"
+                          onClick={() => toggleDefault(a)}
+                          className={`relative inline-flex h-5 w-9 shrink-0 rounded-full transition-colors cursor-pointer focus:outline-none ${a.is_default ? 'bg-amber-500' : 'bg-gray-200'}`}
+                        >
+                          <span className={`absolute top-0.75 h-3.5 w-3.5 rounded-full bg-white shadow transition-all ${a.is_default ? 'left-4.75' : 'left-0.75'}`} />
                         </button>
                       </td>
                       <td className="px-4 py-3 text-sm text-center">
@@ -651,7 +687,7 @@ const AccessoriesTab = ({ onCountChange }: { onCountChange?: (n: number) => void
                 </>
               ))}
               {ACCESSORY_CATEGORIES.every(cat => grouped[cat].length === 0) && (
-                <tr><td colSpan={8} className="px-4 py-8 text-center text-sm text-gray-400">{t('database.accessories.noAccessories')}</td></tr>
+                <tr><td colSpan={9} className="px-4 py-8 text-center text-sm text-gray-400">{t('database.accessories.noAccessories')}</td></tr>
               )}
             </tbody>
           </table>
@@ -674,11 +710,14 @@ const ExtrasTab = ({ onCountChange }: { onCountChange?: (n: number) => void }) =
 
   useEffect(() => { onCountChange?.(extras.length) }, [extras.length])
 
-  useEffect(() => {
+  const loadExtras = () => {
+    setLoading(true)
     api.get('/admin/cabin-accessories')
       .then(r => setExtras((r.data as CabinAccessory[]).filter(a => a.category === 'EXTRA')))
       .finally(() => setLoading(false))
-  }, [])
+  }
+
+  useEffect(() => { loadExtras() }, [])
 
   const deleteExtra = async (id: number) => {
     if (!confirm(t('database.extras.confirmDelete'))) return
@@ -688,6 +727,10 @@ const ExtrasTab = ({ onCountChange }: { onCountChange?: (n: number) => void }) =
   const toggleActive = async (a: CabinAccessory) => {
     await api.patch(`/admin/cabin-accessories/${a.id}`, { is_active: !a.is_active })
     setExtras(prev => prev.map(x => x.id === a.id ? { ...x, is_active: !x.is_active } : x))
+  }
+  const toggleDefault = async (a: CabinAccessory) => {
+    await api.patch(`/admin/cabin-accessories/${a.id}`, { is_default: !a.is_default })
+    loadExtras()
   }
   const updateExtra = async (id: number, field: string, value: string | number) => {
     await api.patch(`/admin/cabin-accessories/${id}`, { [field]: value })
@@ -741,11 +784,12 @@ const ExtrasTab = ({ onCountChange }: { onCountChange?: (n: number) => void }) =
               <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.accessories.priceAddition')}</th>
               <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.accessories.sortOrder')}</th>
               <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('common.status')}</th>
+              <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.accessories.isDefault')}</th>
               <th className="w-10" />
             </tr></thead>
             <tbody className="divide-y divide-gray-50">
               {extras.length === 0 && (
-                <tr><td colSpan={6} className="px-4 py-6 text-center text-sm text-gray-400">{t('database.extras.noExtras')}</td></tr>
+                <tr><td colSpan={7} className="px-4 py-6 text-center text-sm text-gray-400">{t('database.extras.noExtras')}</td></tr>
               )}
               {extras.map(a => (
                 <tr key={a.id} className="hover:bg-gray-50/50">
@@ -758,6 +802,15 @@ const ExtrasTab = ({ onCountChange }: { onCountChange?: (n: number) => void }) =
                   <td className="px-4 py-3 text-center">
                     <button onClick={() => toggleActive(a)} className={`text-xs px-2 py-0.5 rounded-full cursor-pointer ${a.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
                       {a.is_active ? t('settings.active') : t('settings.inactive')}
+                    </button>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <button
+                      type="button"
+                      onClick={() => toggleDefault(a)}
+                      className={`relative inline-flex h-5 w-9 shrink-0 rounded-full transition-colors cursor-pointer focus:outline-none ${a.is_default ? 'bg-amber-500' : 'bg-gray-200'}`}
+                    >
+                      <span className={`absolute top-0.75 h-3.5 w-3.5 rounded-full bg-white shadow transition-all ${a.is_default ? 'left-4.75' : 'left-0.75'}`} />
                     </button>
                   </td>
                   <td className="px-2 py-3"><Button variant="ghost" size="icon" onClick={() => deleteExtra(a.id)} className="h-8 w-8 text-red-400 hover:text-red-600"><Trash2 className="h-4 w-4" /></Button></td>
@@ -1003,6 +1056,8 @@ const CabinColorsTab = ({ onCountChange }: { onCountChange?: (n: number) => void
               <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.colors.nameEn')}</th>
               <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.colors.visibleForCabin')}</th>
               <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.colors.visibleForDoor')}</th>
+              <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.colors.isDefaultCabin')}</th>
+              <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.colors.isDefaultDoor')}</th>
               <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.colors.priceAdditionCabin')}</th>
               <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.colors.priceAdditionDoor')}</th>
               <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t('database.colors.sortOrder')}</th>
@@ -1011,7 +1066,7 @@ const CabinColorsTab = ({ onCountChange }: { onCountChange?: (n: number) => void
             </tr></thead>
             <tbody className="divide-y divide-gray-50">
               {colors.length === 0 && (
-                <tr><td colSpan={10} className="px-4 py-8 text-center text-sm text-gray-400">{t('database.colors.noColors')}</td></tr>
+                <tr><td colSpan={12} className="px-4 py-8 text-center text-sm text-gray-400">{t('database.colors.noColors')}</td></tr>
               )}
               {colors.map(c => (
                 <tr key={c.id} className="hover:bg-gray-50/50">
@@ -1048,6 +1103,24 @@ const CabinColorsTab = ({ onCountChange }: { onCountChange?: (n: number) => void
                       className={`relative inline-flex h-5 w-9 shrink-0 rounded-full transition-colors cursor-pointer focus:outline-none ${c.visible_for_door ? 'bg-amber-500' : 'bg-gray-200'}`}
                     >
                       <span className={`absolute top-0.75 h-3.5 w-3.5 rounded-full bg-white shadow transition-all ${c.visible_for_door ? 'left-4.75' : 'left-0.75'}`} />
+                    </button>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <button
+                      type="button"
+                      onClick={() => handleColorField(c.id, 'is_default_cabin', !c.is_default_cabin)}
+                      className={`relative inline-flex h-5 w-9 shrink-0 rounded-full transition-colors cursor-pointer focus:outline-none ${c.is_default_cabin ? 'bg-amber-500' : 'bg-gray-200'}`}
+                    >
+                      <span className={`absolute top-0.75 h-3.5 w-3.5 rounded-full bg-white shadow transition-all ${c.is_default_cabin ? 'left-4.75' : 'left-0.75'}`} />
+                    </button>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <button
+                      type="button"
+                      onClick={() => handleColorField(c.id, 'is_default_door', !c.is_default_door)}
+                      className={`relative inline-flex h-5 w-9 shrink-0 rounded-full transition-colors cursor-pointer focus:outline-none ${c.is_default_door ? 'bg-amber-500' : 'bg-gray-200'}`}
+                    >
+                      <span className={`absolute top-0.75 h-3.5 w-3.5 rounded-full bg-white shadow transition-all ${c.is_default_door ? 'left-4.75' : 'left-0.75'}`} />
                     </button>
                   </td>
                   <td className="px-4 py-3 text-center">

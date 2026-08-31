@@ -347,6 +347,7 @@ const en: AdminTranslations = {
       detailValuePlaceholder: 'Value (e.g. ST1)',
       addRow: 'Add row',
       priceAddition: 'Price addition (PLN)',
+      isDefault: 'Default',
     },
     accessories: {
       title: 'Cabin accessories',
@@ -357,6 +358,7 @@ const en: AdminTranslations = {
       confirmDelete: 'Delete accessory?',
       priceAddition: 'Price addition (PLN)',
       multiplyByAccessCount: '× accesses',
+      isDefault: 'Default',
     },
     extras: {
       title: 'Extras',
@@ -378,6 +380,8 @@ const en: AdminTranslations = {
       priceAdditionCabin: 'Price addition cabin (PLN)',
       priceAdditionDoor: 'Price addition door (PLN)',
       sortOrder: 'Sort order',
+      isDefaultCabin: 'Default (cabin)',
+      isDefaultDoor: 'Default (door)',
     },
     technical: {
       sectionTitle: 'Technical data',
