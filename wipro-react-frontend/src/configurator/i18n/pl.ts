@@ -177,7 +177,6 @@ const pl = {
         link: 'Regulamin',
         page: {
             title: 'Regulamin',
-            placeholder: 'Treść regulaminu zostanie tutaj opublikowana.',
             backToForm: '← Wróć do formularza',
         },
     },

@@ -16,14 +16,14 @@ const TermsPage = () => {
                         <h2 className='text-base font-semibold text-gray-900 mb-2'>§ 1. Postanowienia ogólne</h2>
                         <p className='m-0'>
                             Niniejszy regulamin określa zasady korzystania z internetowego konfiguratora dźwigów
-                            osobowych (dalej: „Konfigurator"), dostępnego pod niniejszą domeną.
+                            osobowych (dalej: „Konfigurator”), dostępnego pod niniejszą domeną.
                         </p>
                         <p className='m-0 mt-2'>
                             Administratorem Konfiguratora oraz administratorem danych osobowych przetwarzanych
                             w związku z jego działaniem jest <strong>WINDY WIPRO SP. Z O. O.</strong> z siedzibą
                             w Kokotowie 942, 32-002 Węgrzce Wielkie, NIP: 6832103529, REGON: 382308124,
                             KRS: 0000765948, reprezentowana przez Janusza i Krzysztofa Kasperowskich
-                            (dalej: „Administrator").
+                            (dalej: „Administrator”).
                         </p>
                     </section>
 

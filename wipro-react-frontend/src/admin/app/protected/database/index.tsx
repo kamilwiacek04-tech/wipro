@@ -324,12 +324,20 @@ const CabinModelsTab = ({ onCountChange }: { onCountChange?: (n: number) => void
     setModels(prev => prev.filter(m => m.id !== id))
   }
   const toggleActive = async (m: CabinModel) => {
-    await api.patch(`/admin/cabin-models/${m.id}`, { is_active: !m.is_active })
-    setModels(prev => prev.map(x => x.id === m.id ? { ...x, is_active: !x.is_active } : x))
+    try {
+      await api.patch(`/admin/cabin-models/${m.id}`, { is_active: !m.is_active })
+      setModels(prev => prev.map(x => x.id === m.id ? { ...x, is_active: !x.is_active } : x))
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? 'Nie udało się zaktualizować statusu.')
+    }
   }
   const toggleDefault = async (m: CabinModel) => {
-    await api.patch(`/admin/cabin-models/${m.id}`, { is_default: !m.is_default })
-    loadModels()
+    try {
+      await api.patch(`/admin/cabin-models/${m.id}`, { is_default: !m.is_default })
+      loadModels()
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? 'Nie udało się ustawić wartości domyślnej.')
+    }
   }
   const updateModel = async (id: number, field: string, value: string | number) => {
     await api.patch(`/admin/cabin-models/${id}`, { [field]: value })
@@ -517,12 +525,20 @@ const AccessoriesTab = ({ onCountChange }: { onCountChange?: (n: number) => void
     setAccessories(prev => prev.filter(a => a.id !== id))
   }
   const toggleActive = async (a: CabinAccessory) => {
-    await api.patch(`/admin/cabin-accessories/${a.id}`, { is_active: !a.is_active })
-    setAccessories(prev => prev.map(x => x.id === a.id ? { ...x, is_active: !x.is_active } : x))
+    try {
+      await api.patch(`/admin/cabin-accessories/${a.id}`, { is_active: !a.is_active })
+      setAccessories(prev => prev.map(x => x.id === a.id ? { ...x, is_active: !x.is_active } : x))
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? 'Nie udało się zaktualizować statusu.')
+    }
   }
   const toggleDefault = async (a: CabinAccessory) => {
-    await api.patch(`/admin/cabin-accessories/${a.id}`, { is_default: !a.is_default })
-    loadAccessories()
+    try {
+      await api.patch(`/admin/cabin-accessories/${a.id}`, { is_default: !a.is_default })
+      loadAccessories()
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? 'Nie udało się ustawić wartości domyślnej.')
+    }
   }
   const updateAcc = async (id: number, field: string, value: string | number) => {
     await api.patch(`/admin/cabin-accessories/${id}`, { [field]: value })
@@ -725,12 +741,20 @@ const ExtrasTab = ({ onCountChange }: { onCountChange?: (n: number) => void }) =
     setExtras(prev => prev.filter(a => a.id !== id))
   }
   const toggleActive = async (a: CabinAccessory) => {
-    await api.patch(`/admin/cabin-accessories/${a.id}`, { is_active: !a.is_active })
-    setExtras(prev => prev.map(x => x.id === a.id ? { ...x, is_active: !x.is_active } : x))
+    try {
+      await api.patch(`/admin/cabin-accessories/${a.id}`, { is_active: !a.is_active })
+      setExtras(prev => prev.map(x => x.id === a.id ? { ...x, is_active: !x.is_active } : x))
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? 'Nie udało się zaktualizować statusu.')
+    }
   }
   const toggleDefault = async (a: CabinAccessory) => {
-    await api.patch(`/admin/cabin-accessories/${a.id}`, { is_default: !a.is_default })
-    loadExtras()
+    try {
+      await api.patch(`/admin/cabin-accessories/${a.id}`, { is_default: !a.is_default })
+      loadExtras()
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? 'Nie udało się ustawić wartości domyślnej.')
+    }
   }
   const updateExtra = async (id: number, field: string, value: string | number) => {
     await api.patch(`/admin/cabin-accessories/${id}`, { [field]: value })
@@ -1082,10 +1106,13 @@ const CabinColorsTab = ({ onCountChange }: { onCountChange?: (n: number) => void
                   <td className="px-4 py-3 text-center">
                     <button
                       type="button"
-                      onClick={() => {
-                        const newVal = !c.visible_for_cabin;
-                        setColors(prev => prev.map(x => x.id === c.id ? { ...x, visible_for_cabin: newVal } : x));
-                        api.patch(`/admin/cabin-colors/${c.id}`, { visible_for_cabin: newVal });
+                      onClick={async () => {
+                        try {
+                          await api.patch(`/admin/cabin-colors/${c.id}`, { visible_for_cabin: !c.visible_for_cabin })
+                          loadColors()
+                        } catch (err: any) {
+                          toast.error(err?.response?.data?.message ?? 'Nie udało się zaktualizować widoczności.')
+                        }
                       }}
                       className={`relative inline-flex h-5 w-9 shrink-0 rounded-full transition-colors cursor-pointer focus:outline-none ${c.visible_for_cabin ? 'bg-amber-500' : 'bg-gray-200'}`}
                     >
@@ -1095,10 +1122,13 @@ const CabinColorsTab = ({ onCountChange }: { onCountChange?: (n: number) => void
                   <td className="px-4 py-3 text-center">
                     <button
                       type="button"
-                      onClick={() => {
-                        const newVal = !c.visible_for_door;
-                        setColors(prev => prev.map(x => x.id === c.id ? { ...x, visible_for_door: newVal } : x));
-                        api.patch(`/admin/cabin-colors/${c.id}`, { visible_for_door: newVal });
+                      onClick={async () => {
+                        try {
+                          await api.patch(`/admin/cabin-colors/${c.id}`, { visible_for_door: !c.visible_for_door })
+                          loadColors()
+                        } catch (err: any) {
+                          toast.error(err?.response?.data?.message ?? 'Nie udało się zaktualizować widoczności.')
+                        }
                       }}
                       className={`relative inline-flex h-5 w-9 shrink-0 rounded-full transition-colors cursor-pointer focus:outline-none ${c.visible_for_door ? 'bg-amber-500' : 'bg-gray-200'}`}
                     >

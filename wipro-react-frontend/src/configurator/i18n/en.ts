@@ -179,7 +179,6 @@ const en: Translations = {
         link: 'Terms of Service',
         page: {
             title: 'Terms of Service',
-            placeholder: 'The terms of service will be published here.',
             backToForm: '← Back to form',
         },
     },

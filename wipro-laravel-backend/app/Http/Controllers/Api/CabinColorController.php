@@ -82,14 +82,14 @@ class CabinColorController extends Controller
     {
         if ($color->is_default_cabin && (!$color->is_active || !$color->visible_for_cabin)) {
             abort(response()->json([
-                'message' => 'validation.default_cabin_requires_active_and_visible',
-                'errors'  => ['is_default_cabin' => ['validation.default_cabin_requires_active_and_visible']],
+                'message' => 'Nie można ustawić jako domyślny nieaktywnego lub niewidocznego dla kabiny koloru.',
+                'errors'  => ['is_default_cabin' => ['Nie można ustawić jako domyślny nieaktywnego lub niewidocznego dla kabiny koloru.']],
             ], 422));
         }
         if ($color->is_default_door && (!$color->is_active || !$color->visible_for_door)) {
             abort(response()->json([
-                'message' => 'validation.default_door_requires_active_and_visible',
-                'errors'  => ['is_default_door' => ['validation.default_door_requires_active_and_visible']],
+                'message' => 'Nie można ustawić jako domyślny nieaktywnego lub niewidocznego dla drzwi koloru.',
+                'errors'  => ['is_default_door' => ['Nie można ustawić jako domyślny nieaktywnego lub niewidocznego dla drzwi koloru.']],
             ], 422));
         }
     }

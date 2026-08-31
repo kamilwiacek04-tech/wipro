@@ -50,6 +50,8 @@ class CabinAccessoryController extends Controller
 
         unset($data['image']);
 
+        $data['is_active'] = $data['is_active'] ?? true;
+
         $accessory = new CabinAccessory($data);
         $this->guardDefaultRequiresActive($accessory);
 
@@ -100,8 +102,8 @@ class CabinAccessoryController extends Controller
     {
         if ($accessory->is_default && !$accessory->is_active) {
             abort(response()->json([
-                'message' => 'validation.default_must_be_active',
-                'errors'  => ['is_default' => ['validation.default_must_be_active']],
+                'message' => 'Nie można ustawić jako domyślnego nieaktywnego akcesorium.',
+                'errors'  => ['is_default' => ['Nie można ustawić jako domyślnego nieaktywnego akcesorium.']],
             ], 422));
         }
     }

@@ -44,6 +44,8 @@ class CabinModelController extends Controller
 
         unset($data['image']);
 
+        $data['is_active'] = $data['is_active'] ?? true;
+
         $model = new CabinModel($data);
         $this->guardDefaultRequiresActive($model);
 
@@ -92,8 +94,8 @@ class CabinModelController extends Controller
     {
         if ($model->is_default && !$model->is_active) {
             abort(response()->json([
-                'message' => 'validation.default_must_be_active',
-                'errors'  => ['is_default' => ['validation.default_must_be_active']],
+                'message' => 'Nie można ustawić jako domyślny nieaktywnego modelu kabiny.',
+                'errors'  => ['is_default' => ['Nie można ustawić jako domyślny nieaktywnego modelu kabiny.']],
             ], 422));
         }
     }
