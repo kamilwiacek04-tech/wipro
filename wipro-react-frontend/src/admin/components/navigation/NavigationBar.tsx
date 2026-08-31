@@ -200,7 +200,10 @@ const NavigationBar = () => {
           <div className="hidden md:flex items-center gap-3">
             {isSuperAdmin && <AdminSwitcher />}
             <LanguageSwitcher />
-            <div className="flex items-center gap-2 pl-3 border-l border-gray-100">
+            <div
+              className="flex items-center gap-2 pl-3 border-l border-gray-100 cursor-pointer select-none"
+              onClick={() => navigate('/profile')}
+            >
               <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold text-gray-900" style={{ background: '#ffb400' }}>
                 {user?.name?.charAt(0)?.toUpperCase() ?? 'A'}
               </div>

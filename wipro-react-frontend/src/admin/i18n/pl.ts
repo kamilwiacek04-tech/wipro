@@ -289,6 +289,20 @@ const pl = {
     savePricing: 'Zapisz cennik',
     saveCompany: 'Zapisz dane firmy',
   },
+  profile: {
+    title: 'Moje konto',
+    changePassword: 'Zmiana hasła',
+    currentPassword: 'Obecne hasło',
+    newPassword: 'Nowe hasło',
+    confirmPassword: 'Potwierdź nowe hasło',
+    success: 'Hasło zostało zmienione.',
+    error: 'Nie udało się zmienić hasła.',
+    errors: {
+      required: 'To pole jest wymagane.',
+      minLength: 'Hasło musi mieć co najmniej 8 znaków.',
+      mismatch: 'Hasła nie są identyczne.',
+    },
+  },
   admins: {
     title: 'Zarządzanie adminami',
     subtitle: 'Konta administratorów systemu',

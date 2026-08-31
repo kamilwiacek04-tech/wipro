@@ -291,6 +291,20 @@ const en: AdminTranslations = {
     savePricing: 'Save pricing',
     saveCompany: 'Save company data',
   },
+  profile: {
+    title: 'My account',
+    changePassword: 'Change password',
+    currentPassword: 'Current password',
+    newPassword: 'New password',
+    confirmPassword: 'Confirm new password',
+    success: 'Password changed successfully.',
+    error: 'Failed to change password.',
+    errors: {
+      required: 'This field is required.',
+      minLength: 'Password must be at least 8 characters.',
+      mismatch: 'Passwords do not match.',
+    },
+  },
   admins: {
     title: 'Admin management',
     subtitle: 'Administrator accounts',

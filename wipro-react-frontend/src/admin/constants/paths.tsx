@@ -10,6 +10,7 @@ import QuoteRequestDetail from '@admin/app/protected/quoteRequests/detail'
 import Database from '@admin/app/protected/database'
 import AddressBook from '@admin/app/protected/addressBook'
 import AdminsPage from '@admin/app/protected/admins'
+import ProfilePage from '@admin/app/protected/profile'
 
 export const router = createBrowserRouter([
   { path: '/', element: <App /> },
@@ -29,6 +30,7 @@ export const router = createBrowserRouter([
       { path: '/database', element: <Database /> },
       { path: '/address-book', element: <AddressBook /> },
       { path: '/admins', element: <AdminsPage /> },
+      { path: '/profile', element: <ProfilePage /> },
     ],
   },
   { path: '*', element: <NotFound /> },
