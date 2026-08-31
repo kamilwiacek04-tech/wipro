@@ -17,7 +17,13 @@ return new class extends Migration
         Schema::table('offers', function (Blueprint $table) {
             $table->dropForeign(['quote_request_id']);
         });
-        DB::statement('ALTER TABLE offers MODIFY COLUMN quote_request_id BIGINT UNSIGNED NULL');
+        if (in_array(DB::connection()->getDriverName(), ['mysql', 'mariadb'])) {
+            DB::statement('ALTER TABLE offers MODIFY COLUMN quote_request_id BIGINT UNSIGNED NULL');
+        } else {
+            Schema::table('offers', function (Blueprint $table) {
+                $table->unsignedBigInteger('quote_request_id')->nullable()->change();
+            });
+        }
         Schema::table('offers', function (Blueprint $table) {
             $table->foreign('quote_request_id')->references('id')->on('quote_requests')->nullOnDelete();
         });
@@ -40,7 +46,13 @@ return new class extends Migration
         Schema::table('offers', function (Blueprint $table) {
             $table->dropForeign(['quote_request_id']);
         });
-        DB::statement('ALTER TABLE offers MODIFY COLUMN quote_request_id BIGINT UNSIGNED NOT NULL');
+        if (in_array(DB::connection()->getDriverName(), ['mysql', 'mariadb'])) {
+            DB::statement('ALTER TABLE offers MODIFY COLUMN quote_request_id BIGINT UNSIGNED NOT NULL');
+        } else {
+            Schema::table('offers', function (Blueprint $table) {
+                $table->unsignedBigInteger('quote_request_id')->nullable(false)->change();
+            });
+        }
         Schema::table('offers', function (Blueprint $table) {
             $table->foreign('quote_request_id')->references('id')->on('quote_requests')->cascadeOnDelete();
         });
