@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\CabinAccessory;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class CabinAccessoryController extends Controller
@@ -38,6 +39,7 @@ class CabinAccessoryController extends Controller
             'is_active'                => 'boolean',
             'price_addition'           => 'nullable|numeric|min:0',
             'multiply_by_access_count' => 'boolean',
+            'is_default'               => 'boolean',
         ]);
 
         if ($request->hasFile('image')) {
@@ -48,7 +50,20 @@ class CabinAccessoryController extends Controller
 
         unset($data['image']);
 
-        return response()->json(CabinAccessory::create($data), 201);
+        $accessory = new CabinAccessory($data);
+        $this->guardDefaultRequiresActive($accessory);
+
+        $accessory = DB::transaction(function () use ($accessory) {
+            $accessory->save();
+            if ($accessory->is_default) {
+                CabinAccessory::where('id', '!=', $accessory->id)
+                    ->where('category', $accessory->category)
+                    ->update(['is_default' => false]);
+            }
+            return $accessory;
+        });
+
+        return response()->json($accessory, 201);
     }
 
     public function update(Request $request, int $id): JsonResponse
@@ -63,11 +78,32 @@ class CabinAccessoryController extends Controller
             'is_active'                => 'sometimes|boolean',
             'price_addition'           => 'sometimes|nullable|numeric|min:0',
             'multiply_by_access_count' => 'sometimes|boolean',
+            'is_default'               => 'sometimes|boolean',
         ]);
 
-        $accessory->update($data);
+        $accessory->fill($data);
+        $this->guardDefaultRequiresActive($accessory);
+
+        DB::transaction(function () use ($accessory) {
+            $accessory->save();
+            if ($accessory->is_default) {
+                CabinAccessory::where('id', '!=', $accessory->id)
+                    ->where('category', $accessory->category)
+                    ->update(['is_default' => false]);
+            }
+        });
 
         return response()->json($accessory);
+    }
+
+    private function guardDefaultRequiresActive(CabinAccessory $accessory): void
+    {
+        if ($accessory->is_default && !$accessory->is_active) {
+            abort(response()->json([
+                'message' => 'validation.default_must_be_active',
+                'errors'  => ['is_default' => ['validation.default_must_be_active']],
+            ], 422));
+        }
     }
 
     public function uploadImage(Request $request, int $id): JsonResponse
