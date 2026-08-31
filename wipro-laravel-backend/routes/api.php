@@ -35,6 +35,7 @@ Route::post('/auth/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/user', [AuthController::class, 'user']);
+    Route::patch('/auth/password', [AuthController::class, 'updatePassword']);
 
     // Admin routes
     Route::middleware('admin')->prefix('admin')->group(function () {
