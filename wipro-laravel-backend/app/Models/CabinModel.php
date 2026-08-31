@@ -7,12 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 class CabinModel extends Model
 {
     protected $fillable = [
-        'name_pl', 'name_en', 'image_url', 'details', 'sort_order', 'is_active', 'price_addition',
+        'name_pl', 'name_en', 'image_url', 'details', 'sort_order', 'is_active', 'price_addition', 'is_default',
     ];
 
     protected $casts = [
         'details'        => 'array',
         'is_active'      => 'boolean',
         'price_addition' => 'decimal:2',
+        'is_default'     => 'boolean',
     ];
 }

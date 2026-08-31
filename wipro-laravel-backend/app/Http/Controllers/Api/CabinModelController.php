@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\CabinModel;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class CabinModelController extends Controller
@@ -30,6 +31,7 @@ class CabinModelController extends Controller
             'sort_order'     => 'integer|min:0',
             'is_active'      => 'boolean',
             'price_addition' => 'nullable|numeric|min:0',
+            'is_default'     => 'boolean',
         ]);
 
         if ($request->hasFile('image')) {
@@ -42,7 +44,18 @@ class CabinModelController extends Controller
 
         unset($data['image']);
 
-        return response()->json(CabinModel::create($data), 201);
+        $model = new CabinModel($data);
+        $this->guardDefaultRequiresActive($model);
+
+        $model = DB::transaction(function () use ($model) {
+            $model->save();
+            if ($model->is_default) {
+                CabinModel::where('id', '!=', $model->id)->update(['is_default' => false]);
+            }
+            return $model;
+        });
+
+        return response()->json($model, 201);
     }
 
     public function update(Request $request, int $id): JsonResponse
@@ -55,15 +68,34 @@ class CabinModelController extends Controller
             'sort_order'     => 'sometimes|integer|min:0',
             'is_active'      => 'sometimes|boolean',
             'price_addition' => 'sometimes|nullable|numeric|min:0',
+            'is_default'     => 'sometimes|boolean',
         ]);
 
         if ($request->has('details')) {
             $data['details'] = $this->parseDetails($request->input('details'));
         }
 
-        $model->update($data);
+        $model->fill($data);
+        $this->guardDefaultRequiresActive($model);
+
+        DB::transaction(function () use ($model) {
+            $model->save();
+            if ($model->is_default) {
+                CabinModel::where('id', '!=', $model->id)->update(['is_default' => false]);
+            }
+        });
 
         return response()->json($model);
+    }
+
+    private function guardDefaultRequiresActive(CabinModel $model): void
+    {
+        if ($model->is_default && !$model->is_active) {
+            abort(response()->json([
+                'message' => 'validation.default_must_be_active',
+                'errors'  => ['is_default' => ['validation.default_must_be_active']],
+            ], 422));
+        }
     }
 
     public function uploadImage(Request $request, int $id): JsonResponse
