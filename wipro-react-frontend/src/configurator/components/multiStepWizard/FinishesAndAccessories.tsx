@@ -51,13 +51,44 @@ const FinishesAndAccessories = () => {
     const formData = useAppSelector(formSelectors.data)
     const shaftParameters = useAppSelector(formSelectors.shaftParameters)
 
-    const { formState: { errors }, control, handleSubmit } = useForm<FormFinishesAndAccessories>({
+    const { formState: { errors }, control, handleSubmit, getValues, setValue } = useForm<FormFinishesAndAccessories>({
         resolver: yupResolver(dataSchema),
         defaultValues: defaultData,
         mode: 'onChange',
     })
 
     const cabinDoorSameAsLanding = useWatch({control, name: 'cabinDoorSameAsLanding'})
+
+    type NumericFieldKey = 'cabinModelId' | 'cabinColorId' | 'doorColorId' | 'cabinDoorColorId'
+        | 'panelId' | 'signalId' | 'ceilingId' | 'mirrorId' | 'handrailId' | 'flooringId'
+
+    useEffect(() => {
+        if (loadingModels || loadingAccessories || loadingColors) return
+
+        const applyDefault = (key: NumericFieldKey, defaultId: number | undefined) => {
+            if (!defaultId) return
+            if (getValues(key)) return
+            setValue(key, defaultId)
+            updateField('finishesAndAccessories', key, defaultId)
+        }
+
+        applyDefault('cabinModelId', cabinModels?.find(m => m.is_default)?.id)
+        applyDefault('cabinColorId', cabinColors?.find(c => c.visible_for_cabin && c.is_default_cabin)?.id)
+        applyDefault('doorColorId', cabinColors?.find(c => c.visible_for_door && c.is_default_door)?.id)
+        applyDefault('cabinDoorColorId', cabinColors?.find(c => c.visible_for_door && c.is_default_door)?.id)
+
+        ACCESSORY_SECTIONS.forEach(({ key, category }) => {
+            const items = accessories?.[category as keyof typeof accessories] ?? []
+            applyDefault(key, items.find(i => i.is_default)?.id)
+        })
+
+        const extraDefaultId = accessories?.['EXTRA']?.find(i => i.is_default)?.id
+        if (extraDefaultId && (getValues('extraIds') ?? []).length === 0) {
+            setValue('extraIds', [extraDefaultId])
+            updateField('finishesAndAccessories', 'extraIds', [extraDefaultId])
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [loadingModels, loadingAccessories, loadingColors, cabinModels, accessories, cabinColors])
 
     const onSubmit = (dataCurr: FormFinishesAndAccessories) => {
         dispatch(fillField({ key: 'finishesAndAccessories', value: dataCurr }))

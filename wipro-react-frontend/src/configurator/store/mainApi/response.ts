@@ -25,6 +25,7 @@ export interface CabinModel {
     details: Array<{ label: string; value: string }> | null;
     sort_order: number;
     is_active: boolean;
+    is_default: boolean;
 }
 
 export type AccessoryCategory = 'PANEL' | 'SIGNAL' | 'CEILING' | 'MIRROR' | 'HANDRAIL' | 'FLOORING' | 'EXTRA';
@@ -37,6 +38,7 @@ export interface CabinAccessory {
     image_url: string | null;
     sort_order: number;
     is_active: boolean;
+    is_default: boolean;
 }
 
 export type GroupedAccessories = Partial<Record<AccessoryCategory, CabinAccessory[]>>;
@@ -52,6 +54,8 @@ export interface CabinColor {
     price_addition_door: string;
     sort_order: number;
     is_active: boolean;
+    is_default_cabin: boolean;
+    is_default_door: boolean;
 }
 
 export interface CabinType {
