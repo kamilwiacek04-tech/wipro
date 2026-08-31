@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\CabinColor;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class CabinColorController extends Controller
@@ -33,9 +34,20 @@ class CabinColorController extends Controller
             'price_addition_door'  => 'nullable|numeric|min:0',
             'sort_order'           => 'integer|min:0',
             'is_active'            => 'boolean',
+            'is_default_cabin'     => 'boolean',
+            'is_default_door'      => 'boolean',
         ]);
 
-        return response()->json(CabinColor::create($data), 201);
+        $color = new CabinColor($data);
+        $this->guardDefaults($color);
+
+        $color = DB::transaction(function () use ($color) {
+            $color->save();
+            $this->clearOtherDefaults($color);
+            return $color;
+        });
+
+        return response()->json($color, 201);
     }
 
     public function update(Request $request, int $id): JsonResponse
@@ -51,11 +63,49 @@ class CabinColorController extends Controller
             'price_addition_door'  => 'sometimes|nullable|numeric|min:0',
             'sort_order'           => 'sometimes|integer|min:0',
             'is_active'            => 'sometimes|boolean',
+            'is_default_cabin'     => 'sometimes|boolean',
+            'is_default_door'      => 'sometimes|boolean',
         ]);
 
-        $color->update($data);
+        $color->fill($data);
+        $this->guardDefaults($color);
+
+        DB::transaction(function () use ($color) {
+            $color->save();
+            $this->clearOtherDefaults($color);
+        });
 
         return response()->json($color);
+    }
+
+    private function guardDefaults(CabinColor $color): void
+    {
+        if ($color->is_default_cabin && (!$color->is_active || !$color->visible_for_cabin)) {
+            abort(response()->json([
+                'message' => 'validation.default_cabin_requires_active_and_visible',
+                'errors'  => ['is_default_cabin' => ['validation.default_cabin_requires_active_and_visible']],
+            ], 422));
+        }
+        if ($color->is_default_door && (!$color->is_active || !$color->visible_for_door)) {
+            abort(response()->json([
+                'message' => 'validation.default_door_requires_active_and_visible',
+                'errors'  => ['is_default_door' => ['validation.default_door_requires_active_and_visible']],
+            ], 422));
+        }
+    }
+
+    private function clearOtherDefaults(CabinColor $color): void
+    {
+        if ($color->is_default_cabin) {
+            CabinColor::where('id', '!=', $color->id)
+                ->where('visible_for_cabin', true)
+                ->update(['is_default_cabin' => false]);
+        }
+        if ($color->is_default_door) {
+            CabinColor::where('id', '!=', $color->id)
+                ->where('visible_for_door', true)
+                ->update(['is_default_door' => false]);
+        }
     }
 
     public function uploadImage(Request $request, int $id): JsonResponse
