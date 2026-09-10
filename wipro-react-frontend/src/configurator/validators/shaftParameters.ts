@@ -50,7 +50,7 @@ export const dataSchemaTemp: yup.ObjectSchema<FormShaftTempParameters> = yup.obj
       schema
         .required('form.errors.require')
         .typeError('form.errors.number')
-        .positive('form.errors.positive'),
+        .min(100, () => `form.errors.minNumber|${100}`),
     otherwise: (schema) => schema.strip(),
   }) as unknown as yup.Schema<string | undefined>,
 
@@ -60,7 +60,7 @@ export const dataSchemaTemp: yup.ObjectSchema<FormShaftTempParameters> = yup.obj
       schema
         .required('form.errors.require')
         .typeError('form.errors.number')
-        .positive('form.errors.positive'),
+        .min(100, () => `form.errors.minNumber|${100}`),
     otherwise: (schema) => schema.strip(),
   }) as unknown as yup.Schema<string | undefined>,
 });
@@ -71,7 +71,7 @@ export const createDataSchema = (maxStops: number): yup.ObjectSchema<FormShaftPa
   stopDoorsCount: yup.number().required('form.errors.require').typeError('form.errors.number').min(rangeValue['stopDoorsCount'].min, ({ min }) => `form.errors.minNumber|${min}`).max(maxStops, ({ max }) => `form.errors.maxNumber|${max}`),
   accessCount: yup.number().required('form.errors.require').typeError('form.errors.number').min(rangeValue['accessCount'].min, ({ min }) => `form.errors.minNumber|${min}`).when('stopDoorsCount', (stopDoorsCount, schema) => {
     const count = typeof stopDoorsCount === 'number' ? stopDoorsCount : Number(stopDoorsCount);
-    return count ? schema.max(count * 2, () => `form.errors.maxNumber|${count * 2}`) : schema;
+    return count ? schema.min(count, () => `form.errors.minNumber|${count}`).max(count * 2, () => `form.errors.maxNumber|${count * 2}`) : schema;
   }),
   liftingHeight: yup.number().required('form.errors.require').typeError('form.errors.number').positive('form.errors.positive').when('stopDoorsCount', ([stops], schema) => {
     const s = typeof stops === 'number' && stops > 0 ? stops : 1;
@@ -100,8 +100,8 @@ export const createDataSchema = (maxStops: number): yup.ObjectSchema<FormShaftPa
       if (value == null || accessCount == null || ei30DoorsCount == null) return true;
       return value + ei30DoorsCount <= accessCount;
     }),
-  pitDepth: numberWithComma().required('form.errors.require').typeError('form.errors.number').min(1, () => `form.errors.minNumber|${1}`) as unknown as yup.Schema<string | undefined>,
-  headroom: numberWithComma().required('form.errors.require').typeError('form.errors.number').min(1, () => `form.errors.minNumber|${1}`) as unknown as yup.Schema<string | undefined>,
+  pitDepth: numberWithComma().required('form.errors.require').typeError('form.errors.number').min(270, () => `form.errors.minNumber|${270}`) as unknown as yup.Schema<string | undefined>,
+  headroom: numberWithComma().required('form.errors.require').typeError('form.errors.number').min(270, () => `form.errors.minNumber|${270}`) as unknown as yup.Schema<string | undefined>,
   leftSideMechanic: yup.boolean().required(),
 });
 
