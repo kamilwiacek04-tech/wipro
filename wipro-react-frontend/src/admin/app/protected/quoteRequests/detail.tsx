@@ -867,10 +867,10 @@ const QuoteRequestDetail = () => {
                 <Wrench className="h-3 w-3" /> {t('quoteRequests.detail.shaft')}
               </p>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-5">
-                <EditableField label={t('quoteRequests.detail.width')} value={data.shaft_width} field="shaft_width" onSave={saveNumberField} type="number" unit="mm" />
-                <EditableField label={t('quoteRequests.detail.depth')} value={data.shaft_depth} field="shaft_depth" onSave={saveNumberField} type="number" unit="mm" />
-                <EditableField label={t('quoteRequests.detail.pitDepthLabel')} value={data.pit_depth} field="pit_depth" onSave={saveNumberField} type="number" unit="mm" />
-                <EditableField label={t('quoteRequests.detail.headroomLabel')} value={data.overhead} field="overhead" onSave={saveNumberField} type="number" unit="mm" />
+                <EditableField label={t('quoteRequests.detail.width')} value={data.shaft_width} field="shaft_width" onSave={saveNumberField} type="number" unit="cm" />
+                <EditableField label={t('quoteRequests.detail.depth')} value={data.shaft_depth} field="shaft_depth" onSave={saveNumberField} type="number" unit="cm" />
+                <EditableField label={t('quoteRequests.detail.pitDepthLabel')} value={data.pit_depth} field="pit_depth" onSave={saveNumberField} type="number" unit="cm" />
+                <EditableField label={t('quoteRequests.detail.headroomLabel')} value={data.overhead} field="overhead" onSave={saveNumberField} type="number" unit="cm" />
               </div>
             </div>
 
