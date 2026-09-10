@@ -135,7 +135,7 @@ const pl = {
       width: 'Szerokość',
       depth: 'Głębokość',
       height: 'Wysokość',
-      pitDepthLabel: 'Głęb. podszybia [cm]',
+      pitDepthLabel: 'Głęb. podszybia',
       headroomLabel: 'Nadszybowie',
       capacityLabel: 'Udźwig',
       elevatorTypeLabel: 'Typ windy',

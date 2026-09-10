@@ -880,9 +880,9 @@ const QuoteRequestDetail = () => {
                 <Gauge className="h-3 w-3" /> {t('quoteRequests.detail.cabinSection')}
               </p>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-5">
-                <EditableField label={t('quoteRequests.detail.width')} value={data.cabin_width} field="cabin_width" onSave={saveNumberField} type="number" unit="mm" />
-                <EditableField label={t('quoteRequests.detail.depth')} value={data.cabin_depth} field="cabin_depth" onSave={saveNumberField} type="number" unit="mm" />
-                <EditableField label={t('quoteRequests.detail.height')} value={data.cabin_height} field="cabin_height" onSave={saveNumberField} type="number" unit="mm" />
+                <EditableField label={t('quoteRequests.detail.width')} value={data.cabin_width} field="cabin_width" onSave={saveNumberField} type="number" unit="cm" />
+                <EditableField label={t('quoteRequests.detail.depth')} value={data.cabin_depth} field="cabin_depth" onSave={saveNumberField} type="number" unit="cm" />
+                <EditableField label={t('quoteRequests.detail.height')} value={data.cabin_height} field="cabin_height" onSave={saveNumberField} type="number" unit="cm" />
               </div>
             </div>
 
@@ -892,8 +892,8 @@ const QuoteRequestDetail = () => {
                 <DoorOpen className="h-3 w-3" /> {t('quoteRequests.detail.doorsSection')}
               </p>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-5">
-                <EditableField label={t('quoteRequests.detail.width')} value={data.door_width} field="door_width" onSave={saveNumberField} type="number" unit="mm" />
-                <EditableField label={t('quoteRequests.detail.height')} value={data.door_height} field="door_height" onSave={saveNumberField} type="number" unit="mm" />
+                <EditableField label={t('quoteRequests.detail.width')} value={data.door_width} field="door_width" onSave={saveNumberField} type="number" unit="cm" />
+                <EditableField label={t('quoteRequests.detail.height')} value={data.door_height} field="door_height" onSave={saveNumberField} type="number" unit="cm" />
               </div>
             </div>
           </Card>

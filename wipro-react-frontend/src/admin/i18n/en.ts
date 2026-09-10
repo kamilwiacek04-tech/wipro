@@ -137,7 +137,7 @@ const en: AdminTranslations = {
       width: 'Width',
       depth: 'Depth',
       height: 'Height',
-      pitDepthLabel: 'Pit depth [cm]',
+      pitDepthLabel: 'Pit depth',
       headroomLabel: 'Headroom',
       capacityLabel: 'Capacity',
       elevatorTypeLabel: 'Elevator type',

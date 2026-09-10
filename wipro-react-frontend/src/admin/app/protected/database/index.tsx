@@ -1599,7 +1599,7 @@ const ElevatorRow = ({ elevator, onUpdate, onDelete }: {
           <InlineEdit value={elevator.persons} onSave={v => onUpdate(elevator.id, 'persons', v)} type="number" unit="os." />
         </td>
         <td className="px-2 py-3 text-xs text-gray-500">
-          <span title={`${elevator.cabin_width}×${elevator.cabin_depth}×${elevator.cabin_height} mm`}>
+          <span title={`${elevator.cabin_width}×${elevator.cabin_depth}×${elevator.cabin_height} cm`}>
             {elevator.cabin_width}×{elevator.cabin_depth}×{elevator.cabin_height}
           </span>
         </td>
