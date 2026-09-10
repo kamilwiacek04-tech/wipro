@@ -45,6 +45,7 @@ class Elevator extends Model
         'coeff_ei60'             => 'decimal:4',
     ];
 
+    // Stored in mm on disk (legacy data); every app-facing read/write is cm.
     protected function shaftWidth(): Attribute
     {
         return Attribute::make(

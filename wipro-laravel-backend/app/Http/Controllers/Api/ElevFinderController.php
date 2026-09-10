@@ -68,12 +68,10 @@ class ElevFinderController extends Controller
         $lenMm = $lenCm * 10;
         $depMm = $depCm * 10;
 
-        $base = Elevator::where('is_active', true);
-
-        // Only elevators that fit in the shaft (with 5 % installation tolerance).
-        $elevators = (clone $base)
-            ->where('shaft_width', '<=', $lenMm * 1.05)
-            ->where('shaft_depth', '<=', $depMm * 1.05)
+        // Only elevators that fit exactly within the requested shaft dimensions (no tolerance).
+        $elevators = Elevator::where('is_active', true)
+            ->where('shaft_width', '<=', $lenMm)
+            ->where('shaft_depth', '<=', $depMm)
             ->orderByRaw('ABS(shaft_width - ?) + ABS(shaft_depth - ?)', [$lenMm, $depMm])
             ->limit(8)
             ->get();

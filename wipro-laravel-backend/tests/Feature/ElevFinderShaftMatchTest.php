@@ -49,4 +49,17 @@ class ElevFinderShaftMatchTest extends TestCase
         $response->assertJsonPath('status', 1);
         $response->assertJsonPath('data', []);
     }
+
+    public function test_does_not_suggest_elevator_one_cm_over_the_requested_width_no_tolerance(): void
+    {
+        // shaft_width is exactly 1cm larger than requested; shaft_depth fits.
+        // Under the old 5% tolerance this would have been suggested (131 <= 130*1.05); now it must not.
+        $this->makeElevator(131, 140, 'ONE-CM-OVER');
+
+        $response = $this->postJson('/api/elevFinder', ['shaftLen' => 130, 'shaftDep' => 140]);
+
+        $response->assertStatus(200);
+        $response->assertJsonPath('status', 1);
+        $response->assertJsonPath('data', []);
+    }
 }
