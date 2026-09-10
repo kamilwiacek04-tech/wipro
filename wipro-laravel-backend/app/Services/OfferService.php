@@ -258,7 +258,7 @@ class OfferService
         $logoPath = $settings['company_logo_path'] ?? null;
         if ($logoPath && Storage::exists($logoPath)) {
             try {
-                $hdrR->addImage(storage_path('app/' . $logoPath), ['width' => 150, 'height' => 55, 'alignment' => Jc::END]);
+                $hdrR->addImage(Storage::path($logoPath), ['width' => 150, 'height' => 55, 'alignment' => Jc::END]);
             } catch (\Throwable) {}
         }
 

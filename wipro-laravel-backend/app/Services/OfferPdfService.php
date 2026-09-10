@@ -68,10 +68,6 @@ class OfferPdfService
         $filename = str_replace('/', '_', $offer->offer_number) . '.pdf';
         $path     = 'offers/' . $filename;
 
-        if (!is_dir(storage_path('app/offers'))) {
-            mkdir(storage_path('app/offers'), 0755, true);
-        }
-
         Storage::put($path, $pdf->output());
         $offer->update(['pdf_path' => $path]);
 
