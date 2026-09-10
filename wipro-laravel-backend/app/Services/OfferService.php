@@ -700,4 +700,19 @@ class OfferService
         }
         return [];
     }
+
+    public function resolveSpecLabels(QuoteRequest $qr): array
+    {
+        $purposeLabels = [
+            'PASSENGER'         => 'Osobowy',
+            'FREIGHT_PASSENGER' => 'Pasażersko-towarowy',
+            'HOSPITAL'          => 'Szpitalny',
+            'FIRE'              => 'Pożarowy',
+        ];
+
+        return [
+            'purposeLabel'   => $purposeLabels[$qr->drive_type] ?? $qr->drive_type,
+            'driveTypeLabel' => $qr->elevator?->drive_type,
+        ];
+    }
 }
