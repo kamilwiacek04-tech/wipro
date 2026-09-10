@@ -12,8 +12,8 @@ class ElevFinderController extends Controller
     public function find(Request $request): JsonResponse
     {
         $liftCapacity = $request->input('liftCapacity');
-        $shaftLen     = $request->input('shaftLen'); // metres
-        $shaftDep     = $request->input('shaftDep'); // metres
+        $shaftLen     = $request->input('shaftLen'); // centimetres
+        $shaftDep     = $request->input('shaftDep'); // centimetres
 
         if ($liftCapacity !== null) {
             return $this->findByCapacity((float) $liftCapacity);
@@ -63,14 +63,14 @@ class ElevFinderController extends Controller
         ]);
     }
 
-    private function findByShaft(float $lenM, float $depM): JsonResponse
+    private function findByShaft(float $lenCm, float $depCm): JsonResponse
     {
-        $lenMm = $lenM * 1000;
-        $depMm = $depM * 1000;
+        $lenMm = $lenCm * 10;
+        $depMm = $depCm * 10;
 
         $base = Elevator::where('is_active', true);
 
-        // Primary: elevators that fit in the shaft (with 5 % tolerance)
+        // Only elevators that fit in the shaft (with 5 % installation tolerance).
         $elevators = (clone $base)
             ->where('shaft_width', '<=', $lenMm * 1.05)
             ->where('shaft_depth', '<=', $depMm * 1.05)
@@ -78,19 +78,11 @@ class ElevFinderController extends Controller
             ->limit(8)
             ->get();
 
-        // Fallback: closest by shaft dimensions regardless of fit
-        if ($elevators->isEmpty()) {
-            $elevators = (clone $base)
-                ->orderByRaw('ABS(shaft_width - ?) + ABS(shaft_depth - ?)', [$lenMm, $depMm])
-                ->limit(8)
-                ->get();
-        }
-
         if ($elevators->isEmpty()) {
             return response()->json([
                 'status' => 1,
                 'data'   => [],
-                'info'   => 'Brak wind w bazie danych.',
+                'info'   => 'Brak wind pasujących do podanych wymiarów szybu.',
             ]);
         }
 
