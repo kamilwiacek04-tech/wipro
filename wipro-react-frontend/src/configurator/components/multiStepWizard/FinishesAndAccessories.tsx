@@ -50,6 +50,7 @@ const FinishesAndAccessories = () => {
 
     const formData = useAppSelector(formSelectors.data)
     const shaftParameters = useAppSelector(formSelectors.shaftParameters)
+    const shaftTempParameters = useAppSelector(formSelectors.shaftTempParameters)
 
     const { formState: { errors }, control, handleSubmit, getValues, setValue } = useForm<FormFinishesAndAccessories>({
         resolver: yupResolver(dataSchema),
@@ -107,6 +108,8 @@ const FinishesAndAccessories = () => {
             investment_address: installAddress || undefined,
             investment_city: formData.city || undefined,
             stops: shaftParameters.stopDoorsCount,
+            shaft_width: shaftTempParameters.shaftLen ? parseInt(String(shaftTempParameters.shaftLen), 10) : undefined,
+            shaft_depth: shaftTempParameters.shaftDep ? parseInt(String(shaftTempParameters.shaftDep), 10) : undefined,
             pit_depth: shaftParameters.pitDepth ? parseInt(String(shaftParameters.pitDepth), 10) : undefined,
             overhead: shaftParameters.headroom ? parseInt(String(shaftParameters.headroom), 10) : undefined,
             drive_type: shaftParameters.liftPurpose,

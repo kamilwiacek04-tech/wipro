@@ -32,6 +32,7 @@ export const formSlice = createSlice({
 export const formSelectors = {
     data: (state: RootState) => state.form.data,
     shaftParameters: (state: RootState) => state.form.shaftParameters,
+    shaftTempParameters: (state: RootState) => state.form.shaftTempParameters,
     finishesAndAccessories: (state: RootState) => state.form.finishesAndAccessories
 }
 

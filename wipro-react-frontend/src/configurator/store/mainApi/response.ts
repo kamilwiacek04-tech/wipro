@@ -89,6 +89,8 @@ interface StoreQuoteRequestBody {
     investment_address?: string;
     investment_city?: string;
     stops?: number;
+    shaft_width?: number;
+    shaft_depth?: number;
     pit_depth?: number;
     overhead?: number;
     drive_type?: string;
