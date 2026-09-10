@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -31,18 +32,9 @@ class Elevator extends Model
         'is_active' => 'boolean',
         'capacity' => 'integer',
         'persons' => 'integer',
-        'cabin_width' => 'integer',
-        'cabin_depth' => 'integer',
-        'cabin_height' => 'integer',
-        'shaft_width' => 'integer',
-        'shaft_depth' => 'integer',
-        'pit_depth' => 'integer',
-        'overhead' => 'integer',
         'speed' => 'decimal:1',
         'base_price' => 'decimal:2',
         'lifting_height' => 'decimal:2',
-        'door_width' => 'integer',
-        'door_height' => 'integer',
         'coeff_stops'            => 'decimal:4',
         'stop_surcharge_rate'    => 'decimal:2',
         'coeff_cabin_model'      => 'decimal:4',
@@ -52,6 +44,78 @@ class Elevator extends Model
         'coeff_ei30'             => 'decimal:4',
         'coeff_ei60'             => 'decimal:4',
     ];
+
+    protected function shaftWidth(): Attribute
+    {
+        return Attribute::make(
+            get: fn ($value) => is_null($value) ? null : (int) round($value / 10),
+            set: fn ($value) => is_null($value) ? null : (int) round($value * 10),
+        );
+    }
+
+    protected function shaftDepth(): Attribute
+    {
+        return Attribute::make(
+            get: fn ($value) => is_null($value) ? null : (int) round($value / 10),
+            set: fn ($value) => is_null($value) ? null : (int) round($value * 10),
+        );
+    }
+
+    protected function pitDepth(): Attribute
+    {
+        return Attribute::make(
+            get: fn ($value) => is_null($value) ? null : (int) round($value / 10),
+            set: fn ($value) => is_null($value) ? null : (int) round($value * 10),
+        );
+    }
+
+    protected function overhead(): Attribute
+    {
+        return Attribute::make(
+            get: fn ($value) => is_null($value) ? null : (int) round($value / 10),
+            set: fn ($value) => is_null($value) ? null : (int) round($value * 10),
+        );
+    }
+
+    protected function cabinWidth(): Attribute
+    {
+        return Attribute::make(
+            get: fn ($value) => is_null($value) ? null : (int) round($value / 10),
+            set: fn ($value) => is_null($value) ? null : (int) round($value * 10),
+        );
+    }
+
+    protected function cabinDepth(): Attribute
+    {
+        return Attribute::make(
+            get: fn ($value) => is_null($value) ? null : (int) round($value / 10),
+            set: fn ($value) => is_null($value) ? null : (int) round($value * 10),
+        );
+    }
+
+    protected function cabinHeight(): Attribute
+    {
+        return Attribute::make(
+            get: fn ($value) => is_null($value) ? null : (int) round($value / 10),
+            set: fn ($value) => is_null($value) ? null : (int) round($value * 10),
+        );
+    }
+
+    protected function doorWidth(): Attribute
+    {
+        return Attribute::make(
+            get: fn ($value) => is_null($value) ? null : (int) round($value / 10),
+            set: fn ($value) => is_null($value) ? null : (int) round($value * 10),
+        );
+    }
+
+    protected function doorHeight(): Attribute
+    {
+        return Attribute::make(
+            get: fn ($value) => is_null($value) ? null : (int) round($value / 10),
+            set: fn ($value) => is_null($value) ? null : (int) round($value * 10),
+        );
+    }
 
     public function elements(): HasMany
     {
