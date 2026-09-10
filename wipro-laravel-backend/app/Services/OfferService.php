@@ -154,29 +154,15 @@ class OfferService
 
         $settings = Setting::all()->pluck('value', 'key')->toArray();
         $config   = $this->parseConfiguratorNotes($qr->additional_notes);
+        $spec     = $this->resolveSpecLabels($qr);
 
         // Label maps
-        $purposeLabels = [
-            'PASSENGER'         => 'Osobowy',
-            'FREIGHT_PASSENGER' => 'Pasażersko-towarowy',
-            'HOSPITAL'          => 'Szpitalny',
-            'FIRE'              => 'Pożarowy',
-        ];
         $accessDiagramLabels = [
             'FRONT'      => 'Frontowe',
             'THROUGHT'   => 'Przelotowe',
             'CORNER'     => 'Kątowe',
             'TRIPARTITE' => 'Trójstronne',
         ];
-        $statusMap = [
-            'PASSENGER'   => 'Pasażerski',
-            'ARCHITECT'   => 'Projektowy',
-            'CONTRACTOR'  => 'Budowlany',
-            'RESIDENTIAL' => 'Mieszkalny',
-            'HOSPITAL'    => 'Szpitalny',
-            'FREIGHT'     => 'Towarowy',
-        ];
-        $statusLabel = $statusMap[$config['status'] ?? ''] ?? ($config['status'] ?? null);
 
         // Cabin model
         $cabinModelName = null;
@@ -367,7 +353,7 @@ class OfferService
             $this->addSpecRow($pdzT, 'Typ', trim(($el->manufacturer ?? '') . ' ' . ($el->model ?? '')) . ($el->description ? ' — ' . $el->description : ''), $lw, $vw);
             $this->addSpecRow($pdzT, 'Model', (string)$el->model, $lw, $vw);
         }
-        if ($statusLabel)                    $this->addSpecRow($pdzT, 'Przeznaczenie',         $statusLabel,                   $lw, $vw);
+        if ($spec['purposeLabel'])           $this->addSpecRow($pdzT, 'Przeznaczenie',         $spec['purposeLabel'],          $lw, $vw);
         if ($qr->stops)                      $this->addSpecRow($pdzT, 'Ilość przystanków',     (string)$qr->stops,             $lw, $vw);
         if (isset($config['accessCount']))   $this->addSpecRow($pdzT, 'Ilość dojść',           (string)(int)$config['accessCount'], $lw, $vw);
         if ($el?->speed)                     $this->addSpecRow($pdzT, 'Prędkość',              $el->speed . ' m/s',            $lw, $vw);
@@ -380,7 +366,7 @@ class OfferService
         $drzT->addRow();
         $drzT->addCell($colW, ['bgColor' => 'efefef', 'gridSpan' => 2])->addText('Drzwi', $headFont);
         if ($qr->door_type)            $this->addSpecRow($drzT, 'Schemat dojścia',         $accessDiagramLabels[$qr->door_type] ?? $qr->door_type, $lw, $vw);
-        if ($doorW && $doorH)          $this->addSpecRow($drzT, 'Wymiary (szer. x wys.)',  $doorW . ' x ' . $doorH,                                $lw, $vw);
+        if ($doorW && $doorH)          $this->addSpecRow($drzT, 'Wymiary (szer. x wys.) [cm]',  $doorW . ' x ' . $doorH,                                $lw, $vw);
         if ($el?->cabin_door_finish)   $this->addSpecRow($drzT, 'Drzwi kab. wykończenie', (string)$el->cabin_door_finish,                          $lw, $vw);
         if ($el?->landing_door_finish) $this->addSpecRow($drzT, 'Drzwi szybowe wykończenie', (string)$el->landing_door_finish,                     $lw, $vw);
         if ($el?->door_fire_class)     $this->addSpecRow($drzT, 'Klasa ognioodporności',   (string)$el->door_fire_class,                            $lw, $vw);
@@ -391,20 +377,19 @@ class OfferService
         $szybT = $outerR->addTable($secStyle);
         $szybT->addRow();
         $szybT->addCell($colW, ['bgColor' => 'efefef', 'gridSpan' => 2])->addText('Parametry szybu', $headFont);
-        if ($shaftW)          $this->addSpecRow($szybT, 'Szerokość szybu',           (string)$shaftW,                $lw, $vw);
-        if ($shaftD)          $this->addSpecRow($szybT, 'Głębokość szybu',           (string)$shaftD,                $lw, $vw);
-        if ($pitD)            $this->addSpecRow($szybT, 'Głębokość podszybia [m]',   (string)$pitD,                  $lw, $vw);
-        if ($oh)              $this->addSpecRow($szybT, 'Wysokość nadszybia [m]',    (string)$oh,                    $lw, $vw);
-        if ($doorW && $doorH) $this->addSpecRow($szybT, 'Otwory drzwiowe (sz. x wys.)', $doorW . ' x ' . $doorH,    $lw, $vw);
+        if ($shaftW)          $this->addSpecRow($szybT, 'Szerokość szybu [cm]',    (string)$shaftW,                $lw, $vw);
+        if ($shaftD)          $this->addSpecRow($szybT, 'Głębokość szybu [cm]',    (string)$shaftD,                $lw, $vw);
+        if ($pitD)            $this->addSpecRow($szybT, 'Głębokość podszybia [cm]', (string)$pitD,                 $lw, $vw);
+        if ($oh)               $this->addSpecRow($szybT, 'Wysokość nadszybia [cm]', (string)$oh,                    $lw, $vw);
+        if ($doorW && $doorH) $this->addSpecRow($szybT, 'Otwory drzwiowe (sz. x wys.) [cm]', $doorW . ' x ' . $doorH, $lw, $vw);
 
         // ── RIGHT: Zespół napędowy ────────────────────────────
-        $driveRaw = $qr->drive_type ?? $el?->drive_type;
-        if ($driveRaw) {
+        if ($spec['driveTypeLabel']) {
             $outerR->addText('');
             $napT = $outerR->addTable($secStyle);
             $napT->addRow();
             $napT->addCell($colW, ['bgColor' => 'efefef', 'gridSpan' => 2])->addText('Zespół napędowy', $headFont);
-            $this->addSpecRow($napT, 'Typ', $purposeLabels[$driveRaw] ?? $driveRaw, $lw, $vw);
+            $this->addSpecRow($napT, 'Typ', $spec['driveTypeLabel'], $lw, $vw);
         }
 
         // ── RIGHT: Kabina ─────────────────────────────────────
@@ -412,7 +397,7 @@ class OfferService
         $kabT = $outerR->addTable($secStyle);
         $kabT->addRow();
         $kabT->addCell($colW, ['bgColor' => 'efefef', 'gridSpan' => 2])->addText('Kabina' . ($el?->cabin_finish ? ' — ' . $el->cabin_finish : ''), $headFont);
-        if ($cabW && $cabD && $cabH)           $this->addSpecRow($kabT, 'Wymiary (sz. x gł. x wys.)',   $cabW . ' x ' . $cabD . ' x ' . $cabH, $lw, $vw);
+        if ($cabW && $cabD && $cabH)           $this->addSpecRow($kabT, 'Wymiary (sz. x gł. x wys.) [cm]',   $cabW . ' x ' . $cabD . ' x ' . $cabH, $lw, $vw);
         if ($el?->cabin_finish)                $this->addSpecRow($kabT, 'Wykończenie ścian',             (string)$el->cabin_finish,              $lw, $vw);
         if (isset($config['leftSideMechanic'])) $this->addSpecRow($kabT, 'Strona mechanizmu',            $config['leftSideMechanic'] ? 'Lewa' : 'Prawa', $lw, $vw);
         if ($qr->lighting)                     $this->addSpecRow($kabT, 'Oświetlenie',                   (string)$qr->lighting,                  $lw, $vw);
@@ -461,15 +446,12 @@ class OfferService
 
         // ── Save ─────────────────────────────────────────────
         $filename = str_replace('/', '_', $offer->offer_number) . '.docx';
-        $tempPath = storage_path('app/offers/' . $filename);
+        $path     = 'offers/' . $filename;
 
-        if (!is_dir(storage_path('app/offers'))) {
-            mkdir(storage_path('app/offers'), 0755, true);
-        }
+        Storage::makeDirectory('offers');
 
-        IOFactory::createWriter($phpWord, 'Word2007')->save($tempPath);
+        IOFactory::createWriter($phpWord, 'Word2007')->save(Storage::path($path));
 
-        $path = 'offers/' . $filename;
         $offer->update(['docx_path' => $path]);
 
         return $path;

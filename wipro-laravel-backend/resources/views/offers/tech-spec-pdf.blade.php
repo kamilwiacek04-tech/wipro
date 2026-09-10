@@ -25,21 +25,6 @@ table.sec tr.sep td { border-top:1px solid #efefef; }
 
 @php
   $el = $qr->elevator;
-  $statusMap = [
-    'PASSENGER'   => 'Pasażerski',
-    'ARCHITECT'   => 'Projektowy',
-    'CONTRACTOR'  => 'Budowlany',
-    'RESIDENTIAL' => 'Mieszkalny',
-    'HOSPITAL'    => 'Szpitalny',
-    'FREIGHT'     => 'Towarowy',
-  ];
-  $statusLabel = $statusMap[$parsedNotes['status'] ?? ''] ?? ($parsedNotes['status'] ?? null);
-  $purposeLabels = [
-    'PASSENGER'         => 'Osobowy',
-    'FREIGHT_PASSENGER' => 'Pasażersko-towarowy',
-    'HOSPITAL'          => 'Szpitalny',
-    'FIRE'              => 'Pożarowy',
-  ];
   $accessDiagramLabels = [
     'FRONT'      => 'Frontowe',
     'THROUGHT'   => 'Przelotowe',
@@ -83,8 +68,8 @@ table.sec tr.sep td { border-top:1px solid #efefef; }
     <tr class="sep"><td class="lbl">Typ</td><td>{{ trim(($el->manufacturer ?? '') . ' ' . ($el->model ?? '')) }}@if($el->description) — {{ $el->description }}@endif</td></tr>
     <tr class="sep"><td class="lbl">Model</td><td>{{ $el->model }}</td></tr>
     @endif
-    @if($statusLabel)
-    <tr class="sep"><td class="lbl">Przeznaczenie</td><td>{{ $statusLabel }}</td></tr>
+    @if($spec['purposeLabel'])
+    <tr class="sep"><td class="lbl">Przeznaczenie</td><td>{{ $spec['purposeLabel'] }}</td></tr>
     @endif
     @if($qr->stops)
     <tr class="sep"><td class="lbl">Ilość przystanków</td><td>{{ $qr->stops }}</td></tr>
@@ -108,27 +93,26 @@ table.sec tr.sep td { border-top:1px solid #efefef; }
   <table class="sec" style="margin-bottom:8px">
     <tr><td colspan="2" class="sec-head">Parametry szybu:</td></tr>
     @if($shaftW)
-    <tr><td class="lbl">Szerokość szybu</td><td>{{ $shaftW }}</td></tr>
+    <tr><td class="lbl">Szerokość szybu [cm]</td><td>{{ $shaftW }}</td></tr>
     @endif
     @if($shaftD)
-    <tr class="sep"><td class="lbl">Głębokość szybu</td><td>{{ $shaftD }}</td></tr>
+    <tr class="sep"><td class="lbl">Głębokość szybu [cm]</td><td>{{ $shaftD }}</td></tr>
     @endif
     @if($pitD)
-    <tr class="sep"><td class="lbl">Głębokość podszybia [m]</td><td>{{ $pitD }}</td></tr>
+    <tr class="sep"><td class="lbl">Głębokość podszybia [cm]</td><td>{{ $pitD }}</td></tr>
     @endif
     @if($oh)
-    <tr class="sep"><td class="lbl">Wysokość nadszybia [m]</td><td>{{ $oh }}</td></tr>
+    <tr class="sep"><td class="lbl">Wysokość nadszybia [cm]</td><td>{{ $oh }}</td></tr>
     @endif
     @if($doorW && $doorH)
-    <tr class="sep"><td class="lbl">Otwory drzwiowe (szer. x wys.):</td><td>{{ $doorW }} x {{ $doorH }}</td></tr>
+    <tr class="sep"><td class="lbl">Otwory drzwiowe (szer. x wys.) [cm]:</td><td>{{ $doorW }} x {{ $doorH }}</td></tr>
     @endif
   </table>
 
-  @if($qr->drive_type || $el?->drive_type)
+  @if($spec['driveTypeLabel'])
   <table class="sec">
     <tr><td colspan="2" class="sec-head">Zespół napędowy</td></tr>
-    @php $driveRaw = $qr->drive_type ?? $el?->drive_type; @endphp
-    <tr><td class="lbl">Typ</td><td>{{ $purposeLabels[$driveRaw] ?? $driveRaw }}</td></tr>
+    <tr><td class="lbl">Typ</td><td>{{ $spec['driveTypeLabel'] }}</td></tr>
   </table>
   @endif
 </div>
@@ -144,7 +128,7 @@ table.sec tr.sep td { border-top:1px solid #efefef; }
     <tr><td class="lbl">Schemat dojścia:</td><td>{{ $accessDiagramLabels[$qr->door_type] ?? $qr->door_type }}</td></tr>
     @endif
     @if($doorW && $doorH)
-    <tr class="sep"><td class="lbl">Wymiary drzwi (szer. x wys.):</td><td>{{ $doorW }} x {{ $doorH }}</td></tr>
+    <tr class="sep"><td class="lbl">Wymiary drzwi (szer. x wys.) [cm]:</td><td>{{ $doorW }} x {{ $doorH }}</td></tr>
     @endif
     @if($el?->cabin_door_finish)
     <tr class="sep"><td class="lbl">Drzwi kabinowe wykończenie:</td><td>{{ $el->cabin_door_finish }}</td></tr>
@@ -168,7 +152,7 @@ table.sec tr.sep td { border-top:1px solid #efefef; }
   <table class="sec">
     <tr><td colspan="2" class="sec-head">Kabina{{ $el?->cabin_finish ? ' — ' . $el->cabin_finish : '' }}</td></tr>
     @if($cabW && $cabD && $cabH)
-    <tr><td class="lbl">Wymiary kabiny (szer. x gł. x wys.):</td><td>{{ $cabW }} x {{ $cabD }} x {{ $cabH }}</td></tr>
+    <tr><td class="lbl">Wymiary kabiny (szer. x gł. x wys.) [cm]:</td><td>{{ $cabW }} x {{ $cabD }} x {{ $cabH }}</td></tr>
     @endif
     @if($el?->cabin_finish)
     <tr class="sep"><td class="lbl">Wykończenie wszystkich ścian:</td><td>{{ $el->cabin_finish }}</td></tr>

@@ -274,7 +274,7 @@ class AdminQuoteRequestController extends Controller
 
         $filename = 'oferta-' . str_replace('/', '_', $offer->offer_number) . '.docx';
 
-        return response()->download(storage_path('app/' . $path), $filename, [
+        return response()->download(Storage::path($path), $filename, [
             'Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         ]);
     }

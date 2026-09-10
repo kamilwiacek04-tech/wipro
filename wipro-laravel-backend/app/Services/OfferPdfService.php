@@ -24,6 +24,7 @@ class OfferPdfService
 
         $offerService = new OfferService();
         $parsedNotes  = $offerService->parseConfiguratorNotes($quoteRequest->additional_notes);
+        $spec         = $offerService->resolveSpecLabels($quoteRequest);
 
         $settings = Setting::all()->pluck('value', 'key')->toArray();
 
@@ -59,7 +60,7 @@ class OfferPdfService
         $extraNames   = !empty($extraIdsList) ? CabinAccessory::whereIn('id', $extraIdsList)->pluck('name_pl')->toArray() : [];
 
         $pdf = Pdf::loadView('offers.offer-pdf', compact(
-            'offer', 'settings', 'logoBase64', 'pasekBase64', 'cabinImageBase64', 'parsedNotes',
+            'offer', 'settings', 'logoBase64', 'pasekBase64', 'cabinImageBase64', 'parsedNotes', 'spec',
             'cabinModelName', 'signalName', 'mirrorName',
             'cabinColorName', 'doorColorName', 'cabinDoorColorName', 'extraNames'
         ) + ['qr' => $quoteRequest])->setPaper('a4');
@@ -87,6 +88,7 @@ class OfferPdfService
 
         $offerService = new OfferService();
         $parsedNotes  = $offerService->parseConfiguratorNotes($quoteRequest->additional_notes);
+        $spec         = $offerService->resolveSpecLabels($quoteRequest);
 
         $settings = Setting::all()->pluck('value', 'key')->toArray();
 
@@ -117,6 +119,7 @@ class OfferPdfService
         return Pdf::loadView('offers.tech-spec-pdf', [
             'qr'                 => $quoteRequest,
             'parsedNotes'        => $parsedNotes,
+            'spec'               => $spec,
             'settings'           => $settings,
             'cabinModelName'     => $cabinModelName,
             'signalName'         => $signalName,
