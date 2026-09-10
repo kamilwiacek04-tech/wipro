@@ -115,13 +115,13 @@ const ElevatorDetailModal = ({ elevatorId, onClose }: Props) => {
             <Row label={t('elevatorDetail.maxStops')} value={fmt(data.max_stops)} />
 
             <h3 style={{ fontSize: 14, fontWeight: 600, color: '#555', margin: '16px 0 8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('elevatorDetail.dimensions')}</h3>
-            <Row label={t('elevatorDetail.cabinWidth')} value={`${data.cabin_width} mm`} />
-            <Row label={t('elevatorDetail.cabinDepth')} value={`${data.cabin_depth} mm`} />
-            <Row label={t('elevatorDetail.cabinHeight')} value={`${data.cabin_height} mm`} />
-            {data.shaft_width != null && <Row label={t('elevatorDetail.shaftWidth')} value={`${data.shaft_width} mm`} />}
-            {data.shaft_depth != null && <Row label={t('elevatorDetail.shaftDepth')} value={`${data.shaft_depth} mm`} />}
-            {data.pit_depth != null && <Row label={t('elevatorDetail.pitDepth')} value={`${data.pit_depth} mm`} />}
-            {data.overhead != null && <Row label={t('elevatorDetail.overhead')} value={`${data.overhead} mm`} />}
+            <Row label={t('elevatorDetail.cabinWidth')} value={`${data.cabin_width} cm`} />
+            <Row label={t('elevatorDetail.cabinDepth')} value={`${data.cabin_depth} cm`} />
+            <Row label={t('elevatorDetail.cabinHeight')} value={`${data.cabin_height} cm`} />
+            {data.shaft_width != null && <Row label={t('elevatorDetail.shaftWidth')} value={`${data.shaft_width} cm`} />}
+            {data.shaft_depth != null && <Row label={t('elevatorDetail.shaftDepth')} value={`${data.shaft_depth} cm`} />}
+            {data.pit_depth != null && <Row label={t('elevatorDetail.pitDepth')} value={`${data.pit_depth} cm`} />}
+            {data.overhead != null && <Row label={t('elevatorDetail.overhead')} value={`${data.overhead} cm`} />}
             {data.lifting_height && <Row label="Wys. podnoszenia" value={`${data.lifting_height} m`} />}
 
             {(data.standards || data.machine_room || data.door_width || data.door_height || data.door_fire_class ||
@@ -131,8 +131,8 @@ const ElevatorDetailModal = ({ elevatorId, onClose }: Props) => {
                 <h3 style={{ fontSize: 14, fontWeight: 600, color: '#555', margin: '16px 0 8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Parametry techniczne</h3>
                 {data.standards && <Row label="Normy" value={data.standards} />}
                 {data.machine_room && <Row label="Maszynownia" value={data.machine_room} />}
-                {data.door_width != null && <Row label="Szer. drzwi" value={`${data.door_width} mm`} />}
-                {data.door_height != null && <Row label="Wys. drzwi" value={`${data.door_height} mm`} />}
+                {data.door_width != null && <Row label="Szer. drzwi" value={`${data.door_width} cm`} />}
+                {data.door_height != null && <Row label="Wys. drzwi" value={`${data.door_height} cm`} />}
                 {data.door_fire_class && <Row label="Klasa EI drzwi" value={data.door_fire_class} />}
                 {data.shaft_construction && <Row label="Konstr. szybu" value={data.shaft_construction} />}
                 {data.shaft_ventilation && <Row label="Wentylacja szybu" value={data.shaft_ventilation} />}
