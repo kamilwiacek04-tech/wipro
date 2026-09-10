@@ -122,7 +122,9 @@ const pl = {
                 corner: 'Kątowe',
                 tripartite: 'Trójstronne'
             },
-            throughCabinNote: 'W przypadku kabiny przelotowej lustro występuje na bocznej ścianie.'
+            throughCabinNote: 'W przypadku kabiny przelotowej lustro występuje na bocznej ścianie.',
+            headroomLowWarning: 'Nadszybie jest zaniżone (zalecane min. 340 cm).',
+            pitDepthLowWarning: 'Głębokość podszybia jest zaniżona (zalecane min. 340 cm).'
         },
         finishesAndAccessories: {
             title: 'Wykończenia i dodatki',

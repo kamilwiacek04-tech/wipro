@@ -124,7 +124,9 @@ const en: Translations = {
                 corner: 'Corner',
                 tripartite: 'Tripartite'
             },
-            throughCabinNote: 'For a through cabin, the mirror is located on the side wall.'
+            throughCabinNote: 'For a through cabin, the mirror is located on the side wall.',
+            headroomLowWarning: 'Headroom is on the low side (340 cm or more recommended).',
+            pitDepthLowWarning: 'Pit depth is on the low side (340 cm or more recommended).'
         },
         finishesAndAccessories: {
             title: 'Finishes and Accessories',

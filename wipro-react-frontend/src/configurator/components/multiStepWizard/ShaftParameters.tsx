@@ -70,6 +70,14 @@ const ShaftParameters = () => {
 
   const watchedStops = watch('stopDoorsCount');
   const watchedDiagram = watch('accessDiagram');
+  const watchedPitDepth = watch('pitDepth');
+  const watchedHeadroom = watch('headroom');
+
+  const isLowValue = (raw: string | undefined) => {
+    if (!raw) return false;
+    const n = Number(String(raw).replace(',', '.'));
+    return Number.isFinite(n) && n >= 270 && n < 340;
+  };
 
   useEffect(() => {
     const lh = Math.max(3, 3 * (watchedStops - 1));
@@ -256,6 +264,16 @@ const ShaftParameters = () => {
                 error={errors.headroom?.message}
               />
             </div>
+            {isLowValue(watchedPitDepth) && (
+              <p className="text-[14px] text-[var(--grey)] bg-[#fff8e1] border border-[#ffe082] rounded-[8px] px-4 py-3 -mt-3 m-0">
+                {t('form.shaftParameters.pitDepthLowWarning')}
+              </p>
+            )}
+            {isLowValue(watchedHeadroom) && (
+              <p className="text-[14px] text-[var(--grey)] bg-[#fff8e1] border border-[#ffe082] rounded-[8px] px-4 py-3 -mt-3 m-0">
+                {t('form.shaftParameters.headroomLowWarning')}
+              </p>
+            )}
           </form>
           <div style={{marginTop: 10}} className="p-[10px] flex flex-col gap-5">
             <Controller
@@ -288,14 +306,14 @@ const ShaftParameters = () => {
             ) : (
               <div className="flex gap-[30px] justify-between max-[500px]:flex-col">
                 <TextInput
-                  label={`${t('form.shaftParameters.fields.shaftLen')} [m]`}
+                  label={`${t('form.shaftParameters.fields.shaftLen')} [cm]`}
                   value={registerTemp('shaftLen', {
                     onChange: (e) => updateField('shaftTempParameters', 'shaftLen', replaceDots(e.target.value))
                   })}
                   error={errorsTemp.shaftLen?.message}
                 />
                 <TextInput
-                  label={`${t('form.shaftParameters.fields.shaftDep')} [m]`}
+                  label={`${t('form.shaftParameters.fields.shaftDep')} [cm]`}
                   value={registerTemp('shaftDep', {
                     onChange: (e) => updateField('shaftTempParameters', 'shaftDep', replaceDots(e.target.value))
                   })}
