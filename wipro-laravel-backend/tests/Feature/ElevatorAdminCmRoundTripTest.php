@@ -44,5 +44,9 @@ class ElevatorAdminCmRoundTripTest extends TestCase
         $show->assertStatus(200);
         $show->assertJsonPath('shaft_width', 140);
         $show->assertJsonPath('pit_depth', 120);
+
+        $index = $this->getJson('/api/admin/elevators');
+        $index->assertStatus(200);
+        $index->assertJsonFragment(['id' => $id, 'shaft_width' => 140]);
     }
 }
