@@ -133,11 +133,8 @@ const ACCESS_DIAGRAM_OPTIONS = [
 const INVESTOR_STATUS_OPTIONS = [
   { value: 'ARCHITECT',      label: 'Architekt' },
   { value: 'OWNER',          label: 'Właściciel' },
-  { value: 'CONTRACTOR',     label: 'Generalny wykonawca' },
+  { value: 'CONTRACTOR',     label: 'Wykonawca' },
   { value: 'COST_ESTIMATOR', label: 'Kosztorysant' },
-  { value: 'INVESTOR',       label: 'Inwestor' },
-  { value: 'DISTRIBUTOR',    label: 'Dealer / Dystrybutor' },
-  { value: 'OTHER',          label: 'Inny' },
 ]
 
 const OBJECT_TYPE_OPTIONS = [
